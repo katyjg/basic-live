@@ -1,46 +1,30 @@
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import models
-from django.utils import timezone
-from basiclive.core.lims.models import ActivityLog
-from model_utils import Choices
 import os
 from datetime import timedelta
 
-if settings.LIMS_USE_SCHEDULE:
-    from basiclive.core.schedule.models import Beamtime
-    HOURS_PER_SHIFT = getattr(settings, 'HOURS_PER_SHIFT', 8)
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+from model_utils import Choices
 
-User = get_user_model()
+if settings.LIMS_USE_SCHEDULE:
+    from ..schedule.models import Beamtime
+    HOURS_PER_SHIFT = getattr(settings, 'HOURS_PER_SHIFT', 8)
 
 
 def get_storage_path(instance, filename):
     return os.path.join('uploads/', 'links', filename)
 
 
-class ConnectionBaseClass(models.Model):
 
-    def delete(self, *args, **kwargs):
-        request = kwargs.get('request', None)
-        message = '%s (%s) deleted.' % (self.__class__.__name__[0].upper() + self.__class__.__name__[1:].lower(),
-                                        self.__str__())
-        if request is not None:
-            ActivityLog.objects.log_activity(request, self, ActivityLog.TYPE.DELETE, message, )
-        super(ConnectionBaseClass, self).delete()
-
-    class Meta:
-        abstract = True
-
-
-class RemoteConnectionPoint(ConnectionBaseClass):
+class AccessList(models.Model):
     name = models.CharField(max_length=60, unique=True)
     description = models.TextField(blank=True, null=True)
     address = models.GenericIPAddressField()
-    users = models.ManyToManyField(User, blank=True)
+    users = models.ManyToManyField("lims.Project", blank=True)
     active = models.BooleanField(default=False)
     created = models.DateTimeField('date created', auto_now_add=True, editable=False)
     modified = models.DateTimeField('date modified', auto_now_add=True, editable=False)
-    beamline = models.ManyToManyField("lims.Beamline", blank=True, related_name="connection_points")
+    beamline = models.ManyToManyField("lims.Beamline", blank=True, related_name="access_lists")
 
     def allowed_users(self):
         return ' | '.join(self.users.values_list('username', flat=True))
@@ -76,7 +60,7 @@ class RemoteConnectionPoint(ConnectionBaseClass):
         verbose_name = "Access List"
 
 
-class RemoteConnection(ConnectionBaseClass):
+class Access(models.Model):
     STATES = Choices(
         ('CONNECTED', 'Connected'),
         ('DISCONNECTED', 'Disconnected'),
@@ -84,8 +68,8 @@ class RemoteConnection(ConnectionBaseClass):
         ('FINISHED', 'Finished'),
     )
     name = models.CharField(max_length=48)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="connections")
-    userlist = models.ForeignKey(RemoteConnectionPoint, related_name="connections", on_delete=models.CASCADE)
+    user = models.ForeignKey("lims.Project", on_delete=models.CASCADE)
+    userlist = models.ForeignKey(AccessList, related_name="connections", on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
     created = models.DateTimeField('date created', auto_now_add=True, editable=True)
     end = models.DateTimeField('date ended', null=True, blank=True)

@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import RemoteConnectionPoint
+from .models import AccessList
+
+runlist_site = admin.AdminSite()
 
 
 class UserListAdmin(admin.ModelAdmin):
@@ -8,5 +10,4 @@ class UserListAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'address', 'description', 'active', 'modified']
     ordering = ['-created']
 
-
-admin.site.register(RemoteConnectionPoint, UserListAdmin)
+admin.site.register(AccessList, UserListAdmin)
