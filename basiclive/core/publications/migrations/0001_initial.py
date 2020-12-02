@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
                 ('date', models.DateField(verbose_name='Published')),
                 ('authors', models.TextField()),
                 ('code', models.CharField(max_length=255, null=True, unique=True)),
-                ('keywords', mxlive.utils.fields.StringListField(blank=True)),
+                ('keywords', basiclive.utils.fields.StringListField(blank=True)),
                 ('abstract', models.TextField(blank=True, null=True)),
                 ('kind', models.CharField(choices=[('article', 'Peer-Reviewed Article'), ('proceeding', 'Conference Proceeding'), ('phd_thesis', 'Doctoral Thesis'), ('msc_thesis', 'Masters Thesis'), ('magazine', 'Magazine Article'), ('book', 'Book'), ('chapter', 'Book / Chapter'), ('patent', 'Patent')], default='article', max_length=20, verbose_name='Type')),
                 ('active', models.BooleanField(default=False)),

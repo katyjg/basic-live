@@ -38,8 +38,8 @@ urlpatterns = [
 
     path('containers/', views.ContainerList.as_view(), name='container-list'),
     path('containers/<int:pk>/', views.ContainerDetail.as_view(), name='container-detail'),
-    path('containers/<int:pk>/history/', views.ContainerDetail.as_view(template_name="users/entries/templates/users/entries/container-history.html"), name='container-history'),
-    path('automounter/<int:pk>/history/', views.ContainerDetail.as_view(template_name="users/entries/templates/users/entries/automounter-history.html"), name='automounter-history'),
+    path('containers/<int:pk>/history/', views.ContainerDetail.as_view(template_name="users/entries/container-history.html"), name='container-history'),
+    path('automounter/<int:pk>/history/', views.ContainerDetail.as_view(template_name="users/entries/automounter-history.html"), name='automounter-history'),
     path('containers/<int:pk>/edit/', views.ContainerEdit.as_view(), name='container-edit'),
     path('containers/<int:pk>/samples/', views.ContainerSpreadsheet.as_view(), name='edit-container-samples'),
     path('containers/<int:pk>/delete/', views.ContainerDelete.as_view(), name='container-delete'),
@@ -72,8 +72,8 @@ urlpatterns = [
 
     path('sessions/', views.SessionList.as_view(), name='session-list'),
     path('sessions/<int:pk>/', views.SessionDetail.as_view(), name='session-detail'),
-    path('sessions/<int:pk>/history/', views.SessionDetail.as_view(template_name="users/entries/templates/users/entries/session-history.html"), name='session-history'),
-    path('sessions/<int:pk>/statistics/', views.SessionStatistics.as_view(template_name="users/entries/templates/users/entries/session-statistics.html"), name='session-statistics'),
+    path('sessions/<int:pk>/history/', views.SessionDetail.as_view(template_name="users/entries/session-history.html"), name='session-history'),
+    path('sessions/<int:pk>/statistics/', views.SessionStatistics.as_view(template_name="users/entries/session-statistics.html"), name='session-statistics'),
     path('sessions/<int:pk>/data/', views.SessionDataList.as_view(), name='session-data'),
     path('sessions/<int:pk>/reports/', views.SessionReportList.as_view(), name='session-reports'),
 
@@ -89,9 +89,9 @@ urlpatterns = [
     path('sshkey/<int:pk>/delete/', views.SSHKeyDelete.as_view(), name='sshkey-delete'),
 
     path('quick-guide/', TemplateView.as_view(template_name='users/help.html'), name='user-guide'),
-    path('guides/<int:pk>/youtube/<slug:video>/', views.GuideView.as_view(template_name="users/components/templates/users/components/guide-youtube.html"), name='guide-youtube'),
-    path('guides/<int:pk>/flickr/<album>/<photo>/', views.GuideView.as_view(template_name="users/components/templates/users/components/guide-flickr.html"), name='guide-flickr'),
-    path('guides/<int:pk>/image/', views.GuideView.as_view(template_name="users/components/templates/users/components/guide-image.html"), name='guide-image'),
+    path('guides/<int:pk>/youtube/<slug:video>/', views.GuideView.as_view(template_name="users/components/guide-youtube.html"), name='guide-youtube'),
+    path('guides/<int:pk>/flickr/<album>/<photo>/', views.GuideView.as_view(template_name="users/components/guide-flickr.html"), name='guide-flickr'),
+    path('guides/<int:pk>/image/', views.GuideView.as_view(template_name="users/components/guide-image.html"), name='guide-image'),
     path('guides/<int:pk>/video/', views.GuideView.as_view(template_name="users/components/guide-video.html"), name='guide-video'),
     path('guides/new/', views.GuideCreate.as_view(), name='new-guide'),
     path('guides/<int:pk>/edit/', views.GuideEdit.as_view(), name='guide-edit'),

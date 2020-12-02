@@ -26,7 +26,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small class="">UPCOMING BEAMTIME</small></div>
                 <div class="list-group list-group-flush">
                 {% for beamtime in beamtimes %}
-                    {% include "schedule/../../../schedule/templates/schedule/beamtime-list-item.html" %}
+                    {% include "schedule/beamtime-list-item.html" %}
                 {% endfor %}
                 </div>
             </div>
@@ -64,7 +64,7 @@
             </div>
             <div class="list-group list-group-flush">
                 {% for session in sessions %}
-                    {% include "users/entries/entries/session-list-item.html" %}
+                    {% include "users/entries/session-list-item.html" %}
                 {% endfor %}
             </div>
         </div>

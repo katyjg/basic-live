@@ -1,0 +1,49 @@
+/* Any styling for printing can be done here */
+body {
+	font-size: 9px;
+}
+h3 {font-size: 13px;}
+h4 {font-size: 12px;}
+h5 {font-size: 11px;}
+#header, ul.toolbar, nav
+{
+	display: none;
+}
+main.content {
+	margin-top: 0px;
+}
+.folio-body, .pad-wrapper {
+	padding: 0;
+}
+.panel-heading {
+	padding: 1px 15px;
+}
+.tools-box, .status-bar {
+	display: none;
+}
+.table > tbody > tr > td{
+	padding: 0px;
+	line-height: 1;
+	vertical-align: middle;
+	max-height: 14px !important;
+}
+a[href]:after {
+	display:none;
+}
+.data-thumbnail {
+	display: none;
+}
+.thumbnail-print {
+	display: block;
+}
+input[type=checkbox] {
+	transform: scale(0.5);
+}
+input + label {
+	margin-bottom: 0;
+	margin-top: 9px;
+	vertical-align: top;
+}
+body {
+	line-height: 9px;
+}

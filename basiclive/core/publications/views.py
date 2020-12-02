@@ -7,7 +7,7 @@ from . import models, stats
 
 
 class PubEntryList(AdminRequiredMixin, ItemListView):
-    template_name = 'publications/templates/publications/list.html'
+    template_name = 'publications/list.html'
     model = models.Publication
     list_filters = [
         'created', 'modified',
@@ -32,7 +32,7 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
 
 
 class PDBEntryList(AdminRequiredMixin, ItemListView):
-    template_name = 'publications/templates/publications/list.html'
+    template_name = 'publications/list.html'
     model = models.Deposition
     list_filters = [
         'created', 'modified',

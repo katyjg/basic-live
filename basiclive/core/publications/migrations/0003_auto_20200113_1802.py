@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='journal',
             name='codes',
-            field=mxlive.utils.fields.StringListField(default='', unique=True, verbose_name='ISSN'),
+            field=basiclive.utils.fields.StringListField(default='', unique=True, verbose_name='ISSN'),
             preserve_default=False,
         ),
     ]

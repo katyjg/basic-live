@@ -1,0 +1,30 @@
+{% extends "modal/content.html" %}
+
+{% load msgs %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block modal_assets %}
+    <link rel="stylesheet" href="{% static "css/select2.min.css" %}" media="screen"/>
+    <link rel="stylesheet" href="{% static "css/select2-bootstrap4.min.css" %}" media="screen"/>
+    <script src="{% static "js/misc/jquery.form.min.js" %}"></script>
+    <script src="{% static "js/misc/select2.full.min.js" %}"></script>
+    <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
+    <script src="{% static "js/misc/repeatable-fields.min.js" %}"></script>
+{% endblock %}
+
+{% block modal_styles %}{% endblock %}
+{% block modal_title %}{{ form.body.title }}{% endblock %}
+{% block pre_content %}<form action="{{ form.body.form_action }}" method="{{form.body.method}}">{% endblock %}
+{% block modal_body %}
+    {% if form.errors %}
+        <div id="form-errors" class="alert alert-warning">
+            <strong>It looks like there's a problem!</strong> Please correct the errors below.
+            <hr class="my-2"/>
+            <small>{{ form.errors }}</small>
+        </div>
+    {% endif %}
+    {% crispy form form.body %}
+{% endblock %}
+{% block modal_footer %}{% crispy form form.footer %}{% endblock %}
+{% block post_content %}</form>{% endblock %}

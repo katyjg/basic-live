@@ -1,0 +1,61 @@
+{% extends "users/base.html" %}
+
+{% load static %}
+{% load settings %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static "css/login.css" %}"/>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-center align-content-around w-100 h-100">
+        <div class="card align-self-center">
+            <div class="card-body">
+                <div class="mb-4">
+                    <h1 class="font-weight-light">{% get_setting 'APP_NAME' %} Login</h1>
+                    <p>
+                        Information management at Beamlines, from samples to data analysis.
+                    </p>
+                </div>
+            </div>
+            <div class="card-body bg-light">
+                <form class="form-signin" role="form" action="{{ app_path }}" method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors or error_message %}
+                        <div class="alert alert-danger" role="alert">
+                            <h6>{{ form.non_field_errors.0 }}</h6>
+                            {% if error_message %}
+                                <p class="errornote">{{ error_message }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        {% if form.username.errors %}
+                            <span class="text-danger">{{ form.username.errors.0 }}</span>{% endif %}
+                        <input type="text" name="username" id="id_username"
+                               class="form-control {% if form.username.errors %}input-error{% endif %}"
+                               placeholder="Username" required autofocus>
+                        <label class="sr-only" for="id_username">Username</label>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" name="password" id="id_password"
+                               class="form-control {% if form.password.errors %}input-error{% endif %}"
+                               placeholder="Password" required>
+                        <label class="sr-only" for="id_password">Password</label>
+                    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block mb-2" type="submit">Sign in</button>
+                </form>
+            </div>
+            <div>
+                <p class="mt-5 mb-3 text-muted text-center">&copy; 2008-{% now "Y" %} Canadian Light Source, Inc</p>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+
+
