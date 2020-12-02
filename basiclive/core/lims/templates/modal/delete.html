@@ -1,0 +1,20 @@
+{% extends "modal/form.html" %}
+
+{% load misc_tags %}
+
+{% block modal_title %}Delete?{% endblock %}
+{% block pre_content %}
+    <form action="{% if form_action %}{{ form_action }}{% else %}delete/{% endif %}" method="post">
+{% endblock %}
+
+{% block modal_body %}
+    <h5>Are you sure you want to delete the following {{ object|verbose_name|title }} <strong>"{{object}}"</strong>?</h5>
+    <p>{{ object.delete_warning }}</p>
+    <input type="hidden" name="post" value="yes" />
+{% endblock %}
+{% block modal_footer %}
+    <button type="submit" value="Submit" class="btn btn-danger pull-right">Yes, I'm sure</button>
+{% endblock %}
+{% block post_content %}
+    </form>
+{% endblock %}

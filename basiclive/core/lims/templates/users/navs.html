@@ -1,7 +1,8 @@
+{% load settings %}
 <header>
     <nav class="navbar navbar-expand navbar-dark fixed-top">
         <!-- Brand and toggle get grouped for better mobile display -->
-        <a class="navbar-brand" href="{% url "dashboard" %}">MxLIVE</a>
+        <a class="navbar-brand" href="{% url "dashboard" %}">{% get_setting 'APP_NAME' %}</a>
         <ul class="navbar-nav ml-auto">
             {% if user.is_superuser %}
                <li class="nav-item">

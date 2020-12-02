@@ -1,5 +1,5 @@
 {% load static %}
-
+{% load settings %}
 
 <!doctype html>
 <html lang="en" class="{% block html_class %}{% endblock %}">
@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{% block page_title %}MxLIVE{% endblock %}</title>
+    <title>{% block page_title %}{% get_setting 'APP_NAME' %}{% endblock %}</title>
     <link rel="icon" href="{% static 'img/icon.ico' %}">
 
     <!-- Styles -->
@@ -47,7 +47,7 @@
                 {% block object_status %}{% endblock %}
                 {% if maintenance %}
                 <div class="alert alert-warning">
-                  <strong>Warning!</strong> MxLIVE is currently undergoing maintenance activities. Some features may not be available
+                  <strong>Warning!</strong> {% get_setting 'APP_NAME' %} is currently undergoing maintenance activities. Some features may not be available
                     and performance may be impacted. This message will be removed when full functionality is restored. Sorry for the
                     temporary inconvenience.
                 </div>
