@@ -45,7 +45,7 @@ class ProjectDetail(UserPassesTestMixin, detail.DetailView):
        - sessions: Any recent Session from any beamline
     """
     model = models.Project
-    template_name = "users/templates/users/project.html"
+    template_name = "users/project.html"
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
@@ -113,7 +113,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
     """
 
     model = models.Project
-    template_name = "users/templates/users/staff-dashboard.html"
+    template_name = "users/staff-dashboard.html"
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
@@ -202,7 +202,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
 
 
 class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    template_name = "users/forms/templates/users/forms/project-reset.html"
+    template_name = "users/forms/project-reset.html"
     model = models.Project
     success_message = "Account API key reset"
     fields = ("key", )
@@ -359,7 +359,7 @@ class ShipmentList(ListViewMixin, ItemListView):
 
 class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Shipment
-    template_name = "users/entries/templates/users/entries/shipment.html"
+    template_name = "users/entries/shipment.html"
 
 
 class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
@@ -541,7 +541,7 @@ class SampleStats(AdminRequiredMixin, PlotViewMixin, SampleList):
 class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     model = models.Sample
     form_class = forms.SampleForm
-    template_name = "users/entries/templates/users/entries/sample.html"
+    template_name = "users/entries/sample.html"
     success_url = reverse_lazy('sample-list')
     success_message = "Sample has been updated"
 
@@ -588,7 +588,7 @@ class ContainerList(ListViewMixin, ItemListView):
 
 class ContainerDetail(DetailListMixin, SampleList):
     extra_model = models.Container
-    template_name = "users/entries/templates/users/entries/container.html"
+    template_name = "users/entries/container.html"
     list_columns = ['name', 'barcode', 'group', 'location', 'comments']
     link_url = 'sample-edit'
     link_attr = None
@@ -747,7 +747,7 @@ def movable(val, record):
 
 class GroupDetail(DetailListMixin, SampleList):
     extra_model = models.Group
-    template_name = "users/entries/templates/users/entries/group.html"
+    template_name = "users/entries/group.html"
     list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
     list_transforms = {
         'priority': movable,
@@ -858,7 +858,7 @@ class UsageSummary(PlotViewMixin, DataList):
 
 class DataDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Data
-    template_name = "users/entries/templates/users/entries/data.html"
+    template_name = "users/entries/data.html"
 
     def get_template_names(self):
         return [self.object.kind.template, self.template_name]
@@ -891,7 +891,7 @@ class ReportDetail(OwnerRequiredMixin, detail.DetailView):
 
 
 class ShipmentDataList(DataList):
-    template_name = "users/entries/templates/users/entries/shipment-data.html"
+    template_name = "users/entries/shipment-data.html"
     lookup = 'group__shipment__pk'
     detail_model = models.Shipment
 
@@ -937,7 +937,7 @@ class ShipmentReportList(ReportList):
 
 
 class SessionDataList(ShipmentDataList):
-    template_name = "users/entries/templates/users/entries/session-data.html"
+    template_name = "users/entries/session-data.html"
     lookup = 'session__pk'
     detail_model = models.Session
 
@@ -988,12 +988,12 @@ class SessionList(ListViewMixin, ItemListView):
 
 class SessionDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "users/entries/templates/users/entries/session.html"
+    template_name = "users/entries/session.html"
 
 
 class SessionStatistics(AdminRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "users/entries/templates/users/entries/session-statistics.html"
+    template_name = "users/entries/session-statistics.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1006,7 +1006,7 @@ class SessionStatistics(AdminRequiredMixin, detail.DetailView):
 
 class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Beamline
-    template_name = "users/entries/templates/users/entries/beamline.html"
+    template_name = "users/entries/beamline.html"
 
 
 class DewarEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -1112,7 +1112,7 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
 
 class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.FormView):
     form_class = forms.ShipmentContainerForm
-    template_name = "users/forms/templates/users/forms/add-wizard.html"
+    template_name = "users/forms/add-wizard.html"
     success_message = "Shipment updated"
 
     def get_initial(self):
@@ -1141,7 +1141,7 @@ class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMix
 class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     model = models.Group
     form_class = forms.ShipmentGroupForm
-    template_name = "users/forms/templates/users/forms/add-wizard.html"
+    template_name = "users/forms/add-wizard.html"
     success_message = "Groups in shipment updated"
 
     def get_initial(self):
@@ -1181,12 +1181,12 @@ class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
 
 
 class SeatSamples(OwnerRequiredMixin, AsyncFormMixin, detail.DetailView):
-    template_name = "users/forms/templates/users/forms/seat-samples.html"
+    template_name = "users/forms/seat-samples.html"
     model = models.Shipment
 
 
 class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView):
-    template_name = "users/forms/templates/users/forms/container-spreadsheet.html"
+    template_name = "users/forms/container-spreadsheet.html"
     model = models.Container
 
     @transaction.atomic
@@ -1281,7 +1281,7 @@ class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class GuideView(detail.DetailView):
     model = models.Guide
-    template_name = "users/components/templates/users/components/guide-youtube.html"
+    template_name = "users/components/guide-youtube.html"
 
     def get_object(self, queryset=None):
         if self.request.user.is_superuser:

@@ -11,7 +11,7 @@ from django.utils.text import slugify
 
 from .models import Project, Shipment, Dewar, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
 from .models import Guide, ProjectType, SupportRecord, SupportArea, UserFeedback, FeedbackScale, SSHKey
-from ..staff.models import UserList
+from mxlive.staff.models import UserList
 
 
 class BodyHelper(FormHelper):

@@ -10,12 +10,12 @@ from django.http import JsonResponse
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 
 from ...utils import filters
-from basiclive.utils import AsyncFormMixin, AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
+from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
 
 from . import models, forms, stats
 from itemlist.views import ItemListView
 from basiclive.core.lims.models import Beamline
-from basiclive.core.lims import ListViewMixin
+from basiclive.core.lims.views import ListViewMixin
 
 from datetime import datetime, timedelta
 
@@ -24,7 +24,7 @@ MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
 
 
 class CalendarView(TemplateView):
-    template_name = 'schedule/templates/schedule/public-schedule.html'
+    template_name = 'schedule/public-schedule.html'
 
     @xframe_options_exempt
     def dispatch(self, *args, **kwargs):
@@ -57,7 +57,7 @@ class CalendarView(TemplateView):
 
 
 class ScheduleView(LoginRequiredMixin, CalendarView):
-    template_name = 'schedule/templates/schedule/schedule.html'
+    template_name = 'schedule/schedule.html'
 
     @xframe_options_sameorigin
     def dispatch(self, *args, **kwargs):
@@ -71,7 +71,7 @@ class ScheduleView(LoginRequiredMixin, CalendarView):
 
 class BeamtimeInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     model = models.Beamtime
-    template_name = "schedule/templates/schedule/beamtime-info.html"
+    template_name = "schedule/beamtime-info.html"
 
     def test_func(self):
         # Allow access to admin or owner

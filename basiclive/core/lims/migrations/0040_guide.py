@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(blank=True, max_length=50)),
                 ('description', models.TextField(blank=True)),
                 ('priority', models.IntegerField(default=0)),
-                ('attachment', models.FileField(blank=True, upload_to=mxlive.lims.models.get_storage_path)),
+                ('attachment', models.FileField(blank=True, upload_to=basiclive.core.lims.models.get_storage_path)),
                 ('staff_only', models.BooleanField(default=False)),
                 ('kind', models.CharField(choices=[('snippet', 'Snippet'), ('video', 'Video'), ('image', 'Image')], default='snippet', max_length=20)),
                 ('modal', models.BooleanField(default=False)),
