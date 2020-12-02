@@ -31,12 +31,12 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     list_columns = ['name', 'description', 'current_users', 'allowed_users', 'address', 'beamlines', 'active']
     list_transforms = {'beamlines': format_beamlines}
     list_search = ['name', 'description']
-    tool_template = "users/tools-access.html"
+    tool_template = "lims/tools-access.html"
     link_url = 'access-edit'
     link_kwarg = 'address'
     link_attr = 'data-form-link'
     ordering = ['name']
-    template_name = "users/list.html"
+    template_name = "lims/list.html"
     page_title = 'Remote Access'
 
     def get_list_columns(self):
@@ -64,7 +64,7 @@ class RemoteConnectionList(AdminRequiredMixin, ItemListView):
     list_filters = ['created', filters.YearFilterFactory('created', reverse=True), 'userlist', 'status']
     list_search = ['user__username', 'name', 'status', 'userlist__name', 'created']
     ordering = ['-created']
-    template_name = "users/list.html"
+    template_name = "lims/list.html"
     link_url = 'connection-detail'
     link_attr = 'data-link'
     page_title = 'Remote Connections'
@@ -80,13 +80,13 @@ class RemoteConnectionStats(PlotViewMixin, RemoteConnectionList):
 
 class RemoteConnectionDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Access
-    template_name = "users/entries/connection.html"
+    template_name = "lims/entries/connection.html"
 
 
 class ProjectList(AdminRequiredMixin, ItemListView):
     model = Project
     paginate_by = 25
-    template_name = "users/user-list.html"
+    template_name = "lims/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
     list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']
     list_search = [
@@ -102,14 +102,14 @@ class ProjectList(AdminRequiredMixin, ItemListView):
 
 class UserDetail(AdminRequiredMixin, detail.DetailView):
     model = Project
-    template_name = "users/entries/user-info.html"
+    template_name = "lims/entries/user-info.html"
 
     def get_object(self, **kwargs):
         return Project.objects.get(username=self.kwargs.get('username'))
 
 
 class UserStats(UserDetail):
-    template_name = "users/entries/user.html"
+    template_name = "lims/entries/user.html"
     page_title = "User Profile"
 
     def get_object(self, **kwargs):
