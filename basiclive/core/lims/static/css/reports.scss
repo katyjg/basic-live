@@ -1,0 +1,136 @@
+
+caption, figcaption {
+	padding-top: .75rem;
+	padding-bottom: .75rem;
+	color: #6c757d;
+	text-align: left;
+	caption-side: bottom;
+}
+
+.report-viewer figure {
+	width: 100%;
+	counter-increment: figures;
+	margin-bottom: 0;
+}
+.report-viewer figcaption:before {
+	content: 'Figure ' counter(figures)	' - ';
+}
+
+.report-viewer .table caption:before {
+	content: 'Table ' counter(tables)	' - ';
+}
+
+#report-builder {
+	max-width: 60em;
+	margin: 1rem auto;
+}
+.report-viewer {
+	padding: 1rem;
+	counter-reset: figures tables;
+
+	h3 {
+		font-weight: 200;
+		border-left: 0.25rem solid rgba(0,0,0,0.2);
+		margin-left: 0.25rem;
+		margin-bottom: 1rem;
+	}
+
+	.description {
+		display: block;
+		width: 100%
+	}
+	.table {
+		counter-increment: tables;
+		tbody {
+			td {
+				text-align: right;
+			}
+			border-bottom: 1px solid #bbb;
+			border-top: 1px solid #bbb;
+		}
+		thead {
+			th {
+				text-align: right;
+				&:first-child {
+					text-align: left;
+				}
+			}
+		}
+	}
+	.notes {
+		background: #eee;
+		background: rgba(0,0,0,0.05);
+		padding: 1rem;
+		color: #333;
+		p {
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+		ol {
+			margin-block-start: 1rem;
+			margin-block-end: 1rem;
+			padding-inline-start: 2rem;
+		}
+	}
+}
+g.tick {
+	text {
+		font-size: 0.9rem;
+		fill: #333;
+	}
+	line {
+		fill: none !important;
+		stroke: var(--secondary);
+		//stroke: rgba(0,0,0,0.3);
+		//stroke-width: 1pt;
+	}
+}
+path {
+	&.domain {
+		fill: none !important;
+		stroke: var(--secondary);
+		//stroke-width: 1pt;
+	}
+
+	&.line {
+		//stroke-width: 1pt;
+
+	}
+}
+
+g.axis {
+	font-size: 0.95rem;
+}
+.table-heading {
+	text-align: center;
+}
+div.section-entry {
+	margin-bottom: 1rem;
+}
+.report-table {
+	max-width: 80%;
+	margin: auto;
+	border: 1px solid #ddd;
+	box-shadow: 2px 2px 10px #ddd;
+}
+table {
+	+ {
+		.caption {
+			max-width: 80%;
+			margin: auto;
+			border: 1px solid #ddd;
+			box-shadow: 2px 2px 10px #ddd;
+		}
+	}
+}
+
+.report-viewer {
+	.c3-axis-y-label, .c3-axis-y2-label, .c3-axis-x-label {
+		font-size: 1rem;
+	}
+}
+
+.c3-line {
+    stroke-width: 1.5px;
+}
