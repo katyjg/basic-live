@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load icons %}
 {% load guides %}
 {% load msgs %}
@@ -15,7 +15,7 @@
     <a href="#!"  data-form-link="{% url "shipment-new" %}">
         {% show_icon label='New Shipment' icon='ti ti-md ti-plus' %}
     </a>
-    {% include "users/tools-user.html" %}
+    {% include "lims/tools-user.html" %}
 {% endblock %}
 
 {% block full %}
@@ -52,7 +52,7 @@
                     </a>
                 </div>
                 {% for shipment in shipments %}
-                    {% include "users/entries/shipment-list-item.html" %}
+                    {% include "lims/entries/shipment-list-item.html" %}
                 {% endfor %}
             </div>
         </div>
@@ -64,7 +64,7 @@
             </div>
             <div class="list-group list-group-flush">
                 {% for session in sessions %}
-                    {% include "users/entries/session-list-item.html" %}
+                    {% include "lims/entries/session-list-item.html" %}
                 {% endfor %}
             </div>
         </div>

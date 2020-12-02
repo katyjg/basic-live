@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 
 {% block page_heading %}
     <h3 class="text-condensed">
@@ -16,7 +16,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}{% include "users/../tools-base.html" %}{% endblock %}
+{% block object_tools %}{% include "lims/../tools-base.html" %}{% endblock %}
 
 {% block object_status %}
     <div class="status-bar">
@@ -55,14 +55,14 @@
 
         </div>
     </div>
-    {% include "users/../comments.html" with object=object %}
+    {% include "lims/../comments.html" with object=object %}
 {% endblock %}
 
 {% block full %}
     <div class="row">
         <div class="col-12">
             <div class="list-group list-group-hover">
-                {% include "users/entries/sample-data.html" %}
+                {% include "lims/entries/sample-data.html" %}
                 {% if not object.datasets.count %}
                     <div class="list-group-item empty">No data collected for this sample yet.</div>
                 {% endif %}

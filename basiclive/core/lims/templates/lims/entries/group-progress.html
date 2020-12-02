@@ -51,10 +51,10 @@
                 <div>{{ sample.dewar.beamline.acronym|default:'' }}&nbsp;{{ sample.port }}</div>
             </td>
             <td>
-                {% include "users/entries/sample-data.html" %}
+                {% include "lims/entries/sample-data.html" %}
             </td>
             <td>
-                {% include "users/entries/sample-reports.html" %}
+                {% include "lims/entries/sample-reports.html" %}
             </td>
             {% if user.is_superuser%}
                 <td>

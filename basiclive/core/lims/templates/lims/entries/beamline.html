@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load humanize %}
 {% load markup %}
 {% load static %}
@@ -62,13 +62,13 @@
     {% with object.active_automounter as automounter %}
         <div class="row">
             <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
-                {% include "users/entries/container-layout.html" with container=automounter show_samples=True loadable=True %}
+                {% include "lims/entries/container-layout.html" with container=automounter show_samples=True loadable=True %}
             </div>
 
             <div class="col-sm-5 col-12">
-                {% include "users/entries/loaded.html" %}
+                {% include "lims/entries/loaded.html" %}
             </div>
         </div>
-        {% include "users/../comments.html" with object=automounter.dewar %}
+        {% include "lims/../comments.html" with object=automounter.dewar %}
     {% endwith %}
 {% endblock %}

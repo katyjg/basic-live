@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load humanize %}
 {% load badges %}
 {% load layout %}
@@ -32,7 +32,7 @@
 {% endblock %}
 
 {% block object_tools %}
-    {% include "users/../shipment-tools.html" %}
+    {% include "lims/../shipment-tools.html" %}
 {% endblock %}
 
 {% block object_status %}
@@ -135,7 +135,7 @@
                                 </a>
                             </h5>
                         </div>
-                        {% include "users/entries/container-layout.html" with show_samples=True label_samples=True %}
+                        {% include "lims/entries/container-layout.html" with show_samples=True label_samples=True %}
                     </div>
 
                 {% endfor %}
@@ -187,5 +187,5 @@
             </div>
         </div>
     </div>
-    {% include "users/../comments.html" with object=object %}
+    {% include "lims/../comments.html" with object=object %}
 {% endblock %}

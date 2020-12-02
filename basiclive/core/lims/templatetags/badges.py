@@ -17,7 +17,7 @@ def report_summary(report):
     return "{:0.2f}".format(report.score)
 
 
-@register.inclusion_tag('users/components/badge-score.html')
+@register.inclusion_tag('lims/components/badge-score.html')
 def score_badge(score):
     rgba = colors.colormap(score)
     return {
@@ -30,7 +30,7 @@ def score_badge(score):
     }
 
 
-@register.inclusion_tag('users/components/badge-label.html')
+@register.inclusion_tag('lims/components/badge-label.html')
 def label_badge(header="", classes="", value=0, score=None):
     if score is not None:
         rgba = colors.colormap(score)

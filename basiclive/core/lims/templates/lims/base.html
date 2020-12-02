@@ -32,7 +32,7 @@
 {% block body %}
     <!-- User Profile Menu -->
     {% if user.is_authenticated %}
-        {% include "users/navs.html" %}
+        {% include "lims/navs.html" %}
     {% endif %}
     <main role="main">
         <div id="spinner">
@@ -70,7 +70,7 @@
     </div>
 {% endif %}
 
-{% include "users/messages.html" %}
+{% include "lims/messages.html" %}
 {% block post_js %}{% endblock %}
 
 <script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>

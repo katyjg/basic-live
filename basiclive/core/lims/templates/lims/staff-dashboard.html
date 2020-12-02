@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load static %}
 {% load guides %}
 {% load icons %}
@@ -81,7 +81,7 @@
                                 </h5>
                                 <hr/>
                             </div>
-                            {% include "users/entries/container-layout.html" with container=automounter.container details=False %}
+                            {% include "lims/entries/container-layout.html" with container=automounter.container details=False %}
                     </a>
                 {% endfor %}
                 </div>
@@ -91,7 +91,7 @@
                 <div class="card-body p-2">
                     <div class="row">
                         {% for container in adaptors %}
-                            {% include "users/entries/container-item.html" %}
+                            {% include "lims/entries/container-item.html" %}
                         {% endfor %}
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>ACTIVE CONNECTIONS</small></div>
                 <div class="list-group list-group-flush list-group-hover">
                 {% for connection in connections %}
-                    {% include "users/entries/connection-list-item.html" %}
+                    {% include "lims/entries/connection-list-item.html" %}
                 {% empty %}
                     <div class="list-group-item empty">
                         No active connections at the moment.
@@ -116,7 +116,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>SHIPMENTS</small></div>
                 <div class="list-group list-group-flush">
                     {% for shipment in shipments %}
-                        {% include "users/entries/shipment-list-item.html" %}
+                        {% include "lims/entries/shipment-list-item.html" %}
                     {% endfor %}
                         <div class="p-2 list-group-item empty">
                             <a href="#!" data-form-link="{% url "shipment-new" %}" class="d-flex flex-row">

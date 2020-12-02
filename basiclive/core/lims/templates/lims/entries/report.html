@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 
 {% load humanize static %}
 {% load badges %}
@@ -53,7 +53,7 @@
             </div>
         </div>
     </div>
-    {% include "users/../comments.html" with object=object %}
+    {% include "lims/../comments.html" with object=object %}
 {% endblock %}
 
 {% block page_heading %}

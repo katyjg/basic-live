@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load humanize %}
 {% load markup %}
 {% load icons %}
@@ -52,7 +52,7 @@
         {% endif %}
     </a>
     {% endif %}
-    {% include "users/../tools-base.html" %}
+    {% include "lims/../tools-base.html" %}
     {% if object.parent_history.exists %}
         <a href="#!" data-link="{% url "container-history" object.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
@@ -114,10 +114,10 @@
     {% if object.accepts_children %}
         <div class="row">
             <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
-                {% include "users/entries/container-layout.html" with container=object show_samples=True loadable=True %}
+                {% include "lims/entries/container-layout.html" with container=object show_samples=True loadable=True %}
             </div>
             <div class="col-sm-5 col-12">
-                {% include "users/entries/loaded.html" %}
+                {% include "lims/entries/loaded.html" %}
             </div>
         </div>
     {% else %}
@@ -127,11 +127,11 @@
             {% include "itemlist/list.html" with object_list=object.samples.all %}
         </div>
         <div class="col-md-5 p-4 col-12">
-            {% include "users/entries/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
+            {% include "lims/entries/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
         </div>
     </div>
     {% endif %}
-    {% include "users/../comments.html" with object=automounter.dewar %}
+    {% include "lims/../comments.html" with object=automounter.dewar %}
 {% endblock %}
 
 {% block extra_js %}

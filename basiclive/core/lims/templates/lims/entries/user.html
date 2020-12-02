@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "lims/base.html" %}
 {% load static %}
 {% load humanize %}
 {% load icons %}
@@ -72,7 +72,7 @@
 
     <div class="row">
          <div class="{% if object.sshkeys.all %}col-md-8{% endif %} col-12">
-            {% include "users/entries/address-card.html" %}
+            {% include "lims/entries/address-card.html" %}
         </div>
         {% if object.sshkeys.all %}
             <div class="col-md-4 col-12">
