@@ -1,0 +1,28 @@
+{% extends "modal/content.html" %}
+
+{% load converter %}
+{% load humanize %}
+
+{% block modal_title %}
+    <h3 class="text-condensed">Remote Connection <strong>{{ object.user.username }}</strong></h3>
+    <span class="text-muted"><small>{{ object.name }}</small></span>
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row status-bar pb-1 overflow-ellipsis">
+        <div class="col">
+            <h3 class="no-vmargin">
+                <span class="badge badge-{% if object.is_active %}info{% else %}primary{% endif %}">{{ object.status|upper }}</span>
+            </h3>
+        </div>
+        <div class="col pull-right text-right">
+            <small class="text-muted text-condensed">Total Time:</small><br>
+            {{ object.total_time|humanize_duration }}
+        </div>
+        <div class="col pull-right text-right">
+            <small class="text-muted text-condensed">Start:</small><br>
+            {{ object.created }}
+        </div>
+    </div>
+{% endblock %}
+

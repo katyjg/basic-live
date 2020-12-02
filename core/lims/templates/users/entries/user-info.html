@@ -1,0 +1,55 @@
+{% extends "modal/content.html" %}
+
+{% load humanize %}
+
+{% block modal_title %}
+    <h3 class="text-condensed">
+        <span class="text-muted">
+            {% if object.alias %}{{ object.alias }} (<strong>{{ object.name|upper }}</strong>)
+            {% else %}{{ object.name|upper }}{% endif %}
+        </span> | {{ object.contact_person }}
+    </h3>
+{% endblock %}
+
+{% block modal_subtitle %}
+    Beamline User since {{ object.created|naturalday }}
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row status-bar pb-1 overflow-ellipsis">
+        <div class="col">
+            <strong class="text-sm">Type:</strong><br/>
+            <h6 class="m-0">
+                <div class="badge badge-info"><span>{{ object.kind }}</span></div>
+            </h6>
+        </div>
+        <div class="col pull-right text-right">
+            <strong class="text-sm">Project Owner:</strong><br>
+            <span>{{ object.first_name }} {{ object.last_name }}</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <div class="mini-profile">
+                <strong class="text-condensed">{{ object.contact_person }}</strong><br/>
+                {{ object.contact_email|default_if_none:"" }}<br/>
+                <pre>{{ object.contact_phone|default_if_none:"" }}</pre>
+            </div>
+        </div>
+        <div class="col-6">
+            {% if object.email %}
+                <div class="mini-profile">
+                    <strong class="text-condensed">{{ object.first_name }} {{ object.last_name }}</strong><br/>
+                    {{ object.email|default_if_none:"" }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <hr class="mt-0 mb-0"/>
+    <div class="row">
+        <div class="col-6">
+            {% include "users/address.html" with user=object %}
+        </div>
+    </div>
+{% endblock %}
+

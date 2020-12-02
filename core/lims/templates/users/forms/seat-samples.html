@@ -1,0 +1,77 @@
+{% extends "modal/form.html" %}
+{% load layout %}
+{% load static %}
+
+{% block modal_assets %}
+    {{ block.super }}
+    <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
+    <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
+    <script src="{% static "js/mxlive-layouts.min.js" %}"></script>
+    <script src="{% static "js/mxlive-seater.min.js" %}"></script>
+{% endblock %}
+{% block modal_styles %}modal-lg{% endblock %}
+{% block modal_title %}<i class="ti ti-paint-bucket text-muted"></i> &nbsp; <strong>{{ shipment }}</strong> | Sample Seat Selection{% endblock %}
+{% block modal_body %}
+    <div id="sample-seater" class="row" >
+        <div class="col-9">
+            <div class="row">
+                {% for container in shipment.containers.all %}
+                    <div class="{% container_col container %} seater text-center" id="seater-{{ container.pk }}">
+                        <h4 class="">
+                            <a href="#!" class="badge badge-secondary text-condensed text-thin" title="Toggle All"
+                               data-pk="{{ container.pk }}"><strong>{{ container.name }}</strong>
+                            </a>
+                        </h4>
+                        <div id="seats-for-{{ container.pk }}"
+                             data-layout-url="{% url 'fetch-layout' pk=container.pk %}"
+                             data-pk="{{ container.pk }}"
+                             class="seat-container">
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-3 group-chooser">
+            <div class="card">
+                <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
+                <div class="list-group list-group-flush">
+                    {% for group in shipment.groups_by_priority %}
+                        {% with num_samples=group.samples.count %}
+                            <a href="#!" class="list-group-item group-selector py-1"
+                               data-group="{{ group.pk }}"
+                               data-name="{{ group.name }}"
+                               data-selector="{{ forloop.counter }}"
+                               {% if group.comments %}title="{{ group.comments }}"{% endif %}
+                            >
+                                <strong>{{ group.name }}</strong>
+                            </a>
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modal_footer %}
+    <div class="col-9">
+        <div class="alert alert-info m-0 p-2 small" id="seater-instructions">
+            <i class="ti ti-md ti-info-alt float-left pr-2"></i>
+            Click on a group to select it, then click the locations of the corresponding samples in each container.
+            Click previously selected samples to remove them.
+        </div>
+    </div>
+    <div class="col-3 my-auto text-right">
+        <button id='save-seats' class="btn btn btn-primary" name="save" type="button"
+                data-post-action="{% url 'create-samples' pk=shipment.pk %}"
+        >Save Samples</button>
+    </div>
+{% endblock %}
+
+{% block modal_scripts %}
+    <script>
+        $('#modal').on('shown.bs.modal', function () {
+            initSampleSeater();
+        });
+    </script>
+{% endblock %}

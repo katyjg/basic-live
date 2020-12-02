@@ -1,0 +1,19 @@
+{% load static %}
+{% load settings %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1063, initial-scale=1">
+    <title>Shipping Labels</title>
+
+    <link href="{% get_setting 'PROJECT_DIR' %}{% static "img/icon.ico" %}" rel="SHORTCUT ICON">
+    <link href="{% get_setting 'PROJECT_DIR' %}{% static "css/mxlive.min.css" %}" rel="stylesheet">
+    <link href="{% get_setting 'PROJECT_DIR' %}{% static "css/pdfs.css" %}" rel="stylesheet">
+
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>

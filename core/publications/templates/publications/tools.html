@@ -1,0 +1,18 @@
+{% load icons %}
+
+<a href="{% url 'pub-entry-list' %}">
+    {% show_icon label='Publications' icon='ti ti-md ti-layout-list-post' %}
+</a>
+<a href="{% url 'pdb-entry-list' %}">
+    {% show_icon label='PDB Entries' icon='ti ti-md ti-star' %}
+</a>
+<a href="{% url 'all-stats' %}">
+    {% show_icon label='Metrics' icon='ti ti-md ti-pulse' %}
+</a>
+<a href="{% url 'subject-area-list' %}">
+    {% show_icon label='Subject Areas' icon='ti ti-md ti-bag' %}
+</a>
+<a href="{% url 'journal-list' %}">
+    {% show_icon label='Journals' icon='ti ti-md ti-book' %}
+</a>
+

@@ -1,0 +1,42 @@
+{% extends "users/pdf/doc_base.html" %}
+
+{% load static %}
+{% load settings %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <h2 class="heading">
+            <span class="text-thin">MxLIVE&nbsp;|&nbsp;</span>
+            <span class="text-condensed">RETURN SHIPPING LABEL</span>
+        </h2>
+        <p>Print this document and cut out the label. Remove the labels currently on the dewars and replace them with this return label.</p>
+        <div class="panel panel-main">
+            <div class="label-sidebar">
+                <div>
+                    <img src="{% get_setting 'PROJECT_DIR'%}{% static "img/fragile_sign.svg" %}"/>
+                </div>
+                <div class="p-2 emphasize text-center"><strong>Non-Hazardous Frozen Samples In Dry-Shipper</strong></div>
+            </div>
+            <table class="table table-sm">
+                <tr><td>To:</td><td>{{ project.organisation|upper|default:"" }}</td></tr>
+                <tr><td></td><td>ATTN: {{ project.contact_person|upper|default:"" }}{% if project.department %} / {{ project.department|upper }}{% endif %}</td></tr>
+                {% include "users/pdf/address_base.html" %}
+            </table>
+            <div class="panel panel-default">
+                <table class="table table-sm">
+                    <tr class="border-bottom"><td>ID:</td><td>{{project.first_name}} {{project.last_name}} ({{shipment.name}})</td></tr>
+                    <tr><td>From:</td><td>{{ admin_project.contact_person|upper|default:"" }}{% if admin_project.department %} / {{ admin_project.department|upper }}{% endif %}</td></tr>
+                    <tr><td></td><td>{{ admin_project.organisation|upper|default:"" }}</td></tr>
+                    {% include "users/pdf/address_base.html" with project=admin_project %}
+                </table>
+            </div>
+        <span class="emphasize">Not restricted, as per Special Provision A152</span>
+        </div>
+    </div>
+</div>
+
+{% include "users/pdf/shipping_form.html" %}
+
+{% endblock %}

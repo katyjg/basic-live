@@ -1,0 +1,27 @@
+{% extends "users/entries/shipment-data.html" %}
+
+{% load icons %}
+{% load static %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">Reports |</span>
+        <span class="text-condensed">
+            <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+        {% if not shipment.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
+        {{ shipment.identity }} |
+        Analysis Reports from Shipment
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "shipment-data" shipment.pk %}" title="Go to Data from this shipment">
+        {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=shipment.num_datasets %}
+    </a>
+    <a href="{% url "shipment-protocol" shipment.pk %}">
+        {% show_icon label="Progress" icon="ti ti-md ti-layout-media-overlay" %}
+    </a>
+{% endblock %}

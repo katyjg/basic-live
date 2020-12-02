@@ -1,0 +1,65 @@
+<table class="stats" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <tr><th colspan="10">Status Overview</th></tr>
+    <tr><td class="outgoing" title="Out-going items which have been sent but not yet received at the synchrotron.">Sent items</td>
+    <td class="links">
+        {% if statistics.shipments.outgoing %}
+        <p>({{statistics.shipments.outgoing}})<br/><a href="{% url "users-shipment-list" %}?status__exact=1">Shipment{{statistics.shipments.outgoing|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Shipments</p>{% endif %}
+    </td>
+    <td class="links">
+        {% if statistics.crystals.outgoing %}
+        <p>({{statistics.crystals.outgoing}})<br><a href="{% url "users-sample-list" %}?status__exact=1">Crystal{{statistics.crystals.outgoing|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Crystals</p>{% endif %}
+    </td>
+    <td>&nbsp;</td>
+    </tr>
+
+    <tr><td class="incoming" title="Returned items. Includes both incoming items and those you have received but not yet archived.">Returned</td>
+    <td class="links">
+        {% if statistics.shipments.incoming %}
+        <p>({{statistics.shipments.incoming}})<br/><a href="{% url "users-shipment-list" %}?status__exact=4">Shipment{{statistics.shipments.incoming|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Shipments</p>{% endif %}
+    </td> 
+    <td class="links">
+        {% if statistics.crystals.incoming %}
+        <p>({{statistics.crystals.incoming}})<br/><a href="{% url "users-sample-list" %}?status__exact=4">Crystal{{statistics.crystals.incoming|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Crystals</p>{% endif %}
+    </td>
+    <td>&nbsp;</td>
+    </tr>
+
+    <tr><td class="on-site" title="On-site items">On-site</td>
+    <td class="links">
+        {% if statistics.dewars.on_site %}
+        <p>({{statistics.dewars.on_site}})<br/><a href="{% url "users-dewar-list" %}?status__exact=2">Dewar{{statistics.dewars.on_site|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Dewars</p>{% endif %}
+    </td> 
+    <td class="links">
+        {% if statistics.crystals.on_site %}
+        <p>({{statistics.crystals.on_site}})<br/><a href="{% url "users-sample-list" %}?status__in=2,3">Crystal{{statistics.crystals.on_site|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Crystals</p>{% endif %}
+    </td>
+    <td class="links" title="Active Experiment Requests">
+        {% if statistics.experiments.active %}
+        <p>({{statistics.experiments.active}})<br/><a href="{% url "users-group-list" %}?status__in=5,6,7,8">Request{{statistics.experiments.active|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Requests</p>{% endif %}
+    </td>
+    </tr>
+    <tr><td class="new" title="Datasets and Reports added since last login or in the past week">New!</td>
+    <td class="links">
+        {% if statistics.datasets.new %}
+        <p>({{statistics.datasets.new}})<br/><a href="{% url "users-data-list" %}?modified__gte={{statistics.datasets.start_date|date:'Y-m-d'}}">Dataset{{statistics.datasets.new|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Datasets</p>{% endif %}
+    </td> 
+    <td class="links">
+        {% if statistics.reports.new %}
+        <p>({{statistics.reports.new}})<br/><a href="{% url "users-result-list" %}?modified__gte={{statistics.reports.start_date|date:'Y-m-d'}}">Report{{statistics.reports.new|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Reports</p>{% endif %}
+    </td>
+    <td class="links">
+        {% if statistics.scanresults.new %}
+        <p>({{statistics.scanresults.new}})<br/><a href="{% url "users-scanresult-list" %}?modified__gte={{statistics.scanresults.start_date|date:'Y-m-d'}}">Scan{{statistics.scanresults.new|pluralize}}</a></p>
+        {% else %}<p class="nothing">No<br/>Scans</p>{% endif %}
+    </td>
+    </tr>
+</table>

@@ -1,0 +1,15 @@
+{% extends "modal/form.html" %}
+
+{% load static %}
+
+{% block modal_assets %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'js/mxlive-forms.min.js' %}"></script>
+{% endblock %}
+
+{% block modal_scripts %}
+    <script>
+        initShipmentWizard();
+        {% if form.repeated_data %}setInitial({{ form.repeated_data|safe }});{% endif %}
+    </script>
+{% endblock %}

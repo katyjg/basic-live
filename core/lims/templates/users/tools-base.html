@@ -1,0 +1,11 @@
+{% load icons %}
+{% if object.status == object.STATES.DRAFT or object.comments or object.staff_comments %}
+    {% if object.status == object.STATES.DRAFT %}
+        <a href="#!" data-form-link="{{ handler }}edit/">
+            {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+        </a>
+        <a href="#!" data-form-link="{{ handler }}delete/">
+            {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+        </a>
+    {% endif %}
+{% endif %}

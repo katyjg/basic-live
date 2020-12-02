@@ -1,0 +1,16 @@
+{% extends "modal/content.html" %}
+
+{% block modal_styles %}modal-lg{% endblock %}
+
+{% block modal_title %}
+    {{ object.project.username|upper}} | <strong>{{ object.info_subject }}</strong>
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row">
+        <div class="col-12">
+            {{ object.info_body|linebreaks }}
+        </div>
+    </div>
+{% endblock %}
+

@@ -1,0 +1,73 @@
+{% extends "users/base.html" %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <i class="text-muted fa fa-fw {% if object.is_editable %}fa-unlock{% else %}fa-lock{% endif %}"></i>
+        <span class="text-muted">{% if user.is_superuser %}{{ object.project|upper }} | {% endif %}</span><strong>{{ object.name }}</strong>
+    </h3>
+    <span class="text-muted">
+        {% if object.container.shipment %}
+            {% with object.container.shipment.num_samples as num_samples %}
+            <strong>1</strong> of <strong>{{ num_samples }}</strong> Sample{{ num_samples|pluralize }} in Shipment {{object.container.shipment.name}}
+            {% endwith %}
+        {% else %}
+            Sample not in a shipment.
+        {% endif %}
+    </span>
+{% endblock %}
+
+{% block object_tools %}{% include "users/tools-base.html" %}{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-2">
+                <h3 class="no-vmargin">
+                    <span class="badge badge-{% if object.container.status == object.container.STATES.ON_SITE %}info
+                                             {% elif object.container.status < object.container.STATES.ON_SITE %}warning
+                                             {% else %}default{% endif %}">
+                        {% if object.container.status < object.container.STATES.SENT %}Draft
+                        {% elif object.container.status < object.container.STATES.RETURNED %}{{ object.dewar.beamline.acronym|default:"Pending" }}
+                        {% else %}Done{% endif %}
+                    </span>
+                </h3>
+            </div>
+            <div class="col-3">
+                <small class="text-muted text-condensed">Shipment:</small><br>
+                {% if object.container.shipment %}
+                <a href="{% url "shipment-detail" object.container.shipment.pk %}">{{object.container.shipment.name}}</a>
+                    {% else %}
+                    Not in Shipment
+                {% endif  %}
+            </div>
+            <div class="col-2 pull-right text-right">
+                <small class="text-muted text-condensed">Location:</small><br>
+                <strong>{{ object.dewar|default_if_none:"" }} {{ object.port }}</strong>
+            </div>
+            <div class="col-3 pull-left">
+                <small class="text-muted text-condensed">Group:</small><br>
+                <a href="{% url "group-detail" object.group.pk %}">{{ object.group }}</a>
+            </div>
+            <div class="col-2 pull-left">
+                <small class="text-muted text-condensed">Container:</small><br>
+                <a href="{% url "container-detail" object.container.pk %}">{{ object.container.name }}</a>
+            </div>
+
+        </div>
+    </div>
+    {% include "users/comments.html" with object=object %}
+{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="col-12">
+            <div class="list-group list-group-hover">
+                {% include "users/entries/sample-data.html" %}
+                {% if not object.datasets.count %}
+                    <div class="list-group-item empty">No data collected for this sample yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

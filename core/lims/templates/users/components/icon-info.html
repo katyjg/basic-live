@@ -1,0 +1,5 @@
+<div class="icon-stack" {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+    <i class="{{ icon }}"></i>
+    {% if badge is not None %}<span class="badge badge-pill badge-{% if color %}{{ color }}{% else %}info{% endif %}">{{ badge }}</span>{% endif %}
+</div>
+{% if label %}<div class="icon-label d-none d-md-inline-block">{{label}}</div>{% endif %}

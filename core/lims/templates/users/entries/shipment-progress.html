@@ -1,0 +1,71 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% load icons %}
+{% load progress_extras %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static "css/print.css" %}" type="text/css" media="print"/>
+{% endblock %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">Progress |</span>
+        <span class="text-condensed">
+            <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+        {% if not shipment.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
+        {{ shipment.identity }} |
+        Progress Summary of shipment
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "shipment-data" object.pk %}" title="Go to Data from this shipment">
+        {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=object.num_datasets %}
+    </a>
+    <a href="{% url "shipment-reports" object.pk %}" title="Go to Reports from this shipment">
+        {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=object.num_reports %}
+    </a>
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col">
+                <small class="text-muted text-condensed">Shipment:</small><br>
+                <a href="{% url "shipment-detail" object.pk %}">{{object.name}}</a>
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Samples:</small><br>
+                {{ object.num_samples }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Groups:</small><br>
+                {{ object.groups.count }}
+            </div>
+            <div class="col">
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="col-12">
+            {% for group in object.groups.all %}
+                <h4>
+                    <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a> |
+                    <span class="text-muted text-thin">
+                    {{ group.get_kind_display }}{% if group.resolution %}({{ group.resolution }}Å){% endif %} |
+                    {{ group.get_plan_display }}{% if group.absorption_edge %}({{ group.absorption_edge }}){% endif %}
+                    </span>
+                </h4>
+                {% include "users/entries/group-progress.html" with samples=group.samples.all %}
+                <hr />
+            {% endfor %}
+        </div>
+    </div>
+    {% include "users/comments.html" with object=shipment %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% load badges %}
+
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 mini-thumbnail pull-right">
+    <a href="{% url 'report-detail' report.pk %}">
+    <div class="list-group-item list-group-item-info text-condensed">
+        {% score_badge report.score %}
+        <span class="overflow ellipsis"><strong>{{ report.name }} </strong> | {{ report.kind }} Report</span>
+        <span class="text-muted overflow ellipsis">
+            {% for data in report.data.all %}
+                {{ data.name }} ({{ data.total_angle }}&#176;) {% if not forloop.last %}&middot;{% endif %}
+            {% empty %}
+                Data unknown
+            {% endfor %}
+
+        </span>
+    </div>
+    </a>
+</div>

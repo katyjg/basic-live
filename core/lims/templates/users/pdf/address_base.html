@@ -1,0 +1,7 @@
+<tr><td></td><td>{{ project.address|upper|default:"" }}</td></tr>
+<tr><td></td><td>{{ project.city|upper|default:"" }} {{ project.province|upper|default:"" }}&nbsp;&nbsp;&nbsp;{{ project.postal_code|upper|default:"" }}</td></tr>
+<tr><td></td><td>{{ project.country|upper|default:"" }}</td></tr>
+<tr><td class="pt-4 pb-0"></td><td class="pt-4 pb-0">Phone: {{ project.contact_phone|default:""}}</td></tr>
+{% if project.contact_fax %}
+    <tr><td></td><td>Fax: {{ project.contact_fax|default:""}}</td></tr>
+{% endif %}

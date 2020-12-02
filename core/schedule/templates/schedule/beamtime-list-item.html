@@ -1,0 +1,53 @@
+{% load humanize %}
+{% load icons %}
+{% load time_extras %}
+
+<style>
+    {% for kind in access_types %}
+        .{{kind.name}} {
+          position: relative;
+        }
+        .{{kind.name}}:before {
+          content: "";
+          height: 100%;
+          width: 7px;
+          background-color: {{kind.color}};
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+    {% endfor %}
+</style>
+
+<div class="list-group-item p-2 {{ beamtime.access.name }} {% if not beamtime.current %}empty{% endif %}">
+    <div class="d-flex flex-row">
+        <div class="pl-3 overflow-ellipsis align-self-center">
+            <h5 class="m-0 text-condensed">
+                <a class="text-muted">
+                    <strong>{{ beamtime.beamline.acronym }}</strong> | {{ beamtime.duration|duration_shifts }} shift{{ beamtime.duration|duration_shifts|pluralize }}
+                </a>
+            </h5>
+            <span class="text-muted text-sm overflow ellipsis">{{ beamtime.start }}</span>
+        </div>
+        <div class="tools-box ml-auto">
+            {% if beamtime.current %}
+                {% for session in beamtime.sessions %}
+                    <a href="{% url 'session-detail' session.pk %}" title='View Session "{{ session.name }}"'>
+                        {% show_icon label=session.name|truncatechars:6 icon='ti ti-md ti-calendar' color='info' %}
+                    </a>
+                {% endfor %}
+            {% else %}
+                <a href="#!" data-link="{% url "beamtime-info" beamtime.pk %}" title="Get information about your upcoming beamtime">
+                    {% show_icon label='Info' icon='ti ti-md ti-info-alt' color='info' %}
+                </a>
+            {% endif %}
+            {% with beamtime.local_contact as local_contact %}
+                {% if local_contact %}
+                    <a href="#!" data-link="{% url "support-info" local_contact.pk %}?current={{ beamtime.current }}" title="Get support from your local contact">
+                        {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' %}
+                    </a>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,185 @@
+{% load icons %}
+{% load calendar %}
+
+{% calendar_view year week as info %}
+<style>
+    {% for kind in access_types %}
+        .{{kind.name}} {
+          position: relative;
+        }
+        .{{kind.name}}:before {
+          content: "";
+          height: 100%;
+          width: 7px;
+          background-color: {{kind.color}};
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+    {% endfor %}
+    {% for kind in facility_modes %}
+        {% for css in kind.css_classes %}.{{ css }} {% if not forloop.last %}, {% endif %}{% endfor %} {
+            background-color: {{ kind.color }};
+        }
+    {% endfor %}
+</style>
+
+<div id="beamline-calendar"
+     data-beamtime-url="{% url 'new-beamtime' %}?detailed={{ editable }}"
+     data-downtime-url="{% url 'new-downtime' %}?detailed={{ editable }}"
+     data-week-url="{% url 'any-week' year week %}">
+    <div class="card">
+        <div class="card-header d-flex flex-row justify-content-between overflow-ellipsis">
+            <div class="heading-box">
+                <h3>Week of {{ info.start }}</h3>
+            </div>
+            <div class="calendarnav tools-box pull-right">
+                <a class="cal-nav" href="#" rel="{% url 'any-week' last_week.0 last_week.1 %}" title="Last Week">
+                    {% show_icon icon="ti ti-md ti-angle-left" %}
+                </a>
+                <a class="bcal-datepicker date" href="#" >
+                    <span class="input-group-addon">{% show_icon icon="ti ti-md ti-calendar" %}</span>
+                </a>
+                <a class="cal-nav" href="#" rel="{% url 'any-week' next_week.0 next_week.1 %}" title="Next Week">
+                    {% show_icon icon="ti ti-md ti-angle-right" %}
+                </a>
+                <a class="cal-nav" href="#" rel="{% url 'this-week' %}" title="Today">
+                    {% show_icon icon="ti ti-md ti-home" %}
+                </a>
+                {% if editable %}
+                    <div class="toggle-box d-flex flex-column ml-3 pl-4">
+                        <div title="Edit Downtime">
+                            <text class="text-muted text-sm text-condensed mr-1" style="writing-mode: vertical-lr;">CANC</text>
+                            <input type="checkbox"  id="dtSwitch" class="dn">
+                            <label for="dtSwitch" class="toggle mb-0"><span class="toggle__handler"></span></label>
+
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <table data-beamtime-url="{% url 'beamtime-json' %}?start={{ info.start }}&end={{ info.end }}"
+                   data-downtime-url="{% url 'downtime-json' %}?start={{ info.start }}&end={{ info.end }}"
+                   class="table table-sm mb-0 item-list bcal-week">
+                <thead class="card-header">
+                    <tr>
+                        <th class="text-uppercase bcal-sm-col align-middle"></th>
+                        <th class="text-uppercase bcal-sm-col align-middle">Time</th>
+                        {% for bl in beamlines %}<th class="text-uppercase align-middle">{{ bl.acronym }}</th>{% endfor %}
+                        <th class="text-uppercase bcal-md-col py-1 align-middle" {% if support %}style="line-height: 1;"{% endif %}>
+                            Staff
+                            {% if support %}<br/><small>{{ support }}</small>{% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day, details in info.week.items %}
+                        {% for shift, mode in details.modes.items %}
+                            <tr data-shift-id="{{ day }}T{{ shift }}" class="mode {{ mode.kind }} {% if today == day %}today{% endif %}">
+                                {% if forloop.first %}
+                                    <td rowspan="{{ info.shifts }}" class="bg-white bcal-day">
+                                        <text class="text-uppercase text-condensed">
+                                            {{ details.name }}<br>
+                                            <strong>{{ details.date|date:'N d' }}{% if today == day %}<br>Today{% endif %}</strong>
+                                        </text>
+                                    </td>
+                                {% endif %}
+                                <td class="bg-white">{{ shift }}:00</td>
+                                {% for bl in beamlines %}
+                                    <td data-beamline="{{bl.acronym}}"></td>
+                                {% endfor %}
+                                {% if forloop.first %}
+                                    <td rowspan="{{ info.shifts }}" class="bg-white text-center">
+                                        {% include "schedule/beamline-support.html" with support=details.support date=day editable=editable %}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="legend-box {% if facility_modes %}col-6{% else %}col-12{% endif %} my-3">
+            <div class="row">
+                <div class="col-4 pr-2 py-2 overflow ellipsis" title="Reserved"><span class="full legend px-3 mr-1"></span> Reserved</div>
+                {% for scope in scope_types %}
+                    <div class="col-4 p-2 overflow ellipsis" title="{{ scope.1 }}">
+                        <span class="{{ scope.0 }} legend px-3 mr-1" style="background-color: {{kind.color}};"></span> {{ scope.1 }}
+                    </div>
+                {% endfor %}
+                {% for kind in access_types %}
+                    <div class="col-4 p-2 overflow ellipsis" title="{{ kind.name }}"><span class="kind.name legend px-3 mr-1" style="background-color: {{kind.color}};"></span> {{ kind.name }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if facility_modes %}
+        <div class="legend-box col-6 my-3">
+            <div class="row">
+                {% for kind in facility_modes %}
+                    <div class="col-4 {% if forloop.first %}pr-2 py-2{% else %}p-2{% endif %} overflow ellipsis" title="{{ kind.description }}">
+                        <span class="legend px-3 mr-1" style="background-color: {{kind.color}};"></span>
+                        {{ kind.description }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#beamline-calendar table.bcal-week").displayBeamtime({
+            detailed: {% if editable %}true{% else %}false{% endif %},
+            prefix: "bcal"
+        });
+        $("#beamline-calendar table.bcal-week").displayDowntime();
+
+        $('.cal-nav').click(function() {
+            $.ajax({
+                url: $(this).attr('rel') {% if editable %}+ '?detailed={{ editable }}'{% endif %},
+                context: document.body,
+                success: function(d) {
+                    $('#beamline-calendar').html(d);
+                }
+            });
+        });
+
+        $('.bcal-datepicker').datepicker({
+            weekStart: 1,
+            maxViewMode: 2,
+            format: "yyyy-mm-dd",
+            orientation: "bottom right",
+            autoclose: true,
+            todayHighlight: true,
+            calendarWeeks: true,
+        }).on('changeDate', function(e) {
+            let year = e.date.getFullYear();
+            let dayone = new Date(year, 0, 1);
+            let week = Math.ceil( (((e.date - dayone) / 86400000) + dayone.getDay() + 1) / 7);
+            let url = "{% url 'this-week' %}" + year + '-W' + week + '/{% if editable %}?detailed={{ editable }}{% endif %}';
+            $.ajax({
+                url: url,
+                context: document.body,
+                success: function(d) {
+                    $('#beamline-calendar').html(d);
+                }
+            });
+        });
+        try {
+            $('.bcal-datepicker').datepicker('update', {% for day in info.week.keys %}'{{ day }}'{% if not forloop.last %},{%  endif %}{% empty %}''{% endfor %});
+        } catch {
+            // cannot update datepicker
+        }
+
+        {% if editable %}
+            setupEditor('#beamline-calendar', '#dtSwitch');
+            setupDowntimeEditor('#beamline-calendar', '#dtSwitch');
+        {% endif %}
+    });
+</script>

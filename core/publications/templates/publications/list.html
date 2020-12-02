@@ -1,0 +1,12 @@
+{% extends "publications/base.html" %}
+{% load static %}
+
+{% block page_heading %}<h3>{{ view.page_title }}</h3>{% endblock %}
+
+{% block full %}
+<div class="row">
+        <div class="col">
+		{% include "itemlist/embed_list.html" %}
+        </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% load humanize %}
+<div id="sidebar-activity-log">
+<h2>Recent Items</h2>
+<ul>
+    {% if logs %}
+        {% for log in logs %}
+        <li class="{{log.get_action_type_display|lower}}-log" title="{{log.description}}">
+            {% if log.affected_item and not request.user.is_staff%}
+                {% if modal_edit %}
+            <a class="modal-form" href="{{log.affected_item.pk}}/edit/">{{ log.affected_item.identity }}| {{ log.affected_item}}</a>
+                {% else %}{% if modal_link %}
+            <a class="modal" href="{{log.affected_item.pk}}/">{{ log.affected_item.identity }}| {{ log.affected_item}}</a>
+                {% else %}   
+            <a href="{{log.affected_item.pk}}/">{{ log.affected_item.identity }}|  {{ log.affected_item }}</a>
+                {% endif %}{% endif %}
+            {% else %}
+                {{log.object_repr}} 
+            {% endif %}
+            by&nbsp;{{ log.user}}, <em>{{ log.created|date:"M jS H:i" }}</em>
+        </li>
+        {% endfor %}
+    {% else %}
+        <li class="list-empty">no activity to show</li>
+    {% endif %}
+</ul>
+</div>

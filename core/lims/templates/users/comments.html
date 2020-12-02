@@ -1,0 +1,23 @@
+{% if object.comments or object.staff_comments %}
+    <div class="sticky-notes">
+        {% if object.comments %}
+        <div class="note-holder">
+            <a class="note" href="#!">
+                <h5 class="text-thin text-muted my-0"><i class="ti ti-comments"></i>&nbsp;{{ object.project.username|upper }}</h5>
+                <hr class="my-1"/>
+                <p class="comment">{{ object.comments }}</p>
+            </a>
+        </div>
+        {% endif %}
+        {% if object.staff_comments %}
+        <div class="note-holder">
+            <a class="note" href="#!">
+                <h5 class="text-thin text-muted my-0"><i class="ti ti-comments"></i>&nbsp;<span>STAFF</span></h5>
+                <hr class="my-1"/>
+                <p class="comment">{{ object.staff_comments }}</p>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% if object.staff_comments %}{% endif %}
+{% endif %}

@@ -1,0 +1,9 @@
+{% if message %}
+{% with message as messages %}
+{% for msg in messages %}
+jQuery.jGrowl("{{msg|escape}}");
+{% endfor %}
+{% endwith %}
+{% endif %}
+
+

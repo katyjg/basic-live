@@ -1,0 +1,40 @@
+{% extends "users/base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block extra_css %}
+    {% if not request.user.username %}
+        <style>
+            main {
+                margin-top: 0;
+                padding-bottom: 0;
+            }
+        </style>
+    {% endif %}
+{% endblock %}
+
+{% block body_class %}survey{% endblock %}
+
+{% block page_title %}{{ form.body.title }}{% endblock %}
+
+{% block page_heading %}
+    <h2 class="text-condensed">
+        {{ form.body.title }}
+    </h2>
+{% endblock %}
+
+{% block full %}
+    <form action="{{ form.body.form_action }}" method="post">
+        {% if form.errors %}
+            <div id="form-errors" class="alert alert-warning">
+                <strong>It looks like there's a problem!</strong> Please correct the errors below.
+                <hr class="my-2"/>
+                <small>{{ form.errors }}</small>
+            </div>
+        {% endif %}
+        {% crispy form form.body %}
+        <hr/>
+        {% crispy form form.footer %}
+    </form>
+{% endblock %}

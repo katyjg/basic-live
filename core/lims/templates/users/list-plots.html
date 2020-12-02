@@ -1,0 +1,65 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% load stats %}
+{% load icons %}
+
+{% block page_heading %}
+    <h3>
+        {{ view.page_title }} Statistics
+    </h3>
+    <span class="text-muted">
+       {% if active_filters %}
+           {% for title, spec, selected in filters %}
+               {% if not spec.0.selected %}
+                   {{ title|capfirst }}: <strong>{{ selected }}</strong>&emsp;
+               {% endif %}
+           {% endfor %}
+       {% else %}
+           All Items
+       {% endif %}
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    {% if view.list_url %}
+        <a href="{{ view.list_url }}" title="Support Areas">
+            {% show_icon label='List' icon='ti ti-md ti-list' %}
+        </a>
+        {% if view.tool_template %}
+            <a class="separator"></a>
+        {% endif %}
+    {% endif %}
+    {% if view.tool_template %}{% include view.tool_template %}{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="col">
+            {% include "itemlist/filters.html" %}
+        </div>
+        <div id="data-stats" class="col-12"></div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+
+    <script type="text/javascript">
+        var report = {{ report | safe }};
+        $(document).ready(function() {
+            $('#data-stats').liveReport({
+                data: report
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "modal/form.html" %}
+
+{% block modal_scripts %}
+    {{ block.super }}
+    <script>
+    $('input[name$="name"]').on('change', function (e) {
+        e.stopImmediatePropagation();
+        $(this).val(slugify($(this).val()));
+    });
+    </script>
+{% endblock %}

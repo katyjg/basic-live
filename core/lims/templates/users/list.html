@@ -1,0 +1,24 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% load icons %}
+{% block page_heading %}<h3>{{ view.page_title }}</h3>{% endblock %}
+
+{% block object_tools %}
+    {% if view.plot_url %}
+        <a href="{{ view.plot_url }}">
+            {% show_icon label='Stats' icon='ti ti-md ti-pulse' %}
+        </a>
+        {% if view.tool_template %}
+            <a class="separator"></a>
+        {% endif %}
+    {% endif %}
+    {% if view.tool_template %}{% include view.tool_template %}{% endif %}
+{% endblock %}
+
+{% block full %}
+<div class="row">
+        <div class="col">
+		{% include "itemlist/embed_list.html" %}
+        </div>
+</div>
+{% endblock %}

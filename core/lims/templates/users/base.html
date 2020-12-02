@@ -1,0 +1,153 @@
+{% load static %}
+
+
+<!doctype html>
+<html lang="en" class="{% block html_class %}{% endblock %}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block page_title %}MxLIVE{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/icon.ico' %}">
+
+    <!-- Styles -->
+    {% block site_css %}
+        <link rel="stylesheet" href="{% static "themify-icons/themify-icons.css" %}">
+        <link rel="stylesheet" href="{% static "css/noty/noty.min.css" %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static "css/jquery.scrollbar.css" %}"/>
+        <link rel="stylesheet" href="{% static "css/mxlive.min.css" %}" type="text/css"/>
+    {% endblock %}
+    {% block extra_css %}{% endblock %}
+    <script src="{% static "js/jquery/jquery-3.4.1.min.js" %}"></script>
+    <script src="{% static 'js/misc/noty.min.js' %}"></script>
+    <script src="{% static "js/misc/underscore-min.js" %}"></script>
+    <script src="{% static "js/misc/jquery.cookie.min.js" %}"></script>
+    <script src="{% static "js/mxlive-modals.min.js" %}"></script>
+
+    {% block pre_js %}{% endblock %}
+
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% block body %}
+    <!-- User Profile Menu -->
+    {% if user.is_authenticated %}
+        {% include "users/navs.html" %}
+    {% endif %}
+    <main role="main">
+        <div id="spinner">
+            <i class="fa fa-spinner fa-spin"></i>
+        </div>
+        <div class="container-fluid">
+            <div class="folio mt-3">
+                <div class="folio-header d-flex flex-row justify-content-between overflow-ellipsis">
+                    <div class="heading-box">{% block page_heading %}{% endblock %}</div>
+                    <div class="no-overflow tools-box">{% block object_tools %}{% endblock %}</div>
+                </div>
+                {% block object_status %}{% endblock %}
+                {% if maintenance %}
+                <div class="alert alert-warning">
+                  <strong>Warning!</strong> MxLIVE is currently undergoing maintenance activities. Some features may not be available
+                    and performance may be impacted. This message will be removed when full functionality is restored. Sorry for the
+                    temporary inconvenience.
+                </div>
+                {% endif %}
+                <div class="folio-body">
+                    {% block full %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+<div id="modal-target"></div>
+{% if user.is_authenticated %}
+    <div class="footer text-muted">
+        <div class="footer-wrapper overflow-ellipsis">
+            <div class="footer-item"> {{ version }}</div>
+            <div class="footer-item">&#9400; 2010&ndash;{% now "Y" %}</div>
+            <div class="footer-item"><a class="text-muted" href="/">Dashboard</a></div>
+        </div>
+    </div>
+{% endif %}
+
+{% include "users/messages.html" %}
+{% block post_js %}{% endblock %}
+
+<script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>
+<!--script src="{% static "js/jquery/jquery-ui.min.js" %}"></script-->
+<script src="{% static "js/misc/jquery.scrollbar.min.js" %}"></script>
+
+{% block extra_js %}{% endblock %}
+<script>
+    function serverHeartBeat() {
+        $.ajax({
+            url: '/misc/ping/',
+            success: function (result) {
+                console.log(result);
+            },
+            error: function (result) {
+                console.log(result);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // enable tooltips
+
+        $("[title]").not("[data-toggle]").tooltip({
+            container: 'body',
+            viewport: {selector: 'body', padding: 5}
+            //placement: 'auto'
+        });
+
+        // Enable popovers
+        $("[data-toggle='popover']").popover({
+            container: 'body',
+            placement:  function(context, src) {
+                $(context).addClass($(src).data('type') || '');
+                console.log(context, src);
+                return 'auto';
+            }
+        });
+
+        // show attention popovers
+        $(".attention").popover('show');
+
+        // Handle data-link, data-form-link and data-href
+        $(document).on('click', '[data-href]', function () {
+            window.document.location = $(this).data("href");
+        });
+
+        $(document).on('click', '[data-link]', function () {
+            $('#modal-target').loadModal($(this).data('link'));
+        });
+        $(document).on('click', '[data-form-link]', function () {
+            $('#modal-target').asyncForm({url: $(this).data('form-link')});
+        });
+
+        {% if show_help %}
+            $('#modal-target').loadModal("{% url 'user-guide' %}");
+        {% endif %}
+
+        });
+        </script>
+
+<script>
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</body>
+</html>

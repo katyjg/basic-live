@@ -1,0 +1,106 @@
+{% extends "users/base.html" %}
+
+{% load icons %}
+{% load humanize %}
+{% load converter %}
+{% load static %}
+{% load time_extras %}
+{% load progress_extras %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">Session |</span>
+        <span class="text-condensed">
+            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+       {{ object.identity }} |
+       Started {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "session-reports" object.pk %}" title="Go to Reports from this session">
+        {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=object.num_reports %}
+    </a>
+    <a href="{% url "session-data" object.pk %}" title="Go to Data from this session">
+        {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=object.datasets.count %}
+    </a>
+    <a href="#!" data-link="{% url "session-history" object.pk %}">
+        {% show_icon label='History' icon='ti ti-md ti-timer' %}
+    </a>
+    {% if user.is_superuser %}
+        <a href="{% url "session-statistics" pk=object.pk %}">
+            {% show_icon label='Statistics' icon='ti ti-md ti-pulse' %}
+        </a>
+    {% endif %}
+    {% if object.datasets.count %}
+        <div class="separator"></div>
+        <a href="{% url 'files-proxy' section='archive' path=object.download_url %}">
+            {% show_icon label='Download' icon='ti ti-md ti-download' %}
+        </a>
+    {% endif %}
+    {% if request.user == object.project %}
+        <a href="{% url "session-feedback" key=object.feedback_key %}" title="Give feedback about this session">
+            {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            {% if object.is_active %}
+                <div class="col">
+                    <h3 class="m-0"><span class="badge badge-info">Active</span></h3>
+                </div>
+            {% endif %}
+            <div class="col">
+                <small class="text-muted text-condensed">Datasets:</small><br>
+                {{ object.datasets.count }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Reports:</small><br>
+                {{ object.num_reports }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Total Time:</small><br>
+                {{ object.total_time|humanize_duration }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Start:</small><br>
+                {{ object.start|naturalday }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block full %}
+<div class="row">
+    <div class="col-12">
+        {% for group in object.groups %}
+            <h4>
+                <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a> |
+                <span class="text-muted text-thin">
+                    {{ group.get_kind_display }}{% if group.resolution %}({{ group.resolution }}Å){% endif %} |
+                    {{ group.get_plan_display }}{% if group.absorption_edge %}({{ group.absorption_edge }}){% endif %}
+                </span>
+            </h4>
+            {% include "users/entries/group-progress.html" with samples=group.samples.all %}
+            <hr />
+        {% endfor %}
+        {% with session.orphans as orphans %}
+            {% if orphans %}
+            <h4>
+                <strong>Orphaned Data/Reports</strong> |
+                <span class="text-muted text-thin">
+                    No associated sample
+                </span>
+            </h4>
+            {% include "users/entries/group-progress.html" with samples=orphans %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}

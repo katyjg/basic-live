@@ -1,0 +1,65 @@
+{% extends "users/base.html" %}
+{% load jsutils %}
+{% load static %}
+{% load icons %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <strong class="text-muted"> {{ beamline }}</strong> | {{ view.page_title }}
+    </h3>
+    <span class="text-muted">
+        {{ object.name }}
+    </span>
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <h5 class="col my-0 p-2">
+                <a href="{% url "beamtime-stats" %}"><span
+                        class="badge badge-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+                {% for yr in years %}
+                    <a href="{% url "beamtime-stats-yearly" yr %}"><span
+                            class="badge badge-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+                {% endfor %}
+
+            </h5>
+        </div>
+    </div>
+{% endblock %}
+
+{% block object_tools %}
+
+{% endblock %}
+
+{% block extra_css %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block full %}
+    <div class="row">
+        <div class="col-12">
+            <div id="beamtime-stats" class="row"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+    <script type="text/javascript">
+        var report = {{ report | jsonify }};
+
+        $(document).ready(function(){
+            $('#beamtime-stats').liveReport({
+                data: report
+            })
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "modal/content.html" %}
+{% load icons %}
+{% load data_server %}
+{% load static %}
+{% load humanize %}
+{% load badges %}
+
+{% block modal_assets %}
+    <link rel="stylesheet" href="{% static "css/jquery.diffviewer.css" %}" />
+    <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
+    <script src="{% static "js/jquery/jquery-migrate.min.js" %}"></script>
+    <script src="{% static "js/misc/jquery.mousewheel.min.js" %}"></script>
+    <script src="{% static "js/mxlive-diffviewer.min.js" %}"></script>
+{% endblock  %}
+
+{% block modal_styles %}data-viewer{% endblock %}
+
+{% block modal_title %}
+    Data | {% if request.user.is_superuser %}<span class="text-muted">{{ object.project | upper }} | </span>{% endif %}
+    <strong>{{ object.name }}</strong>
+{% endblock %}
+
+{% block modal_subtitle %}<small>{{ object.identity }} &mdash; {{ object.kind }} from {{ object.modified|naturalday }}</small>{% endblock %}
+
+{% block modal_body %}
+    <div class="row small py-1 overflow-ellipsis">
+        <div class="col">
+            <strong>Session:</strong><br/>
+            <span class="text-muted">{% if object.session %}<a href="{% url 'session-detail' object.session.pk %}">{{ object.session.name }}</a>{% else %}
+                Unrecorded Session{% endif %}</span>
+        </div>
+        <div class="col">
+            <strong>Beamline / Energy:</strong><br/>
+            <span class="text-muted">{{ object.beamline }} at {{ object.energy }} keV</span>
+
+        </div>
+        <div class="col">
+            <strong>Beam:</strong><br/>
+            <span class="text-muted">
+                <span title="Exposure Time">{{ object.exposure_time }}s</span> /
+                <span title="Attenuation">{{ object.attenuation }}% </span>
+                {% if object.beam_size %}/ <span class="text-muted" title="Beam Size">{{ object.beam_size|floatformat:0 }} &mu;m</span>{% endif %}
+            </span>
+        </div>
+        <div class="col">
+            <strong>Group / Sample:</strong><br/>
+            <span class="text-muted">
+                {% if object.group %}
+                    <a title="Group" href="{% url "group-detail" object.sample.group.pk %}">{{ object.group }}</a>
+                {% else %}
+                    None
+                {% endif %}
+            /
+                {% if object.sample %}
+                    <a title="Sample" href="{% url "sample-detail" object.sample.pk %}">{{ object.sample }}</a>
+                {% else %}
+                    None
+                {% endif %}
+            </span>
+        </div>
+        {% if object.reports.exists %}
+        <div class="col">
+            <strong>Reports:</strong><br/>
+            <span class="text-muted">
+            {% for report in object.reports.all %}
+                <a href="{% url "report-detail" report.pk %}" title="View {{ report.name }} Report">
+                    {% score_badge report.score %}
+                </a>
+            {% endfor %}
+            </span>
+        </div>
+        {% endif %}
+        <div class="col">
+            <div class="tools-box float-right">
+            {% if object.url %}
+                <a href="{% url 'files-proxy' section='archive' path=object.download_url %}"
+                   download="{{ object.name }}.tar.gz" title="Download Full Dataset">
+                    {% show_icon label="Download" icon="ti ti-md ti-download" %}
+                </a>
+            {% else %}
+                <span class="text-muted not-allowed" title="Download Not Available">
+                    {% show_icon label="Download" icon="ti ti-md ti-download" %}
+                </span>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <hr class="row mt-0 mb-2"/>
+    {% block data_content %}
+    {% endblock %}
+{% endblock %}

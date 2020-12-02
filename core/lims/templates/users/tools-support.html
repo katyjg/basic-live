@@ -1,0 +1,18 @@
+{% load icons %}
+
+<a href="{% url "supportarea-list" %}" title="Support Areas">
+    {% show_icon label='Areas' icon='ti ti-md ti-target' %}
+</a>
+<a href="{% url "supportrecord-list" %}" title="Records of User Support">
+    {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' %}
+</a>
+<a href="{% url "user-feedback-list" %}" title="User Feedback">
+    {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
+</a>
+<a class="separator"></a>
+<a href="#!" data-form-link="{% url "new-supportrecord" %}" title="Record User Support">
+    {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' badge='+' color='primary' %}
+</a>
+<a href="#!" data-form-link="{% url "new-supportarea" %}" title="Add Support Area">
+    {% show_icon label='New Area' icon='ti ti-md ti-target' badge='+' color='primary' %}
+</a>

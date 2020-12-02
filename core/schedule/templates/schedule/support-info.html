@@ -1,0 +1,68 @@
+{% extends "modal/content.html" %}
+
+{% load humanize %}
+{% load settings %}
+
+{% block modal_title %}
+    <h3 class="text-condensed">
+        <span class="text-muted">
+            <strong>{{ object.staff.first_name|upper }}</strong>
+            {{ object.staff.last_name }}
+        </span>
+    </h3>
+{% endblock %}
+
+{% block modal_subtitle %}
+    Beamline Support for {{ object.date }}
+{% endblock %}
+
+{% block modal_body %}
+    {% now "Y-m-d" as now %}
+    {% get_setting "MIN_SUPPORT_HOUR" 0 as MIN_SUPPORT_HOUR %}
+    {% get_setting "MAX_SUPPORT_HOUR" 24 as MAX_SUPPORT_HOUR %}
+    {% get_setting "SUPPORT_EMAIL" as SUPPORT_EMAIL %}
+
+    {% with object.active as active %}
+        <div class="row status-bar pb-1 overflow-ellipsis">
+            <div class="col">
+                <strong class="text-sm">Current Local Time:</strong><br/>
+                <h5>
+                    <strong><span class="{% if active %}text-success{% elif current %}text-warning{% else %}text-muted{% endif %}">{% now "H:i" %}</span></strong> <span class="text-condensed text-muted">{% now "M j, Y" %}</span>
+                </h5>
+            </div>
+            <div class="col pull-right text-right">
+                <strong class="text-sm">Support Hours:</strong><br>
+                <h5 class="text-condensed text-muted">{% if MIN_SUPPORT_HOUR < 10 %}0{% endif %}{{ MIN_SUPPORT_HOUR|floatformat:"0" }}:00 - {{ MAX_SUPPORT_HOUR|floatformat:"0" }}:00</h5>
+            </div>
+        </div>
+        <hr class="mt-0"/>
+        <div class="row">
+            <div class="col-12">
+                {% if active %}
+                    <div class="alert alert-success mt-3">
+                        Contact <strong>{{ object.staff.first_name }}</strong> at
+                        <strong><a href="mailto:{{ object.staff.contact_email|urlencode }}" title="Email {{ object }}">
+                            {{ object.staff.contact_email }}
+                        </a></strong> or <strong>{{ object.staff.contact_phone }}</strong>.
+                    </div>
+                {% else %}
+                    <div class="alert alert-{% if current %}warning{% else %}info{% endif %} mt-3">
+                        <div class="alert-heading">
+                            {% if current %}
+                                There is no local support at this time.
+                            {% else %}
+                                {{ object.staff.first_name }} will contact you on {{ object.date }} to start your beamtime.
+                            {% endif %}
+                        </div><br/>
+                        Contact <strong>{% if SUPPORT_EMAIL %}
+                        <a href="mailto:{{ SUPPORT_EMAIL|urlencode }}" title="Send an email">
+                            {{ SUPPORT_EMAIL }}
+                        </a>
+                        {% else %}Beamline Staff{% endif %}</strong> with questions or concerns.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endwith %}
+{% endblock %}
+

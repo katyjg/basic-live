@@ -1,0 +1,15 @@
+{% load msgs %}
+
+<script type="text/javascript">
+    var messages = {% prep_messages %};
+    $.each(messages, function(i, item){
+        new Noty({
+            text: item.text,
+            type: item.tags,
+            layout: 'bottomRight',
+            theme: 'sunset',
+            timeout: 4000,
+            visibilityControl: true
+        }).show()
+    });
+</script>

@@ -1,0 +1,12 @@
+{% load badges %}
+
+{% for data in sample.datasets.all %}
+    <a data-link="{% url 'data-detail' data.pk %}" class="d-inline-block p-1">
+    {% label_badge header=data.kind.acronym|slice:":3" value=data|dataset classes="bg-info" %}
+    </a>
+{% endfor %}
+{% for data in sample.orphaned_datasets %}
+    <a data-link="{% url 'data-detail' data.pk %}" class="d-inline-block p-1">
+    {% label_badge header=data.kind.acronym|slice:":3" value=data|dataset classes="bg-info" %}
+    </a>
+{% endfor %}

@@ -1,0 +1,55 @@
+{% extends "modal/content.html" %}
+
+{% load converter %}
+{% load humanize %}
+
+{% block modal_title %}
+    <h3 class="text-condensed">User Feedback</h3>
+    <span class="text-muted"><small>Submitted {{ object.created }}</small></span>
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row status-bar pb-1 overflow-ellipsis">
+        <div class="col">
+            <small class="text-muted text-condensed">Session Duration:</small><br>
+            {% if object.session.total_time %}
+                {{ object.session.total_time|humanize_duration }}
+            {% else %}
+                No Session
+            {% endif %}
+        </div>
+        <div class="col pull-right text-right">
+            <small class="text-muted text-condensed">Session Start:</small><br>
+            {{ object.session.start }}
+        </div>
+    </div>
+    <div class="row">
+        {% if object.comments %}
+        <div class="col-12">
+            <div class="alert alert-info mt-3">
+                <sup><i class="ti ti-sm ti-quote-left"></i></sup> {{ object.comments }} <sup><i class="ti ti-sm ti-quote-right"></i></sup>
+            </div>
+        </div>
+        {% endif %}
+        <div class="col-12">
+            <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Support Area</th>
+                    <th>User Experience</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for area in object.areas.all %}
+                    <tr>
+                      <td>{{ area.area.name }}</td>
+                      <td>{{ area.get_rating_display }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
+

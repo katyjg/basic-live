@@ -1,0 +1,62 @@
+{% extends "modal/form.html" %}
+{% load layout %}
+{% load static %}
+
+{% block modal_assets %}
+    {{ block.super }}
+    <script src="{% static "js/mxlive-spreadsheet.min.js" %}"></script>
+{% endblock %}
+{% block modal_styles %}modal-lg{% endblock %}
+{% block modal_title %}<i class="ti ti-paint-bucket text-muted"></i>&nbsp;<strong>{{ container.name }}</strong>
+    Samples{% endblock %}
+{% block modal_body %}
+    <div id="container-spreadsheet">
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th style="width: 7%;">Port</th>
+                <th>Name</th>
+                <th>Group</th>
+                <th>Barcode</th>
+                <th>Comments</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for placeholder in container.placeholders %}
+                <tr data-location={{ placeholder.location.pk }} data-sample={{ placeholder.pk }}>
+                    <td class="text-muted">{{ placeholder.location.name }}</td>
+                    <td data-field="name" data-unique="true" contenteditable="true">{{ placeholder.name|default:"" }}</td>
+                    <td data-field="group" contenteditable="true">{{ placeholder.group.name|default:"" }}</td>
+                    <td data-field="barcode" contenteditable="true">{{ placeholder.barcode|default:"" }}</td>
+                    <td data-field="comments" contenteditable="true">{{ placeholder.comments|default:"" }}</td>
+                    <td class="text-center"><a href="#!" class="remove-sample" title="Delete Sample?"><i class="ti ti-trash"></i></a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block modal_footer %}
+    <div class="col-10">
+        <div class="alert alert-info m-0 p-2" id="spreadsheet-instructions">
+            <i class="ti ti-md ti-info-alt float-left pr-2"></i>
+            Click on a field to edit it. Copy and paste single columns from a spreadsheet. Remove existing samples by clearing the name.
+        </div>
+    </div>
+    <div class="col-2 my-auto text-right">
+        <button id='save-spreadsheet' class="btn btn btn-primary" name="save" type="button"
+                data-post-action="{% url 'edit-container-samples' pk=container.pk %}"
+        >Save
+        </button>
+    </div>
+{% endblock %}
+
+{% block modal_scripts %}
+    <script>
+        $('#modal').on('shown.bs.modal', function () {
+            initSampleSpreadsheet();
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'schedule/schedule.html' %}
+{% load i18n static %}
+{% load icons %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+        .folio-header, header, .footer { display: none !important; }
+        .folio-body { padding: 0em 2em 2em 2em; }
+        .folio { margin-top: 0 !important; }
+        .container-fluid { padding: 0; }
+        main {
+            margin-top: 0;
+            padding-bottom: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block pre_js %}
+    {{ block.super }}
+    <script src="{% static 'js/misc/iframeResizer.contentWindow.min.js' %}"></script>
+{% endblock %}
+
+

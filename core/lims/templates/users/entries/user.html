@@ -1,0 +1,123 @@
+{% extends "users/base.html" %}
+{% load static %}
+{% load humanize %}
+{% load icons %}
+
+
+{% block extra_css %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <span class="text-muted">{{ object.name|upper }}</span> | <strong>{{ object.first_name }} {{ object.last_name }}</strong>
+    </h3>
+    <span class="text-muted">
+        Beamline User since {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "data-list" %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
+        {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=object.datasets.count %}
+    </a>
+    <a class="pull-right" href="{% url "result-list" %}?search={{ object.username }}" title="Go to Reports for {{ object.username }}">
+        {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=object.reports.count %}
+    </a>
+    <a class="pull-right" href="{% url "session-list" %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
+        {% show_icon label="Sessions" icon="ti ti-md ti-calendar" badge=object.sessions.count %}
+    </a>
+    {% if user.is_superuser %}
+    <span class="separator"></span>
+    <a href="{% url "project-labels" object.username %}" title="Get Shipping Labels">
+        {% show_icon label="Labels" icon="ti ti-md ti-tag" %}
+    </a>
+    <a href="#!" data-form-link="{% url "edit-profile" object.username %}" title="Edit Profile">
+        {% show_icon label="Edit" icon="ti ti-md ti-pencil-alt" %}
+    </a>
+    <a href="#!" data-form-link="{% url "project-reset" object.username %}" title="Reset API Key">
+        {% show_icon label="Reset Key" icon="ti ti-md ti-key" %}
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-2">
+                <h3 class="m-0">
+                    <div class="badge badge-{% if object.active_status == 'Active' %}info{% else %}{% if object.active_status == 'Idle' %}secondary{% else %}success{% endif %}{% endif %}"
+                         title="Last session on {{ object.last_session }}"><span class="text-thin">{{ object.kind }} | </span>{{ object.active_status }}</div>
+                </h3>
+            </div>
+            <div class="col-3 pull-right text-right">
+                <small class="text-muted text-condensed">Groups:</small><br>
+                {{ object.sample_groups.count }}
+            </div>
+            <div class="col-2 pull-right text-right">
+                <small class="text-muted text-condensed">Shipments:</small><br>
+                {{ object.shipments.count }}
+            </div>
+            <div class="col-2 pull-right text-right">
+                <small class="text-muted text-condensed">Samples:</small><br>
+                {{ object.samples.count }}
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block full %}
+
+    <div class="row">
+         <div class="{% if object.sshkeys.all %}col-md-8{% endif %} col-12">
+            {% include "users/entries/address-card.html" %}
+        </div>
+        {% if object.sshkeys.all %}
+            <div class="col-md-4 col-12">
+                <div class="card mb-4">
+                    <div class="card-header p-1 text-wide text-muted text-center">
+                        <small>SSH KEYS</small>
+                    </div>
+                    {% for key in object.sshkeys.all %}
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item p-2">
+                                <div class="d-flex flex-row">
+                                    <div class="pl-3  overflow-ellipsis align-self-center">
+                                        <h5 class="mt-2 text-condensed text-muted">
+                                            <strong><i class="ti ti-key ti-sm"></i> {{ key.name }}</strong> | {{ key.created }}
+                                        </h5>
+                                        <p class="d-block mt-2 text-wrap text-sm text-monospace" style="word-wrap: break-word;">{{ key.fingerprint }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div id="data-stats" class="col-12"></div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+
+    <script type="text/javascript">
+        var report = {{ report | safe }};
+        $(document).ready(function() {
+            $('#data-stats').liveReport({
+                data: report
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% load crispy_forms_filters %}
+{% load l10n %}
+
+{% if field.is_hidden %}
+    {{ field }}
+{% else %}
+    <tr id="div_{{ field.auto_id }}" class="form-group{% if 'form-horizontal' in form_class %} row{% endif %}{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if form_show_errors and field.errors %} has-danger{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+        <th scope="row">
+            {% if field.label %}
+                <label for="{{ field.id_for_label }}"  class="{{ label_class }}{% if not inline_class %} col-form-label{% endif %}{% if field.field.required %} requiredField{% endif %}">
+                    {{ field.label|safe }}{% if field.field.required %}<span class="asteriskField">*</span>{% endif %}
+                </label>
+            {% endif %}
+        </th>
+        {% for choice in field.field.choices %}
+            <td align="center" class="text-center p-0"><label>&nbsp;
+                <input type="radio" class="form-check-input{% if field.errors %} is-invalid{% endif %}"{% if choice.0 in field.value or choice.0|stringformat:"s" in field.value or choice.0|stringformat:"s" == field.value|default_if_none:""|stringformat:"s" %} checked="checked"{% endif %} name="{{ field.html_name }}" id="id_{{ field.html_name }}_{{ forloop.counter }}" value="{{ choice.0|unlocalize }}" {{ field.field.widget.attrs|flatatt }} />
+            </label></td>
+        {% endfor %}
+    </tr>
+{% endif %}
+

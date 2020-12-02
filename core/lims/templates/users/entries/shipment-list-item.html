@@ -1,0 +1,58 @@
+{% load icons %}
+<div class="p-2 list-group-item list-group-item-{% if shipment.status == shipment.STATES.ON_SITE %}info{% elif shipment.status == shipment.STATES.DRAFT %}warning{% elif shipment.status == shipment.STATES.SENT %}success{% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}empty{% else %}default{% endif %}">
+    <div class="d-flex flex-row">
+        <div class="box-status text-center">
+            {% if shipment.status == shipment.STATES.DRAFT %}
+                {% show_icon label='DRAFT' icon='ti ti-md ti-clipboard' tooltip='Draft' %}
+            {% elif shipment.status == shipment.STATES.SENT %}
+                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='ti ti-md ti-truck text-dark' tooltip='Sent' %}
+            {% elif shipment.status == shipment.STATES.ON_SITE %}
+                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='ti ti-md ti-location-pin' tooltip='On-site' %}
+            {% elif shipment.status == shipment.STATES.RETURNED %}
+                {% show_icon label=shipment.date_returned|date:"M j"|upper icon='ti ti-md ti-check-box' tooltip='Returned' %}
+            {% elif shipment.status == shipment.STATES.ARCHIVED %}
+                {% show_icon label=shipment.date_returned|date:"M j"|upper icon='ti ti-md ti-archive' tooltip='Archived' %}
+            {% endif %}
+        </div>
+        <div class="pl-3 overflow-ellipsis text-muted align-self-center">
+            <h5 class="m-0">
+                <a class="text-muted text-condensed" href="{% url "shipment-detail" shipment.pk %}"
+                   title='View Shipment "{{ shipment.name }}"'>
+                    <strong>{% if user.is_superuser %}{{ shipment.project.name|upper }}{% else %}
+                        {{ shipment.identity }}{% endif %}</strong> | {{ shipment.name }}
+                </a>
+            </h5>
+            <div>
+                <strong>{{ shipment.container_count }}</strong> Container{{ shipment.container_count|pluralize }} /
+                <strong>{{ shipment.group_count }}</strong> Group{{ shipment.group_count|pluralize }} /
+                <strong>{{ shipment.sample_count }}</strong> Sample{{ shipment.sample_count|pluralize }}
+            </div>
+        </div>
+        <div class="tools-box ml-auto">
+            {% if shipment.status >= shipment.STATES.ON_SITE %}
+                <a href="{% url "shipment-data" shipment.pk %}" title="Go to Data from this shipment">
+                    {% show_icon label='Data' badge=shipment.data_count icon='ti ti-md ti-layout-grid3' color='info' %}
+                </a>
+                <a href="{% url "shipment-reports" shipment.pk %}" title="Go to Reports from this shipment">
+                    {% show_icon label='Reports' badge=shipment.report_count icon='ti ti-md ti-bar-chart-alt' color='info' %}
+                </a>
+                <a class="separator"></a>
+            {% endif %}
+            {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
+                {% if shipment.status == shipment.STATES.ON_SITE %}
+                    <a data-form-link="{% url "shipment-return" shipment.pk %}" title="Return shipment">
+                        {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
+                    </a>
+                {% else %}
+                    <a data-form-link="{% url "shipment-receive" shipment.pk %}" title="Receive shipment">
+                        {% show_icon label='Receive' icon='ti ti-md ti-shopping-cart-full' %}
+                    </a>
+                {% endif %}
+            {% elif shipment.status == shipment.STATES.DRAFT and not user.is_superuser %}
+                    <a data-form-link="{% url "shipment-send" shipment.pk %}" title="Send shipment">
+                        {% show_icon label='Send' icon='ti ti-md ti-location-arrow' %}
+                    </a>
+            {% endif %}
+        </div>
+    </div>
+</div>

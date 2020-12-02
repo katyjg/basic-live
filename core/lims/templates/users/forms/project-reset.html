@@ -1,0 +1,30 @@
+{% extends "modal/form.html" %}
+
+{% load misc_tags %}
+
+{% block modal_title %}Reset API Key?{% endblock %}
+{% block pre_content %}
+    <form action="{{ form_action }}" method="post">
+{% endblock %}
+
+{% block modal_body %}
+    <h5>Are you sure you want to reset the API key of {{ object|verbose_name|title }} <strong>"{{object.name.upper}}"</strong>?</h5>
+    <hr />
+    <p>Resetting the key allows a new key to be set remotely. Only do this if you will be providing a new key shortly.
+    </p>
+
+    <div id="key_snippet_grp" class="form-group">
+        <label for="key_snippet" class="">Existing Key</label>
+        <div class="">
+            <textarea cols="40" rows="1" disabled class="textarea form-control" id="key_snippet">{{ object.key|truncatechars:50|default:"-- no key --" }}</textarea>
+        </div>
+    </div>
+    {% csrf_token %}
+    <input type="hidden" name="key" value="" />
+{% endblock %}
+{% block modal_footer %}
+    <button type="submit" value="Submit" class="btn btn-danger pull-right">Yes, I'm sure</button>
+{% endblock %}
+{% block post_content %}
+    </form>
+{% endblock %}

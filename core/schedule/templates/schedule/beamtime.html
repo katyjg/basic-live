@@ -1,0 +1,40 @@
+{% load icons %}
+
+{% if detailed %}
+    {% if bt.notification %}
+    <div class="float-left">
+
+        <a href="#!" class="d-flex" data-form-link="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
+            {% if bt.notification.sent %}
+                {% show_icon icon='ti ti-sm ti-check-box' %}
+            {% elif bt.notification.unsendable %}
+                {% show_icon icon='ti ti-sm ti-alert text-danger' %}
+            {% else %}
+                {% show_icon icon='ti ti-sm ti-email' %}
+            {% endif %}
+
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="tools-box float-right pr-0 my-1">
+        <a href="#!" data-form-link="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pr-0">
+            {% show_icon icon='ti ti-sm ti-pencil' %}
+        </a>
+        <a href="#!" data-form-link="{% url 'beamtime-delete' bt.pk %}" title="Delete">
+            {% show_icon icon='ti ti-sm ti-trash' %}
+        </a>
+    </div>
+{% endif %}
+
+{% if bt.project.alias %}
+    {{ bt.project.alias }} {% if detailed %}(<strong>{{ bt.project }}</strong>){% endif %}
+{% else %}
+    {{ bt.project|default_if_none:"Reserved" }}
+{% endif %}
+
+{% if bt.comments and detailed %}
+    <span class="text-muted text-condensed"> | {{ bt.comments }}</span>
+{% endif %}
+
+

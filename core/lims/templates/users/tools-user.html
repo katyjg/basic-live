@@ -1,0 +1,26 @@
+{% load icons %}
+{% load settings %}
+
+{% get_setting "LIMS_USE_SCHEDULE" as schedule %}
+
+{% url "project-profile" username=user.username as profile_url %}
+{% url "project-statistics" username=user.username as stats_url %}
+
+<a  href="{% url "session-list" %}">
+    {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
+</a>
+{% if schedule %}
+    <a  href="{% url 'schedule' %}">
+        {% show_icon label="Schedule" icon="ti ti-md ti-time" %}
+    </a>
+{% endif %}
+{% if request.path != stats_url %}
+    <a  href="{{ stats_url }}">
+        {% show_icon label='My Stats' icon='ti ti-md ti-pulse' %}
+    </a>
+{% endif %}
+{% if request.path != profile_url %}
+    <a  href="{{ profile_url }}">
+        {% show_icon label='My Profile' icon='ti ti-md ti-user' %}
+    </a>
+{% endif %}

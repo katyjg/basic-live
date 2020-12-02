@@ -1,0 +1,61 @@
+{% load humanize %}
+{% load icons %}
+{% load converter %}
+
+<div class="list-group-item p-2 {{ connection.beamtime.access.name }} {% if not connection.beamtime %}empty{% endif %}"
+     data-highlight="project" data-reference="{{ connection.user.username }}">
+    <div class="d-flex flex-row">
+        <div class="box-status text-center">
+            <a href="#!" data-form-link="{% url 'new-supportrecord' %}?project={{ connection.user.username }}&beamline={{ connection.beamline }}"
+               title='Record User Support'>{% show_icon label='Support' icon='ti ti-md ti-headphone-alt' %}
+            </a>
+        </div>
+        <div class="pl-3 overflow-ellipsis align-self-center">
+            <h5 class="m-0 text-condensed">
+                <span class="text-muted">
+                    <a href="#!" data-link="{% url "user-info" connection.user.username %}"
+                       title='View Contact Information for {{ connection.user.username }}'>
+                        <i class="ti ti-sm ti-info-alt"></i>
+                    </a>
+                    {{ connection.beamline }} |
+                    {% if connection.user.alias %}
+                        {{ connection.user.alias }} (<strong>{{ connection.user.name|upper }}</strong>)
+                    {% else %}
+                        <strong>{{ connection.user.name|upper }}</strong>
+                    {% endif %}|
+                </span>
+                {% if connection.user.contact_person %}{{ connection.user.contact_person }}
+                {% else %}{{ connection.user.first_name|default_if_none:"" }} {{ connection.user.last_name|default_if_none:"" }}
+                {% endif %}
+            </h5>
+            <span class="text-muted overflow ellipsis">
+                {% if connection.beamtime %}
+                    <span title="{{ connection.beamtime.start }} to {{ connection.beamtime.end }}">
+                        <strong>{{ connection.beamtime.shifts|intword }}</strong> {{ connection.beamtime.access.name }} shift{{ connection.beamtime.shifts|pluralize:"s" }}
+                    </span>
+                {% else %}
+                    No scheduled beamtime
+                {% endif %} /
+                <strong>{{ connection.shipments }}</strong> Shipment{{ connection.shipments|pluralize }}
+
+            </span>
+        </div>
+        <div class="tools-box ml-auto">
+            {% for access, conn in connection.connections.items %}
+                <a href="{% url "connection-list" %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
+                   title='View {{ connection.user.username|upper }} Connections to {{ access }}'>
+                    {% if conn|length is 1 %}
+                        {% show_icon label=access|upper icon='ti ti-md ti-rss-alt' %}
+                    {% else %}
+                        {% show_icon label=access|upper badge=conn|length icon='ti ti-md ti-rss-alt' %}
+                    {% endif %}
+                </a>
+            {% endfor %}
+            {% for session in connection.sessions %}
+                <a href="{% url "session-detail" session.pk %}" title='View Session "{{ session.name }}"'>
+                    {% show_icon label=session.start.date|date:"M j"|upper icon='ti ti-md ti-calendar' %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>

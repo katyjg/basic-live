@@ -1,0 +1,15 @@
+<div id="svglayout-{{ container.pk }}"
+     style="padding-bottom: {{ container.aspect_ratio|floatformat:"-2" }}%; width: 100%; position: relative;"
+     data-layout-url= "{% url 'fetch-layout' pk=container.pk %}"
+     data-pk="{{ container.pk }}"
+     class="container-layout"></div>
+<script>
+    $(document).ready(function() {
+        $('#svglayout-{{ container.pk }}').layoutContainer({
+            detailed: {% if show_samples %}true{% else %}false{% endif %},
+            labelled: {% if label_samples %}true{% else %}false{% endif %},
+            loadable: {% if loadable %}true{% else %}false{% endif %},
+            prefix: "cntld"
+        })
+    });
+</script>

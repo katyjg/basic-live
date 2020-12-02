@@ -1,0 +1,40 @@
+{% extends "modal/content.html" %}
+
+{% load converter %}
+
+{% block modal_styles %}modal-lg{% endblock %}
+
+{% block modal_title %}
+    <strong>{{ object.name }}</strong> | History
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row">
+        <div class="col-12">
+            <table class="small table table-sm">
+                <tr>
+                    <th>Container</th>
+                    <th>Start</th>
+                    <th class="text-right">End</th>
+                    <th class="text-right">Loaded Time</th></tr>
+                {% for stretch in object.children_history.active %}
+                    <tr>
+                        <td>{{ stretch.child.project }} | {{ stretch.child.name }} <strong>{{ stretch.location }}</strong></td>
+                        <td>{{ stretch.start }}</td>
+                        <td class="text-right">{{ stretch.end }}</td>
+                        <td class="text-right">{{ stretch.duration|default:"Active" }} {% if stretch.duration %}minutes{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                {% for stretch in object.children_history.with_duration|slice:"50" %}
+                    <tr>
+                        <td>{{ stretch.child.project }} | {{ stretch.child.name }} <strong>{{ stretch.location }}</strong></td>
+                        <td>{{ stretch.start }}</td>
+                        <td class="text-right">{{ stretch.end }}</td>
+                        <td class="text-right">{{ stretch.duration|humanize_duration|default:"0 minutes" }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
