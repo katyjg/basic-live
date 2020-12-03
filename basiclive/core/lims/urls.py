@@ -1,6 +1,5 @@
 from django.urls import path
 from django.views.decorators.cache import cache_page
-from django.views.generic import TemplateView
 from . import views, ajax_views, forms
 
 urlpatterns = [
@@ -11,6 +10,12 @@ urlpatterns = [
     path('profile/<slug:username>/labels', views.ProjectLabels.as_view(), name='project-labels'),
     path('profile/<slug:username>/reset', views.ProjectReset.as_view(), name='project-reset'),
     path('profile/<slug:username>/statistics/', views.ProjectStatistics.as_view(), name='project-statistics'),
+
+    path('accounts/', views.ProjectList.as_view(), name='user-list'),
+    path('accounts/new/', views.ProjectCreate.as_view(), name='new-project'),
+    path('accounts/<slug:username>/', views.UserStats.as_view(), name='user-detail'),
+    path('accounts/<slug:username>/info/', views.UserDetail.as_view(), name='user-info'),
+    path('accounts/<slug:username>/delete/', views.ProjectDelete.as_view(), name='user-delete'),
 
     path('beamline/<int:pk>/', views.BeamlineDetail.as_view(), name='beamline-detail'),
     path('beamline/usage/', views.UsageSummary.as_view(), name='beamline-usage'),
@@ -88,7 +93,6 @@ urlpatterns = [
     path('sshkey/<int:pk>/edit/', views.SSHKeyEdit.as_view(), name='sshkey-edit'),
     path('sshkey/<int:pk>/delete/', views.SSHKeyDelete.as_view(), name='sshkey-delete'),
 
-    path('quick-guide/', TemplateView.as_view(template_name='lims/help.html'), name='user-guide'),
     path('guides/<int:pk>/youtube/<slug:video>/', views.GuideView.as_view(template_name="lims/components/guide-youtube.html"), name='guide-youtube'),
     path('guides/<int:pk>/flickr/<album>/<photo>/', views.GuideView.as_view(template_name="lims/components/guide-flickr.html"), name='guide-flickr'),
     path('guides/<int:pk>/image/', views.GuideView.as_view(template_name="lims/components/guide-image.html"), name='guide-image'),

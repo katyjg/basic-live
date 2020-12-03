@@ -125,10 +125,6 @@
             $('#modal-target').asyncForm({url: $(this).data('form-link')});
         });
 
-        {% if show_help %}
-            $('#modal-target').loadModal("{% url 'user-guide' %}");
-        {% endif %}
-
         });
         </script>
 

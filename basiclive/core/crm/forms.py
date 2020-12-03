@@ -43,7 +43,7 @@ class SupportAreaForm(forms.ModelForm):
 
 
 class LikertTable(Div):
-    template = "lims/forms/likert-table.html"
+    template = "crm/forms/likert-table.html"
 
     def __init__(self, *fields, **kwargs):
         super().__init__(*fields, **kwargs)
@@ -51,7 +51,7 @@ class LikertTable(Div):
 
 
 class LikertEntry(Field):
-    template = "lims/forms/likert-entry.html"
+    template = "crm/forms/likert-entry.html"
 
 
 class FeedbackForm(forms.ModelForm):

@@ -15,7 +15,6 @@ def get_storage_path(instance, filename):
     return os.path.join('uploads/', 'links', filename)
 
 
-
 class AccessList(models.Model):
     name = models.CharField(max_length=60, unique=True)
     description = models.TextField(blank=True, null=True)

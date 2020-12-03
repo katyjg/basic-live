@@ -7,7 +7,7 @@ from django.template.defaultfilters import linebreaksbr
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.text import slugify
-from django.views.generic import edit, detail, TemplateView
+from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
 from basiclive.core.lims.views import ListViewMixin
@@ -44,14 +44,14 @@ class SupportAreaList(ListViewMixin, ItemListView):
     link_field = 'name'
     show_project = False
     ordering = ['name']
-    tool_template = 'lims/tools-support.html'
+    tool_template = 'crm/tools-support.html'
     link_url = 'supportarea-edit'
     link_attr = 'data-form-link'
 
 
 class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SupportAreaForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SupportArea
     success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been created"
@@ -59,7 +59,7 @@ class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin,
 
 class SupportAreaEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SupportAreaForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SupportArea
     success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been updated"
@@ -80,7 +80,7 @@ class FeedbackList(ListViewMixin, ItemListView):
     list_transforms = {'contact': format_contact}
     list_search = ['session__project__username', 'comments']
     ordering = ['-created']
-    tool_template = 'lims/tools-support.html'
+    tool_template = 'crm/tools-support.html'
     show_project = False
     link_url = 'user-feedback-detail'
     link_attr = 'data-link'
@@ -89,12 +89,12 @@ class FeedbackList(ListViewMixin, ItemListView):
 
 class FeedbackDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Feedback
-    template_name = "lims/entries/feedback.html"
+    template_name = "crm/feedback.html"
 
 
 class FeedbackCreate(SuccessMessageMixin, edit.CreateView):
     form_class = forms.FeedbackForm
-    template_name = "lims/forms/survey.html"
+    template_name = "crm/forms/survey.html"
     model = models.Feedback
     success_url = reverse_lazy('dashboard')
     success_message = "User Feedback has been submitted"
@@ -139,7 +139,7 @@ class SupportEntryList(ListViewMixin, ItemListView):
     list_transforms = {'comments': format_comments, 'area': format_areas, 'created': format_created}
     list_search = ['beamline__acronym', 'project__username', 'comments']
     ordering = ['-created']
-    tool_template = 'lims/tools-support.html'
+    tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
     link_field = 'beamline'
     link_attr = 'data-form-link'
@@ -164,7 +164,7 @@ class FeedbackStats(PlotViewMixin, FeedbackList):
 
 class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SupportEntryForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SupportRecord
     success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been created"
@@ -181,7 +181,7 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin
 
 class SupportEntryEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SupportEntryForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SupportRecord
     success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been updated"

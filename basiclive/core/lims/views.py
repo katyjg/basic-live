@@ -1,26 +1,25 @@
 import json
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import requests
 from django import http
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
 from django.http import JsonResponse, Http404, HttpResponseRedirect
-from django.template.defaultfilters import linebreaksbr
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone
-from django.utils.text import slugify
-from django.views.generic import edit, detail, View, TemplateView
+from django.utils import dateformat, timezone
+from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
 from proxy.views import proxy_view
 
 from basiclive.core.acl.models import Access, AccessList
 from basiclive.utils import filters
-from basiclive.utils.encrypt import decrypt
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, HTML2PdfMixin, PlotViewMixin
 from . import forms, models, stats
 
@@ -259,7 +258,7 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ProjectForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Project
     success_message = "Profile has been updated."
 
@@ -384,7 +383,7 @@ class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
 
 class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ShipmentForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been updated."
 
@@ -399,7 +398,7 @@ class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ShipmentCommentsForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been edited by staff."
 
@@ -416,7 +415,7 @@ class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
 
 
 class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Shipment
     success_message = "Shipment has been deleted."
     success_url = reverse_lazy('dashboard')
@@ -548,7 +547,7 @@ class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SampleForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Sample
     success_url = reverse_lazy('sample-list')
     success_message = "Sample has been updated."
@@ -559,7 +558,7 @@ class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
 
 class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Sample
     success_message = "Sample has been deleted."
 
@@ -614,7 +613,7 @@ class ContainerDetail(DetailListMixin, SampleList):
 
 class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ContainerForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Container
     success_message = "Container has been updated."
 
@@ -629,7 +628,7 @@ class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class ContainerLoad(AdminRequiredMixin, ContainerEdit):
     form_class = forms.ContainerLoadForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
@@ -688,7 +687,7 @@ class LocationLoad(AdminRequiredMixin, ContainerEdit):
 
 class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
     form_class = forms.EmptyContainers
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Project
     success_message = "Containers have been removed for {username}."
     success_url = reverse_lazy('dashboard')
@@ -719,7 +718,7 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
 
 class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Container
     success_message = "Container has been deleted."
 
@@ -796,7 +795,7 @@ class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.Up
 
 class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Group
     success_message = "Group has been deleted."
 
@@ -994,14 +993,12 @@ class SessionDetail(OwnerRequiredMixin, detail.DetailView):
 class SessionStatistics(AdminRequiredMixin, detail.DetailView):
     model = models.Session
     template_name = "lims/entries/session-statistics.html"
+    page_title = "Session Statistics"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['report'] = stats.session_stats(self.object)
         return context
-
-    def page_title(self):
-        return 'Session Statistics'
 
 
 class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
@@ -1011,7 +1008,7 @@ class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
 
 class DewarEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.DewarForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Dewar
     success_url = reverse_lazy('dashboard')
     success_message = "Comments have been updated."
@@ -1021,7 +1018,7 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
     form_list = [('shipment', forms.AddShipmentForm),
                  ('containers', forms.ShipmentContainerForm),
                  ('groups', forms.ShipmentGroupForm)]
-    template_name = "modal/wizard.html"
+    template_name = "lims/modal/wizard.html"
 
     def get_form_initial(self, step):
         if step == 'shipment':
@@ -1237,7 +1234,7 @@ class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView
 
 class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SSHKeyForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been created"
@@ -1261,14 +1258,14 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SSHKeyForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been updated"
 
 
 class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been deleted"
@@ -1298,7 +1295,7 @@ class GuideView(detail.DetailView):
 
 class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.GuideForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been created"
@@ -1306,14 +1303,14 @@ class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
 
 class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.GuideForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been updated"
 
 
 class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been deleted"
@@ -1340,3 +1337,106 @@ def fetch_archive(request, url):
         return resp
     else:
         return http.HttpResponseNotFound()
+
+
+class ProjectList(AdminRequiredMixin, ItemListView):
+    model = models.Project
+    paginate_by = 25
+    template_name = "lims/user-list.html"
+    list_filters = ['created', 'modified', 'kind', 'designation']
+    list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']
+    list_search = [
+        'username', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
+        'department', 'organisation'
+    ]
+    link_url = 'user-detail'
+    link_kwarg = 'username'
+    add_url = 'new-project'
+    add_ajax = True
+    ordering = ['name']
+
+
+class UserDetail(AdminRequiredMixin, detail.DetailView):
+    model = models.Project
+    template_name = "lims/entries/user-info.html"
+
+    def get_object(self, **kwargs):
+        return models.Project.objects.get(username=self.kwargs.get('username'))
+
+
+class UserStats(UserDetail):
+    template_name = "lims/entries/user.html"
+    page_title = "User Profile"
+
+    def get_object(self, **kwargs):
+        return models.Project.objects.get(username=self.kwargs.get('username'))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['report'] = stats.project_stats(self.object)
+        return context
+
+
+class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+    form_class = forms.NewProjectForm
+    template_name = "lims/modal/form.html"
+    model = models.Project
+    success_url = reverse_lazy('user-list')
+    success_message = "New Account '%(username)s' has been created."
+
+    def form_valid(self, form):
+        # create local user
+        response = super().form_valid(form)
+        info_msg = 'New Account {} added'.format(self.object)
+
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.CREATE, info_msg
+        )
+        # messages are simply passed down to the template via the request context
+        return response
+
+
+class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+    template_name = "lims/modal/delete.html"
+    model = models.Project
+    success_url = reverse_lazy('user-list')
+    success_message = "Account has been deleted"
+
+    def get_object(self, *kwargs):
+        obj = self.model.objects.get(username=self.kwargs.get('username'))
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectDelete, self).get_context_data(**kwargs)
+        context['form_action'] = reverse_lazy('user-delete', kwargs={'username': self.object.username})
+        return context
+
+    def delete(self, *args, **kwargs):
+        obj = self.get_object()
+        self.success_message = "{} account has been deleted".format(kwargs.get('username'))
+        return JsonResponse({'url': self.success_url}, safe=False)
+
+
+def record_logout(sender, user, request, **kwargs):
+    """ user logged outof the system """
+    models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGOUT, '{} logged-out'.format(user.username))
+
+
+def record_login(sender, user, request, **kwargs):
+    """ Login a user into the system """
+    if user.is_authenticated:
+        models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.username))
+        last_login = models.ActivityLog.objects.last_login(request)
+        if last_login is not None:
+            last_host = last_login.ip_number
+            message = 'Your previous login was on {date} from {ip}.'.format(
+                date=dateformat.format(timezone.localtime(last_login.created), 'M jS @ P'),
+                ip=last_host)
+            messages.info(request, message)
+        elif not request.user.is_staff:
+            message = 'You are logging in for the first time. Please make sure your profile is updated.'
+            messages.info(request, message)
+
+
+user_logged_in.connect(record_login)
+user_logged_out.connect(record_logout)

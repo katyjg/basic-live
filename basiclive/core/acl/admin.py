@@ -10,4 +10,5 @@ class UserListAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'address', 'description', 'active', 'modified']
     ordering = ['-created']
 
+
 admin.site.register(AccessList, UserListAdmin)

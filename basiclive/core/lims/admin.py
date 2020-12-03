@@ -16,6 +16,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Guide)
 admin.site.register(models.Beamline)
+admin.site.register(models.Carrier)
 admin.site.register(models.Dewar)
 admin.site.register(models.ProjectType)
 admin.site.register(models.ProjectDesignation)
