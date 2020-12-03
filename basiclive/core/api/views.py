@@ -1,16 +1,14 @@
-import os
-from datetime import timedelta
-import msgpack
 import functools
 import operator
+import os
+from datetime import timedelta
 
+import msgpack
 import requests
 from django import http
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils import timezone, dateparse
@@ -19,11 +17,12 @@ from django.utils.encoding import force_str
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
-from basiclive.utils.signing import Signer, InvalidSignature
-from basiclive.utils.data import parse_frames
-
-from basiclive.core.lims.models import ActivityLog, Beamline, Container, Dewar, Data, DataType, AnalysisReport, Project, Session
+from basiclive.core.lims.models import ActivityLog, Beamline, Container, Dewar, Data, DataType
+from basiclive.core.lims.models import AnalysisReport, Project, Session
 from basiclive.core.lims.templatetags.converter import humanize_duration
+from basiclive.utils.data import parse_frames
+from basiclive.utils.signing import Signer, InvalidSignature
+
 
 if settings.LIMS_USE_SCHEDULE:
     HALF_SHIFT = int(getattr(settings, 'HOURS_PER_SHIFT', 8)/2)
