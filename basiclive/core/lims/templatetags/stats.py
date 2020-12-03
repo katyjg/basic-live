@@ -8,7 +8,7 @@ from django.utils.safestring import mark_safe
 
 from basiclive.core.lims.models import *
 from .converter import humanize_duration
-from ..stats import SHIFT, get_data_periods, supportrecord_stats, userfeedback_stats
+from ..stats import SHIFT, get_data_periods
 
 register = template.Library()
 
@@ -201,16 +201,6 @@ def get_project_stats(user):
         }
         ]}
     return stats
-
-
-@register.simple_tag(takes_context=True)
-def get_supportrecord_stats(context):
-    return supportrecord_stats(context['object_list'], context['stats_filters'])
-
-
-@register.simple_tag(takes_context=True)
-def get_userfeedback_stats(context):
-    return userfeedback_stats(context['object_list'], context['stats_filters'])
 
 
 def js_epoch(dt):
