@@ -21,3 +21,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False, verbose_name='Add to User Experience Survey'),
         ),
     ]
+
+    replaces = [
+        ('lims', '0064_auto_20200721_2258'),
+    ]

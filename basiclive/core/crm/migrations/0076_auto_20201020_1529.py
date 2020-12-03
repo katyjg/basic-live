@@ -16,3 +16,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False, verbose_name="External (out of the beamline's control)"),
         ),
     ]
+
+    replaces = [
+        ('lims', '0076_auto_20201020_1529'),
+    ]

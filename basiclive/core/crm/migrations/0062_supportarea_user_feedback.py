@@ -16,3 +16,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False),
         ),
     ]
+
+    replaces = [
+        ('lims', '0062_supportarea_user_feedback'),
+    ]

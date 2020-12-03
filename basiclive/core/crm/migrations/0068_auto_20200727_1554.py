@@ -27,3 +27,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='feedback', to='lims.Session'),
         ),
     ]
+
+    replaces = [
+        ('lims', '0068_auto_20200727_1554'),
+    ]

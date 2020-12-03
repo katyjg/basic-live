@@ -16,3 +16,7 @@ class Migration(migrations.Migration):
             field=models.CharField(max_length=200),
         ),
     ]
+
+    replaces = [
+        ('lims', '0069_auto_20200731_1005'),
+    ]

@@ -21,3 +21,7 @@ class Migration(migrations.Migration):
             field=models.IntegerField(choices=[(-2, 'Impressed'), (-1, 'Satisfied'), (1, 'Needs Improvement'), (2, 'Needs Urgent Attention'), (0, 'N/A')], default=0),
         ),
     ]
+
+    replaces = [
+        ('lims', '0067_auto_20200724_1323'),
+    ]

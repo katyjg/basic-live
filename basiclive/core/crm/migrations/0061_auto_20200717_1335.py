@@ -16,3 +16,6 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(blank=True, to='crm.SupportArea'),
         ),
     ]
+    replaces = [
+        ('lims', '0061_auto_20200717_1335'),
+    ]

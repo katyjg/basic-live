@@ -2,7 +2,6 @@
 
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
 
@@ -12,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('lims', '0078_merge_20201202_1618'),
+        ('lims', '0056_populate_container_type'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -46,3 +45,5 @@ class Migration(migrations.Migration):
             },
         ),
     ]
+
+    replaces = [('lims', '0057_supportarea_supportrecord')]

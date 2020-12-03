@@ -12,3 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
     ]
+
+    replaces = [
+        ('lims', '0077_merge_20201202_1619'),
+    ]

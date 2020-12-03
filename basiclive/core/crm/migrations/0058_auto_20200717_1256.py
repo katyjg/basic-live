@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('crm', '0057_supportarea_supportrecord'),
+        ('crm', '0001_initial'),
     ]
 
     operations = [
@@ -16,3 +16,5 @@ class Migration(migrations.Migration):
             new_name='areas',
         ),
     ]
+
+    replaces = [('lims', '0058_auto_20200717_1256')]

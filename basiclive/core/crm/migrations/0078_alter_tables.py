@@ -23,3 +23,7 @@ class Migration(migrations.Migration):
         migrations.AlterModelTable('userfeedback', 'crm_userfeedback'),
         migrations.AlterModelTable('userareafeedback', 'crm_userareafeedback'),
     ]
+
+    replaces = [
+        ('lims', '0078_alter_tables'),
+    ]

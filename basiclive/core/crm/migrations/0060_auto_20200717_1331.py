@@ -16,3 +16,6 @@ class Migration(migrations.Migration):
             new_name='project',
         ),
     ]
+    replaces = [
+        ('lims', '0060_auto_20200717_1331'),
+    ]

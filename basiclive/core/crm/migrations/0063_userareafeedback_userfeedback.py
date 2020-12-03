@@ -41,3 +41,7 @@ class Migration(migrations.Migration):
             }
         ),
     ]
+
+    replaces = [
+        ('lims', '0063_userareafeedback_userfeedback'),
+    ]

@@ -27,3 +27,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='help', to=settings.AUTH_USER_MODEL),
         ),
     ]
+
+    replaces = [
+        ('lims', '0059_auto_20200717_1318'),
+    ]

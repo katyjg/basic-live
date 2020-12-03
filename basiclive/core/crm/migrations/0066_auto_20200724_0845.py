@@ -37,3 +37,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False, verbose_name='Contact User'),
         ),
     ]
+
+    replaces = [
+        ('lims', '0066_auto_20200724_0845'),
+    ]

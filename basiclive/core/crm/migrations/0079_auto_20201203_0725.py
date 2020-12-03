@@ -6,7 +6,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lims', '0078_merge_20201202_1618'),
         ('crm', '0078_alter_tables'),
     ]
 
@@ -47,4 +46,8 @@ class Migration(migrations.Migration):
             name='supportrecord',
             table=None,
         ),
+    ]
+
+    replaces = [
+        ('lims', '0079_auto_20201203_0725')
     ]

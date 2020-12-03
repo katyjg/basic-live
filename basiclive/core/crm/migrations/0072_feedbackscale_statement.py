@@ -4,8 +4,8 @@ from django.db import migrations, models
 
 
 def initialize_scale(apps, schema_editor):
-    FeedbackScale = apps.get_model('lims', 'FeedbackScale')
-    SupportArea = apps.get_model('lims', 'SupportArea')
+    FeedbackScale = apps.get_model('crm', 'FeedbackScale')
+    SupportArea = apps.get_model('crm', 'SupportArea')
     db_alias = schema_editor.connection.alias
     scale = FeedbackScale.objects.using(db_alias).create(statement='Please evaluate the following aspects of your recent beamline experience.',
                                                  worst='Needs Urgent Attention', worse='Needs Improvement',
@@ -26,4 +26,8 @@ class Migration(migrations.Migration):
             field=models.CharField(max_length=250, null=True),
         ),
         migrations.RunPython(initialize_scale),
+    ]
+
+    replaces = [
+        ('lims', '0072_feedbackscale_statement'),
     ]

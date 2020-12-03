@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from setuptools import find_packages, setup
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
@@ -16,13 +17,15 @@ def package_version():
     return get_version()
 
 
-def package_files(directory):
-    paths = []
+def package_files(directory, exclude=()):
     if os.path.exists(directory):
-        for (path, directories, filenames) in os.walk(directory):
-            for filename in filenames:
-                paths.append(os.path.join('..', path, filename))
-    return paths
+        return [
+            os.path.join(path, filename)
+            for (path, directories, filenames) in os.walk(directory)
+            for filename in filenames
+            if not any(fnmatch.fnmatch(filename, pattern) for pattern in exclude)
+        ]
+    return []
 
 
 setup(
