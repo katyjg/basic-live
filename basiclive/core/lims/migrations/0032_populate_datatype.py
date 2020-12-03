@@ -12,7 +12,7 @@ def activity(apps, schema_editor):
     db_alias = schema_editor.connection.alias
     to_create = [
         DataType(
-            name='MX Screening', acronym='SCREEN', template="lims/entries/data-frames.html",
+            name='MX Screening', acronym='SCREEN', template="users/entries/data-frames.html",
             description="Test frames for sample characterization and evaluation",
             metadata=[
                 'delta_angle', 'start_angle', 'resolution', 'detector', 'detector_type',
@@ -20,7 +20,7 @@ def activity(apps, schema_editor):
             ]
         ),
         DataType(
-            name='MX Dataset', acronym='DATA', template="lims/entries/data-frames.html",
+            name='MX Dataset', acronym='DATA', template="users/entries/data-frames.html",
             description="Full MX Dataset",
             metadata=[
                 'delta_angle', 'start_angle', 'resolution', 'detector', 'detector_type',
@@ -28,7 +28,7 @@ def activity(apps, schema_editor):
             ]
         ),
         DataType(
-            name='XRD Dataset', acronym='XRD', template="lims/entries/data-frames.html",
+            name='XRD Dataset', acronym='XRD', template="users/entries/data-frames.html",
             description="Full MX Dataset",
             metadata=[
                 'delta_angle', 'start_angle', 'resolution', 'detector', 'detector_type',
@@ -36,7 +36,7 @@ def activity(apps, schema_editor):
             ]
         ),
         DataType(
-            name='Rastering', acronym='RASTER', template="lims/entries/data-frames.html",
+            name='Rastering', acronym='RASTER', template="users/entries/data-frames.html",
             description="Diffraction Cartography Dataset",
             metadata=[
                 'grid_points', 'grid_origin', 'start_angle', 'delta_angle', 'detector_type',
@@ -44,17 +44,17 @@ def activity(apps, schema_editor):
             ],
         ),
         DataType(
-            name='XAS Dataset', acronym='XAS', template="lims/entries/data-xas.html",
+            name='XAS Dataset', acronym='XAS', template="users/entries/data-xas.html",
             description="X-ray Absorption Spectroscopy Dataset",
             metadata=[],
         ),
         DataType(
-            name='XRF Dataset', acronym='XRF', template="lims/entries/data-xrf.html",
+            name='XRF Dataset', acronym='XRF', template="users/entries/data-xrf.html",
             description="X-ray Fluorescence Spectroscopy Dataset",
             metadata=[],
         ),
         DataType(
-            name='MAD Scan', acronym='MAD', template="lims/entries/data-mad.html",
+            name='MAD Scan', acronym='MAD', template="users/entries/data-mad.html",
             description="Multiple Anomalous Dispersion Scan",
             metadata=['roi', 'edge'],
         ),

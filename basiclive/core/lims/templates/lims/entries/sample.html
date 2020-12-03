@@ -16,7 +16,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}{% include "lims/../tools-base.html" %}{% endblock %}
+{% block object_tools %}{% include "lims/tools-base.html" %}{% endblock %}
 
 {% block object_status %}
     <div class="status-bar">
@@ -55,7 +55,7 @@
 
         </div>
     </div>
-    {% include "lims/../comments.html" with object=object %}
+    {% include "lims/comments.html" with object=object %}
 {% endblock %}
 
 {% block full %}

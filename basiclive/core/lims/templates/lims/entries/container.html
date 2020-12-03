@@ -52,7 +52,7 @@
         {% endif %}
     </a>
     {% endif %}
-    {% include "lims/../tools-base.html" %}
+    {% include "lims/tools-base.html" %}
     {% if object.parent_history.exists %}
         <a href="#!" data-link="{% url "container-history" object.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
@@ -131,7 +131,7 @@
         </div>
     </div>
     {% endif %}
-    {% include "lims/../comments.html" with object=automounter.dewar %}
+    {% include "lims/comments.html" with object=automounter.dewar %}
 {% endblock %}
 
 {% block extra_js %}
