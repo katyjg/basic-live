@@ -1,4 +1,4 @@
-{% extends "users/pdf/doc_base.html" %}
+{% extends "lims/pdf/doc_base.html" %}
 
 {% load static %}
 {% load settings %}
@@ -22,14 +22,14 @@
             <table class="table table-sm">
                 <tr><td>To:</td><td>{{ project.organisation|upper|default:"" }}</td></tr>
                 <tr><td></td><td>ATTN: {{ project.contact_person|upper|default:"" }}{% if project.department %} / {{ project.department|upper }}{% endif %}</td></tr>
-                {% include "users/pdf/address_base.html" %}
+                {% include "lims/pdf/address_base.html" %}
             </table>
             <div class="panel panel-default">
                 <table class="table table-sm">
                     <tr class="border-bottom"><td>ID:</td><td>{{project.first_name}} {{project.last_name}} ({{shipment.name}})</td></tr>
                     <tr><td>From:</td><td>{{ admin_project.contact_person|upper|default:"" }}{% if admin_project.department %} / {{ admin_project.department|upper }}{% endif %}</td></tr>
                     <tr><td></td><td>{{ admin_project.organisation|upper|default:"" }}</td></tr>
-                    {% include "users/pdf/address_base.html" with project=admin_project %}
+                    {% include "lims/pdf/address_base.html" with project=admin_project %}
                 </table>
             </div>
         <span class="emphasize">Not restricted, as per Special Provision A152</span>
@@ -37,6 +37,6 @@
     </div>
 </div>
 
-{% include "users/pdf/shipping_form.html" %}
+{% include "lims/pdf/shipping_form.html" %}
 
 {% endblock %}

@@ -56,7 +56,7 @@ class HTML2PdfMixin(object):
     """
 
     def get_template_name(self):
-        return "users/base.html"
+        return "lims/base.html"
 
     def get(self, request, *args, **kwargs):
         object = self.get_object()
@@ -89,7 +89,7 @@ class HTML2PdfMixin(object):
 
 
 class PlotViewMixin():
-    template_name = "users/list-plots.html"
+    template_name = "lims/list-plots.html"
     plot_fields = []
     date_field = None
     paginate_by = None

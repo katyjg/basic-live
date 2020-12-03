@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('lims', '0072_feedbackscale_statement'),
+        ('lims', '0056_populate_container_type'),
     ]
 
     operations = [

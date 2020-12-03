@@ -15,4 +15,4 @@ class Migration(migrations.Migration):
         ),
     ]
 
-    replaces = [('staff', '0011_delte_announcement')]
+    replaces = [('staff', '0011_delete_announcement')]
