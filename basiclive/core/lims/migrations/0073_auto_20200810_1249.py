@@ -21,10 +21,6 @@ class Migration(migrations.Migration):
             options={'ordering': ['created'], 'verbose_name': 'Dataset'},
         ),
         migrations.AlterModelOptions(
-            name='feedbackscale',
-            options={'verbose_name': 'User feedback scale'},
-        ),
-        migrations.AlterModelOptions(
             name='sample',
             options={'ordering': ['priority', 'container__name', 'location__name', 'name']},
         ),

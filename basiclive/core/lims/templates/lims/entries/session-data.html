@@ -1,0 +1,52 @@
+{% extends "lims/base.html" %}
+{% load icons %}
+{% load static %}
+{% load humanize %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ session.project|upper }} | {% endif %}</span><strong>{{ session.name }}</strong>
+    </h3>
+    <span class="text-muted">
+        Data from Session
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "session-reports" session.pk %}" title="Go to Reports from this session">
+        {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=session.num_reports %}
+    </a>
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-4">
+                <small class="text-muted text-condensed">Session:</small><br>
+                <a href="{% url "session-detail" session.pk %}">{{session.name}}</a>
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Total Time:</small><br>
+                {{ session.total_time|floatformat }} hour{{ session.total_time|pluralize }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Start:</small><br>
+                {{ session.start|naturalday }}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Comments:</small><br>
+                {{ session.comments }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block full %}
+
+    <div class="row">
+        <div class="col-sm-12">
+            {% include "itemlist/embed_list.html" %}
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+<div class="card mb-4">
+    <div class="card-header p-1 text-center text-wide text-muted">
+        <small>CONTACTS</small>
+    </div>
+    <div class="row d-flex flex-row">
+      <div class="col-6">
+        <div class="mini-profile">
+            <span class="text-condensed text-muted">CONTACT PERSON:</span>
+            <strong>{{ object.contact_person|default_if_none:"" }}</strong><br/>
+            {% if object.contact_email %}{{ object.contact_email }}<br/>{% endif %}
+            {% if object.contact_phone %}<span class="text-monospace">{{ object.contact_phone }}</span><br/>{% endif %}
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="mini-profile text-right">
+            <span class="text-condensed text-muted">PRINCIPAL INVESTIGATOR:</span>
+            <strong>{{ object.first_name }} {{ object.last_name }}</strong><br/>
+            {% if object.email %}{{ object.email }}{% endif %}<br/>
+            {% if object.contact_fax %}
+                <span class="text-condensed text-muted">FACSIMILE:</span>&nbsp;<span class="text-monospace">{{ object.contact_fax }}</span><br/>
+            {% endif %}
+        </div>
+      </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header p-1 text-center text-wide text-muted">
+        <small>SHIPPING</small>
+    </div>
+    <div class="row d-flex flex-row">
+        <div class="col-6">
+            {% include "lims/address.html" with user=object %}
+        </div>
+        <div class="col-6">
+            <div class="text-center float-right">
+                <img src="/static/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
+                     height="80px"
+                     title="{{ object.carrier|default_if_none:'User'|title }}">
+                <h5>{{ object.account_number|default:"-- --- --- --" }}</h5>
+            </div>
+
+        </div>
+    </div>
+</div>
+

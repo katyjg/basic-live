@@ -1,0 +1,256 @@
+{% extends "lims/entries/data.html" %}
+{% load data_server %}
+{% load converter %}
+{% load static %}
+{% load icons %}
+
+{% block data_content %}
+<div id='data-viewer'
+     data-first-file='{{ object.first_file }}'
+     data-first-frame='{{ object.first_frame }}'
+     data-base-url='{% url "files-proxy" section="frame" path=object.url %}'
+     data-frame-set='{{ object.frames }}'
+     data-wavelength='{{ object.energy|energy_to_wavelength }}'
+     data-resolution='{{ object.meta_data.resolution|default:2 }}'
+     class="d-flex"
+>
+    <div>
+        <!-- image viewer aspect -->
+        <div class="data-image p-0">
+            <div id="data-image-loading">
+                <div></div>
+            </div>
+            <div class="image-wrapper">
+                <div id="diffviewer" class="viewer"></div>
+            </div>
+        </div>
+
+        <!-- image navigation -->
+        <div class="row my-2">
+            <div class="col">
+                <button class="btn btn-sm btn-dark btn-dk" onclick="changeBrightness('dk');" type="button">Dark</button>
+                <button class="btn btn-sm  btn-secondary btn-nm" onclick="changeBrightness('nm');" type="button">
+                    Normal
+                </button>
+                <button class="btn btn-sm  btn-light btn-lt" onclick="changeBrightness('lt');" type="button">Light
+                </button>
+            </div>
+            <small class="col text-center text-condensed p-0" style="line-height: 1.2;"><span
+                    id="framename"></span><br/><span id="oscstart"></span> to <span id="oscend"></span></small>
+            <div class="col">
+                <div class="float-right">
+                    <button class="btn btn-sm btn-info" onclick="prevClicked();" type="button"><i
+                            class="ti ti-arrow-left"></i></button>
+                    <button class="btn btn-sm btn-info" onclick="nextClicked();" type="button"><i
+                            class="ti ti-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none d-lg-flex flex-column flex-fill pl-3">
+        <!-- Display of metaData -->
+        <div class="meta-data mb-3" style="flex: none;">
+            <div class="xtal-pic"
+                 style="background-image: url('{% url 'files-proxy' section='snapshot' path=object.snapshot_url %}');"
+                 title="Snapshot from beamline">&nbsp;
+            </div>
+        </div>
+        <small style="flex: none;">
+            <ul class="nav nav-tabs text-condensed px-2" role="tablist">
+                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#frames">{{ object.num_frames }}
+                    Frames ({{ object.frame_sets|truncatechars:20 }})</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#meta-data">Meta-Data</a></li>
+            </ul>
+        </small>
+        <div class="frame-list flex-fill">
+            <!--h4 class="text-condensed">{{ object.num_frames }} Frames ({{ object.frame_sets }})</h4-->
+            <div class="tab-content">
+                <div id="frames" class="tab-pane fade show active">
+                    <ul class="list-unstyled">
+                        {% for frame_id in object.frames %}
+                            {% get_frame_url object frame_id as frame_url %}
+                            {% get_frame_name object frame_id as frame_name %}
+                            <li data-frame-id="{{ frame_id }}" data-frame-name="{{ frame_name }}">
+                                <a onclick="toFrame('{{ frame_name }}', {{ frame_id }});">{{ frame_name }}</a>&nbsp;
+                                <a class="float-right download-tool" download="{{ frame_name }}"
+                                   href="{% url 'files-proxy' section='raw' path=frame_url %}"
+                                   title="Download this image">
+                                   {% show_icon icon='ti ti-sm ti-download' color='info' %}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div id="meta-data" class="tab-pane fade">
+                    <ul class="list-unstyled">
+                        {% for k, v in object.get_meta_data.items %}
+                            <li><strong>{{ k|title }}: </strong> <span class="float-right">{{ v }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modal_scripts %}
+<script type="text/javascript">
+    var dataViewer = function () {
+
+        var loadingTimer, loadingFrame = 1;
+        var loading = $('#data-image-loading');
+        var wavelength = 1.0;
+        var ref_resol = 2.0;
+        var theta_m = Math.asin(0.5 * wavelength) / ref_resol;
+
+        function _animate_loading() {
+            if (!loading.is(':visible')) {
+                clearInterval(loadingTimer);
+                return;
+            }
+            jQuery('div', loading).css('top', (loadingFrame * -40) + 'px');
+            loadingFrame = (loadingFrame + 1) % 12;
+        }
+
+        return {
+            setPars: function (w, r) {
+                wavelength = w;
+                ref_resol = r;
+                theta_m = Math.asin(0.5 * wavelength) / ref_resol;
+            },
+            calcRes: function (f) {
+                return (0.5 * wavelength) / Math.sin(f * theta_m)
+            },
+            showActivity: function () {
+                loading = jQuery('#data-image-loading');
+                clearInterval(loadingTimer);
+                loading.show();
+                loadingTimer = setInterval(_animate_loading, 66);
+            },
+            hideActivity: function () {
+                loading.hide();
+            }
+        }
+    }();
+    var $viewer = $('#data-viewer');
+    var $current_frame_to_display = $viewer.data('first-file');
+    var $current_frame_id = $viewer.data('first-frame');
+    var $current_brightness_to_display = 'nm';
+    var $expanded_frame_set = $viewer.data('frames');
+
+    function changeBrightness(brightness) {
+        if (brightness === $current_brightness_to_display) {
+            return;
+        }
+        $('.active-brightness').removeClass('active-brightness');
+        $('.btn-' + brightness).addClass('active-brightness');
+        $current_brightness_to_display = brightness;
+        updateFrame();
+    }
+
+    function updateFrame() {
+        var url = $viewer.data('base-url') + '/' + $current_frame_to_display + '/' + $current_brightness_to_display + '.png';
+        $("#diffviewer").diffviewer('loadImage', url);
+        updateFrameDetails();
+    }
+
+    function updateFrameDetails() {
+        // use jQuery to find and update the frame specific elements.
+        var element = $('#framename');
+        element.text($current_frame_to_display);
+        if (element.width() > parseInt($('.loaded-image').css('maxWidth'))) {
+            $('.loaded-image').addClass('reverse-ellipsis');
+        }
+
+        osc = ($current_frame_id - {{object.first_frame}}) * {{object.meta_data.delta_angle|default:0}} + {{object.meta_data.start_angle|default:0}};
+        $('#oscstart').text(osc + " deg");
+
+        osc = osc + {{object.meta_data.delta_angle|default:0|floatformat:1}};
+        $('#oscend').text(osc + " deg");
+
+    }
+
+    function nextClicked() {
+        // get next frame in set.
+        var index = $.inArray($current_frame_id, $expanded_frame_set);
+        if ((index !== -1) && (index < $expanded_frame_set.length - 1)) {
+            index++;
+            $current_frame_id = $expanded_frame_set[index];
+            $current_frame_to_display = $('[data-frame-id="' + $current_frame_id + '"]').data('frame-name');
+            updateFrame();
+        }
+    }
+
+    function prevClicked() {
+        // get previous frame in set
+        var index = $.inArray($current_frame_id, $expanded_frame_set);
+        if ((index !== -1) && (index > 0)) {
+            index--;
+            $current_frame_id = $expanded_frame_set[index];
+            $current_frame_to_display = $('[data-frame-id="' + $current_frame_id + '"]').data('frame-name');
+            updateFrame();
+        }
+    }
+
+    function toFrame(frame, frame_id) {
+        var index = $.inArray(frame_id, $expanded_frame_set);
+        if (index !== -1) {
+            $current_frame_to_display = frame;
+            $current_frame_id = frame_id;
+            updateFrame();
+        }
+    }
+
+    function initializeModal() {
+        $current_frame_to_display = $viewer.data('first-file');
+        $current_frame_id = $viewer.data('first-frame');
+        $current_brightness_to_display = "nm";
+        $expanded_frame_set = $viewer.data('frame-set');
+        dataViewer.setPars($viewer.data('wavelength'), $viewer.data('resolution'));
+        var url = $viewer.data('base-url') + '/' + $current_frame_to_display + '/' + $current_brightness_to_display + '.png';
+        updateFrameDetails();
+
+        $('[data-target="#parameters"]').click(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var target = $($(this).attr('data-target'));
+        var frame_list = $('.frame-list ul');
+        var height = 0;
+        if (target.hasClass('in')) {
+            height = frame_list.height() + $('#parameters').height();
+        }
+        $(this).find('i').toggleClass('fa-compress');
+        target.toggleClass('in');
+
+        if (!(height > 0)) {
+            height = frame_list.height() - $('#parameters').height();
+        }
+        frame_list.height(height);
+    });
+
+
+        $("#diffviewer").diffviewer({
+            src: url,
+            //update_on_resize: false,
+            zoom: 50,
+            zoom_min: 50,
+            onStartLoad: function () {
+                dataViewer.showActivity();
+            },
+            onFinishLoad: function () {
+                $("#diffviewer").diffviewer('setCoords', -500, -500);
+                dataViewer.hideActivity();
+            },
+            resFunc: function (r) {
+                return dataViewer.calcRes(r);
+            }
+        });
+        updateFrameDetails();
+    }
+    $('#modal').on('shown.bs.modal', function () {
+       initializeModal();
+    });
+</script>
+{% endblock %}

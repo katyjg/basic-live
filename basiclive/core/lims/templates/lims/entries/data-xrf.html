@@ -1,0 +1,112 @@
+{% extends "lims/entries/data.html" %}
+
+{% load data_server %}
+{% load static %}
+{% load jsutils %}
+
+{% block data_content %}
+    {% xrf_report as xrf %}
+    <div class="row">
+        <div class="col-9">
+            <div id="xrf-report" class="w-100 p-0"></div>
+            <script>
+                // create variables for annotations
+                var edges{{ data.pk }} = {
+                    {% for element in xrf.assignments %}{{ element.label }}: {{ element.edges | jsonify}},
+                    {% endfor %}
+                };
+                var report{{ data.pk }}={{ xrf.report|jsonify }};
+            </script>
+        </div>
+        {% if xrf.assignments %}
+            <div class="col-3">
+                <div class="modal-sidebar" style="overflow-y: scroll;">
+                <table class="table w-100 table-hover table-sm header-fixed">
+                    <thead>
+                    <tr class="bg-light" style="z-index: 1;">
+                        <th>Element</th>
+                        <th class="text-right">%</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for element in xrf.assignments %}
+                        <tr style="color: {{ element.color }};">
+                            <td>
+                            <span class="custom-control custom-switch" style="z-index: 0;">
+                              <input type="checkbox" class="custom-control-input xrf-toggle" id="switch{{ forloop.counter0 }}"
+                                     data-element="{{ element.label }}"
+                                     data-color="{{ element.color }}"
+                                     {% if element.reliability > 2 %}checked{% endif %}
+                              >
+                              <label class="custom-control-label" for="switch{{forloop.counter0}}">&emsp;{{ element.label }}</label>
+                            </span>
+                            </td>
+                            <td class="text-right">{{ element.reliability|floatformat:1 }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block modal_assets %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+{% endblock %}
+
+{% block modal_scripts %}
+    <script type="text/javascript">
+        $('#modal').on('shown.bs.modal', function () {
+            $('#xrf-report').liveReport({
+                data: report{{ data.pk }}
+            });
+
+            function updateAnnotations() {
+                let annotations = edges{{ data.pk }};
+                let xgrids = [];
+                let classes = {};
+                let chart = $('#figure-xrf').data('c3-chart');
+
+                $('#modal input.xrf-toggle:checked').each(function(){
+                    let el_name = $(this).data('element');
+                    let edges = annotations[el_name];
+                    classes[`${el_name}-notes`] = $(this).data('color');
+                    $.each(edges, function(i, edge){
+                        xgrids.push({
+                            value: edge['energy'],
+                            text: `${el_name}-${edge['label']}`,
+                            class: `${el_name}-notes notes`,
+                        });
+                    });
+                });
+
+                chart.xgrids(xgrids);
+                // update class names
+                d3.select("#figure-xrf")
+                    .selectAll(".c3-xgrid-line")
+                    .attr("class", function (d) {
+                        return "c3-xgrid-line"+(d.class ? ` ${d.class}`: "");
+                    });
+
+                $.each(classes, function(name, color){
+                   d3.selectAll(`g.${name} > line`).style('stroke', color);
+                   d3.selectAll(`g.${name} > text`).style('fill', color);
+                });
+            }
+
+            updateAnnotations();
+            $('input.xrf-toggle').click(function(){
+                updateAnnotations();
+            });
+        });
+    </script>
+{% endblock %}

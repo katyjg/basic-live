@@ -14,9 +14,4 @@ class Migration(migrations.Migration):
             name='sample',
             options={'ordering': ['priority', 'container__name', 'location__pk', 'name']},
         ),
-        migrations.AddField(
-            model_name='supportarea',
-            name='external',
-            field=models.BooleanField(default=False, verbose_name="Affected by factors out of the beamline's control"),
-        ),
     ]

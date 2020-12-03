@@ -1,0 +1,53 @@
+{% extends "lims/base.html" %}
+
+{% load static %}
+{% load jsutils %}
+{% load stats %}
+{% load icons %}
+
+{% block extra_css %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <strong class="text-muted">{{ object.username|upper }}</strong> | Project Statistics
+    </h3>
+    <span class="text-muted">
+        Your history in numbers
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a  href="{% url "project-profile" username=object.username %}">
+        {% show_icon label='My Profile' icon='ti ti-md ti-user' %}
+    </a>
+{% endblock %}
+
+{% block object_status %}
+{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div id="data-stats" class="col-12"></div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+
+    <script type="text/javascript">
+        var report = {{ report | safe }};
+        $(document).ready(function() {
+            $('#data-stats').liveReport({
+                data: report
+            });
+        });
+    </script>
+{% endblock %}

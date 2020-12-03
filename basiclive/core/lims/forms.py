@@ -11,7 +11,7 @@ from django.utils.text import slugify
 
 from .models import Project, Shipment, Dewar, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
 from .models import Guide, ProjectType, SSHKey
-from mxlive.staff.models import UserList
+from basiclive.core.acl.models import AccessList
 
 
 class BodyHelper(FormHelper):
@@ -1145,7 +1145,7 @@ class GuideForm(forms.ModelForm):
 class AccessForm(forms.ModelForm):
 
     class Meta:
-        model = UserList
+        model = AccessList
         fields = ('users',)
 
     def __init__(self, *args, **kwargs):

@@ -1,0 +1,17 @@
+{% extends "lims/entries/session-data.html" %}
+{% load static %}
+{% load icons %}
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ session.project|upper }} | {% endif %}</span><strong>{{ session.name }}</strong>
+    </h3>
+    <span class="text-muted">
+        Reports from Session
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="{% url "session-data" session.pk %}" title="Go to Data from this session">
+        {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=session.datasets.count %}
+    </a>
+{% endblock %}

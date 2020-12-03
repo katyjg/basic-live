@@ -8,7 +8,7 @@ from basiclive.core.lims import models
 register = Library()
 
 
-@register.inclusion_tag('users/guides.html', takes_context=True)
+@register.inclusion_tag('lims/guides.html', takes_context=True)
 def load_guides(context):
     return {
         'guides': models.Guide.objects.all(),

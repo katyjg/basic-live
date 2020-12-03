@@ -1,0 +1,90 @@
+{% extends "lims/base.html" %}
+
+{% load humanize static %}
+{% load badges %}
+{% load data_server %}
+{% load icons %}
+{% load jsutils %}
+
+{% block extra_css %}
+    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block object_tools %}
+    {% if object.url %}
+    <a  href="{% url 'files-proxy' section='archive' path=object.download_url %}" download="{{ object.name }}.tar.gz" title="Download all output files">
+        {% show_icon label="Download" icon="ti ti-md ti-download" %}
+    </a>
+    {% else %}
+        <a class="text-muted not-allowed" title="Download Not Available">
+            {% show_icon label="Download" icon="ti ti-md ti-download" %}
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-1">
+                <h3 class="m-0">
+                    {% score_badge object.score %}
+                </h3>
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Session:</small><br>
+                {% for session in object.sessions %}
+                    <a href="{% url "session-detail" session.pk %}">{{ session.name }}</a>
+                    {% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}
+                {% empty %}
+                    <span class="text-muted">Unrecorded Session</span>
+                {% endfor %}
+                {% if object.session %}
+                    <a href="{% url "session-detail" object.session.pk %}">{{ object.session.name }}</a>
+                {% endif %}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Data:</small><br>
+                {% for data in object.data.all %}<a data-link="{% url "data-detail" data.pk %}">{{ data.name }}</a>{% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}{% endfor %}
+            </div>
+            <div class="col">
+                <small class="text-muted text-condensed">Uploaded:</small><br>
+                {{ object.modified }}
+            </div>
+        </div>
+    </div>
+    {% include "lims/../comments.html" with object=object %}
+{% endblock %}
+
+{% block page_heading %}
+    <h4>
+        <span class="text-thin">Analysis Report |</span>
+        <span class="text-condensed">
+            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+        </span>
+    </h4>
+    <span class="text-muted">
+        {{ object.identity }} &mdash; {{ object.kind }} Created {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
+
+{% block full %}
+    <div id="report-builder"></div>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+    <script type="text/javascript">
+        let report = {
+            details: {{ object.details | jsonify }}
+        };
+        $('#report-builder').liveReport({
+            data: report
+        });
+    </script>
+{% endblock %}

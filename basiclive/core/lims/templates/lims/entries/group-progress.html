@@ -1,0 +1,80 @@
+{% load badges %}
+{% if samples %}
+<table class="table table-sm text-condensed">
+    <thead>
+        <tr>
+            {% if user.is_superuser %}<th></th>{% endif %}
+            <th>Sample</th>
+            <th>Container</th>
+            <th>Location</th>
+            <th>Data&nbsp;Sets</th>
+            <th>Analysis&nbsp;Reports</th>
+            {% if user.is_superuser %}<th></th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for sample in samples %}
+        <tr>
+            {% if user.is_superuser %}
+                <td>
+                    {% if sample.pk %}
+                    <a href="#!"
+                       data-form-link="{% url "sample-admin-edit" sample.pk %}"
+                       title="Edit Notes"
+                    >
+                        <i class="ti ti-comment{% if sample.staff_comments %}-alt{% endif %}"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            {% endif %}
+            <td class="overflow-ellipsis"
+            {% if sample.staff_comments %}
+                title="Staff Comments"
+                data-toggle="popover"
+                data-content="{{ sample.staff_comments|default:''}}"
+                data-placement="bottom"
+                data-trigger="hover"
+            {% endif %}
+            >
+                {% if sample.pk %}
+                    <a href="{% url "sample-detail" sample.pk %}" {% if sample.staff_comments %}class="checkout-dot"{% endif %}>{{ sample.name }}</a>
+                {% else %}
+                    {{ sample.name }}
+                {% endif %}
+            </td>
+            <td class="overflow-ellipsis">
+                {% if sample.pk %}
+                <a href="{% url "container-detail" sample.container.pk %}">{{ sample.container.name }}</a>
+                {% endif %}
+            </td>
+            <td class="overflow-ellipsis">
+                <div>{{ sample.dewar.beamline.acronym|default:'' }}&nbsp;{{ sample.port }}</div>
+            </td>
+            <td>
+                {% include "lims/entries/sample-data.html" %}
+            </td>
+            <td>
+                {% include "lims/entries/sample-reports.html" %}
+            </td>
+            {% if user.is_superuser%}
+                <td>
+                    {% if sample.pk %}
+                    <a href="#!"
+                       data-form-link="{% url "sample-admin-edit" sample.pk %}"
+                       title="Mark Complete/Incomplete"
+                    >
+                        {% if sample.collect_status %}
+                            <i class="ti ti-check-box"></i>
+                        {% else %}
+                            <i class="ti ti-pencil"></i>
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                </td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
