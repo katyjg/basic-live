@@ -6,6 +6,7 @@
 {% load static %}
 {% load time_extras %}
 {% load progress_extras %}
+{% load settings %}
 
 {% block page_heading %}
     <h3>
@@ -41,7 +42,8 @@
             {% show_icon label='Download' icon='ti ti-md ti-download' %}
         </a>
     {% endif %}
-    {% if request.user == object.project %}
+    {% get_setting "LIMS_USE_CRM" as crm %}
+    {% if request.user == object.project and crm %}
         <a href="{% url "session-feedback" key=object.feedback_key %}" title="Give feedback about this session">
             {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
         </a>

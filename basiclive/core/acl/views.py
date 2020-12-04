@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
-from basiclive.core.lims import forms
+from .forms import AccessForm
 
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin
@@ -42,7 +42,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
 
 
 class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    form_class = forms.AccessForm
+    form_class = AccessForm
     template_name = "lims/modal/form.html"
     model = models.AccessList
     success_url = reverse_lazy('access-list')

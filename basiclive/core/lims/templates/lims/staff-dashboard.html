@@ -37,6 +37,7 @@
 {% block object_tools %}
     {% get_setting "LIMS_USE_SCHEDULE" as schedule %}
     {% get_setting "LIMS_USE_PUBLICATIONS" as publications %}
+    {% get_setting "LIMS_USE_CRM" as crm %}
 
     <a  href="{% url 'access-list' %}">
         {% show_icon label="Remote" icon="ti ti-md ti-rss-alt" %}
@@ -58,9 +59,11 @@
             {% show_icon label="Publications" icon="ti ti-md ti-layout-list-post" %}
         </a>
     {% endif %}
-    <a href="{% url "supportrecord-list" %}" title="User Support">
-        {% show_icon label="Support" icon="ti ti-md ti-headphone-alt" %}
-    </a>
+    {% if crm %}
+        <a href="{% url "supportrecord-list" %}" title="User Support">
+            {% show_icon label="Support" icon="ti ti-md ti-headphone-alt" %}
+        </a>
+    {% endif %}
     <div class="separator"></div>
     <a href="#!" data-form-link="{% url "new-guide" %}" title="Create Guide">
         {% show_icon label="Add Guide" icon="ti ti-md ti-agenda" %}
@@ -154,9 +157,12 @@
                                 </span>
                             </div>
                             <div class="tools-box ml-auto">
+                                {% get_setting "LIMS_USE_CRM" as crm %}
+                                {% if crm %}
                                 <a href="#!" data-form-link="{% url "new-supportrecord" %}" title="Record User Support">
                                     {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' badge='+' color='primary' %}
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
