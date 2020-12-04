@@ -3,27 +3,11 @@ from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
 from crispy_forms.bootstrap import StrictButton
-from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout, HTML
 
 from basiclive.core.lims.models import Project
-from .models import AccessType, Beamtime, BeamlineSupport, Downtime, EmailNotification
-
-
-class BodyHelper(FormHelper):
-    def __init__(self, form):
-        super().__init__(form)
-        self.form_tag = False
-        self.use_custom_control = True
-        self.form_show_errors = False
-
-
-class FooterHelper(FormHelper):
-    def __init__(self, form):
-        super().__init__(form)
-        self.form_tag = False
-        self.disable_csrf = True
-        self.form_show_errors = False
+from basiclive.core.lims.forms import BodyHelper, FooterHelper
+from .models import Beamtime, BeamlineSupport, Downtime, EmailNotification
 
 
 class BeamtimeForm(forms.ModelForm):

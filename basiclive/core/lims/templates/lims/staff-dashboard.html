@@ -38,10 +38,13 @@
     {% get_setting "LIMS_USE_SCHEDULE" as schedule %}
     {% get_setting "LIMS_USE_PUBLICATIONS" as publications %}
     {% get_setting "LIMS_USE_CRM" as crm %}
+    {% get_setting "LIMS_USE_ACL" as acl %}
 
-    <a  href="{% url 'access-list' %}">
-        {% show_icon label="Remote" icon="ti ti-md ti-rss-alt" %}
-    </a>
+    {% if acl %}
+        <a  href="{% url 'access-list' %}">
+            {% show_icon label="Remote" icon="ti ti-md ti-rss-alt" %}
+        </a>
+    {% endif %}
     <a  href="{% url 'session-list' %}">
         {% show_icon label="Sessions" icon="ti ti-md ti-calendar" %}
     </a>
