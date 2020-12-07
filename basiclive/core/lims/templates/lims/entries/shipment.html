@@ -125,7 +125,7 @@
                                 <a href="{% url "container-detail" pk=container.pk %}">
                                     {% if container.parent %}
                                         <span class="badge badge-primary text-thin" title="Loaded">
-                                        {% if container.dewar %}{{ container.dewar.beamline }} |
+                                        {% if container.automounter %}{{ container.automounter.beamline }} |
                                             {% else %}{{ container.parent.kind.name }} {{ container.parent.name }}
                                             |{% endif %}{{ container.port }}&nbsp;|&nbsp;{{ container.name }}
                                     </span>

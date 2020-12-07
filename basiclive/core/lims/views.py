@@ -108,8 +108,8 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
     """
     This is the "Dashboard" view for superusers only. Basic information is displayed:
        - shipments: Any Shipments that are Sent or On-site
-       - automounters: Any active Dewar objects (Beamline/Automounter)
-       - adaptors: Any adaptors for loading Containers into a Dewar
+       - automounters: Any active Automounter objects (Beamline/Automounter)
+       - adaptors: Any adaptors for loading Containers into a Automounter
        - connections: Any project currently scheduled, connected to a remote access list, or with an active session
        - local contact: Displayed if there is a local contact scheduled
        - user guide: All items, for users and marked staff only
@@ -140,11 +140,10 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
         ).order_by('status', 'project__kind__name', 'project__username', '-date_shipped').prefetch_related('project')
 
         adaptors = models.Container.objects.filter(
-            kind__locations__accepts__isnull=False, dewars__isnull=True, status__gt=models.Container.STATES.DRAFT
+            kind__locations__accepts__isnull=False, beamlines__isnull=True, status__gt=models.Container.STATES.DRAFT
         ).distinct().order_by('name').select_related('parent')
 
-        automounters = models.Dewar.objects.filter(active=True).select_related('container', 'beamline').order_by(
-            'beamline__name')
+        beamlines = models.Beamline.objects.all().order_by('name')
 
         active_sessions = models.Session.objects.filter(stretches__end__isnull=True).annotate(
             data_count=Count('datasets', distinct=True),
@@ -205,7 +204,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
                 for access in AccessList.objects.filter(pk__in=access_info[i]['connections'].values_list('userlist__pk', flat=True)).distinct()
             } or {}
 
-        context.update(connections=access_info, adaptors=adaptors, automounters=automounters, shipments=shipments)
+        context.update(connections=access_info, adaptors=adaptors, shipments=shipments, beamlines=beamlines)
         return context
 
 
@@ -1015,10 +1014,10 @@ class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/entries/beamline.html"
 
 
-class DewarEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    form_class = forms.DewarForm
+class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+    form_class = forms.AutomounterForm
     template_name = "lims/modal/form.html"
-    model = models.Dewar
+    model = models.Automounter
     success_url = reverse_lazy('dashboard')
     success_message = "Comments have been updated."
 

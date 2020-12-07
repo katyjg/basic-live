@@ -80,7 +80,7 @@
             <div class="col-3">
             {% if object.accepts_children %}
                 <small class="text-muted text-condensed">Beamline:</small><br>
-                {% if object.dewar %}<a href="{% url "beamline-detail" object.dewar.beamline.pk %}">{{ object.dewar.beamline.acronym }}</a>{% endif %}
+                {% if object.automounter %}<a href="{% url "beamline-detail" object.automounter.beamline.pk %}">{{ object.automounter.beamline.acronym }}</a>{% endif %}
             {% else %}
                 <small class="text-muted text-condensed">Shipment:</small><br>
                 {% if object.shipment %}<a href="{% url "shipment-detail" object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
@@ -93,8 +93,8 @@
             {% if object.parent %}
                 <div class="col-3 pull-right text-right">
                     <small class="text-muted text-condensed">Location:</small><br>
-                    {% if object.dewar %}
-                        {{ object.dewar.beamline }}
+                    {% if object.automounter %}
+                        {{ object.automounter.beamline }}
                     {% else %}
                         {{ object.parent.kind.name }} {{ object.parent.name }}
                     {% endif %} | <strong>{{ object.port }}</strong>
@@ -131,7 +131,7 @@
         </div>
     </div>
     {% endif %}
-    {% include "lims/comments.html" with object=automounter.dewar %}
+    {% include "lims/comments.html" with object=automounter.automounter %}
 {% endblock %}
 
 {% block extra_js %}

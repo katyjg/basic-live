@@ -48,7 +48,7 @@
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
-                <div>{{ sample.dewar.beamline.acronym|default:'' }}&nbsp;{{ sample.port }}</div>
+                <div>{{ sample.automounter.beamline.acronym|default:'' }}&nbsp;{{ sample.port }}</div>
             </td>
             <td>
                 {% include "lims/entries/sample-data.html" %}

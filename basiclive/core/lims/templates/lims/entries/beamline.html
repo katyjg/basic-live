@@ -13,7 +13,7 @@
 {% block page_heading %}
     <h3 class="text-condensed">
         <i class="text-muted fa fa-fw {% if object.is_editable %}fa-unlock{% else %}fa-lock{% endif %}"></i>
-        <strong class="text-muted">{{ object.acronym }}</strong> | {{ object.active_automounter.kind }}
+        <strong class="text-muted">{{ object.acronym }}</strong> | {{ object.active_automounter.container.kind|default:"Manual Mounting" }}
     </h3>
     <span class="text-muted">
         {{ object.name }}
@@ -21,10 +21,11 @@
 {% endblock %}
 
 {% block object_tools %}
-    {% if object.active_dewar.container.children_history.all %}
-    <a href="#!" data-link="{% url "automounter-history" object.active_dewar.container.pk %}">
-        {% show_icon label='History' icon='ti ti-md ti-timer' %}
-    </a>
+    {% with object.active_automounter as automounter %}
+    {% if automounter.container.children_history.all %}
+        <a href="#!" data-link="{% url "automounter-history" object.active_automounter.container.pk %}">
+            {% show_icon label='History' icon='ti ti-md ti-timer' %}
+        </a>
     {% endif %}
     <a href="{% url "data-stats" %}?beamline__id__exact={{ object.pk }}">
         {% show_icon label='Stats' icon='ti ti-md ti-pulse' %}
@@ -35,9 +36,12 @@
     <a href="{% url "session-list" %}?beamline__id__exact={{ object.pk }}">
         {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
     </a>
-    <a href="#!" data-form-link="{% url "dewar-edit" pk=object.active_dewar.pk %}">
-        {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
-    </a>
+    {% if automounter %}
+        <a href="#!" data-form-link="{% url "automounter-edit" pk=automounter.pk %}">
+            {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
+        </a>
+    {% endif %}
+    {% endwith %}
 {% endblock %}
 
 {% block object_status %}
@@ -60,15 +64,17 @@
 
 {% block full %}
     {% with object.active_automounter as automounter %}
-        <div class="row">
-            <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
-                {% include "lims/entries/container-layout.html" with container=automounter show_samples=True loadable=True %}
-            </div>
+        {% if automounter %}
+            <div class="row">
+                <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
+                    {% include "lims/entries/container-layout.html" with container=automounter.container show_samples=True loadable=True %}
+                </div>
 
-            <div class="col-sm-5 col-12">
-                {% include "lims/entries/loaded.html" %}
+                <div class="col-sm-5 col-12">
+                    {% include "lims/entries/loaded.html" %}
+                </div>
             </div>
-        </div>
-        {% include "lims/comments.html" with object=automounter.dewar %}
+        {% endif %}
+        {% include "lims/comments.html" with object=automounter %}
     {% endwith %}
 {% endblock %}

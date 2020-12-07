@@ -8,7 +8,7 @@ from django import forms
 from django.conf import settings
 from django.urls import reverse_lazy
 
-from .models import Project, Shipment, Dewar, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
+from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
 from .models import Guide, ProjectType, SSHKey
 
 
@@ -226,18 +226,18 @@ class ShipmentCommentsForm(forms.ModelForm):
         widgets = {'staff_comments': forms.Textarea(attrs={'rows': "2"})}
 
 
-class DewarForm(forms.ModelForm):
+class AutomounterForm(forms.ModelForm):
     class Meta:
-        model = Dewar
+        model = Automounter
         fields = ('staff_comments',)
         widgets = {'staff_comments': forms.Textarea(attrs={'rows': "3"})}
 
     def __init__(self, *args, **kwargs):
-        super(DewarForm, self).__init__(*args, **kwargs)
+        super(AutomounterForm, self).__init__(*args, **kwargs)
 
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
-        self.body.form_action = reverse_lazy('dewar-edit', kwargs={'pk': self.instance.pk})
+        self.body.form_action = reverse_lazy('automounter-edit', kwargs={'pk': self.instance.pk})
         self.body.title = u"Staff Comments for {} Automounter".format(self.instance.beamline.acronym)
         self.body.layout = Layout('staff_comments')
         self.footer.layout = Layout(

@@ -27,7 +27,7 @@
                                              {% elif object.container.status < object.container.STATES.ON_SITE %}warning
                                              {% else %}default{% endif %}">
                         {% if object.container.status < object.container.STATES.SENT %}Draft
-                        {% elif object.container.status < object.container.STATES.RETURNED %}{{ object.dewar.beamline.acronym|default:"Pending" }}
+                        {% elif object.container.status < object.container.STATES.RETURNED %}{{ object.automounter.beamline.acronym|default:"Pending" }}
                         {% else %}Done{% endif %}
                     </span>
                 </h3>
@@ -42,7 +42,7 @@
             </div>
             <div class="col-2 pull-right text-right">
                 <small class="text-muted text-condensed">Location:</small><br>
-                <strong>{{ object.dewar|default_if_none:"" }} {{ object.port }}</strong>
+                <strong>{{ object.automounter|default_if_none:"" }} {{ object.port }}</strong>
             </div>
             <div class="col-3 pull-left">
                 <small class="text-muted text-condensed">Group:</small><br>

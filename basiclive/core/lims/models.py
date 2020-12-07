@@ -85,7 +85,7 @@ class Beamline(models.Model):
     energy_lo = models.FloatField(default=4.0)
     energy_hi = models.FloatField(default=18.5)
     contact_phone = models.CharField(max_length=60)
-    automounters = models.ManyToManyField('Container', through='Dewar', through_fields=('beamline', 'container'))
+    automounters = models.ManyToManyField('Container', through='Automounter', through_fields=('beamline', 'container'))
     active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -99,16 +99,10 @@ class Beamline(models.Model):
 
     def active_automounter(self):
         """
-        Returns the container referenced by the active dewar pointing to the beamline.
+        Returns the first active automounter pointing to the beamline. Generally, there should be
+        only one active automounter referencing each beamline at any given time.
         """
-        return self.active_dewar().container
-
-    def active_dewar(self):
-        """
-        Returns the first active dewar pointing to the beamline. Generally, there should only be one active dewar
-        referencing each beamline.
-        """
-        return self.dewars.filter(active=True).first()
+        return self.layouts.filter(active=True).first()
 
 
 class Carrier(models.Model):
@@ -834,8 +828,8 @@ class Container(TransitStatusMixin):
         return groups
 
     @memoize(timeout=60)
-    def dewar(self):
-        return self.dewars.filter(active=True).first() or self.parent and self.parent.dewar() or None
+    def automounter(self):
+        return self.beamlines.filter(active=True).first() or self.parent and self.parent.automounter() or None
 
     def port(self):
         if hasattr(self, 'port_name'):  # fetch from default annotation
@@ -946,14 +940,14 @@ class LoadHistory(models.Model):
         return '{}|{}|{}|{}'.format(self.child, self.parent, self.start, self.end)
 
 
-class Dewar(models.Model):
+class Automounter(models.Model):
     """
     A through-model relating a Beamline object to a Container object. The container referenced here should be the
-    one that samples or containers can be added to during a Project's beamtime. If a beamline has multiple containers
-    (ie. Dewar objects), only the current one should be marked 'active'.
+    one that samples or containers can be added to during a Project's beamtime. If a beamline has multiple possible
+    containers (ie. Automounter objects), only the current one should be marked 'active'.
     """
-    beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE, related_name="dewars")
-    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name="dewars")
+    beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE, related_name="layouts")
+    container = models.ForeignKey(Container, on_delete=models.CASCADE, related_name="beamlines")
     staff_comments = models.TextField(blank=True, null=True)
     modified = models.DateTimeField('date modified', auto_now=True, editable=False)
     active = models.BooleanField(default=False)
@@ -962,7 +956,7 @@ class Dewar(models.Model):
         return "{} | {}".format(self.beamline.acronym, self.container.name)
 
     def identity(self):
-        return 'DEW-{:07,d}'.format(self.id).replace(',', '-')
+        return 'ATM-{:07,d}'.format(self.id).replace(',', '-')
 
     def json_dict(self):
         return {
@@ -1101,8 +1095,8 @@ class Sample(ProjectObjectMixin):
     def identity(self):
         return 'SPL-{:07,d}'.format(self.id).replace(',', '-')
 
-    def dewar(self):
-        return self.container.dewar()
+    def automounter(self):
+        return self.container.automounter()
 
     def reports(self):
         return AnalysisReport.objects.filter(project=self.project, data__sample=self)

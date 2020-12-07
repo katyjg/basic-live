@@ -17,7 +17,7 @@ from django.utils.encoding import force_str
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
-from basiclive.core.lims.models import ActivityLog, Beamline, Container, Dewar, Data, DataType
+from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType
 from basiclive.core.lims.models import AnalysisReport, Project, Session
 from basiclive.core.lims.templatetags.converter import humanize_duration
 from basiclive.utils.data import parse_frames
@@ -237,14 +237,14 @@ class ProjectSamples(VerificationMixin, View):
 
         try:
             beamline = Beamline.objects.get(acronym=beamline_name)
-            dewar = beamline.dewars.select_related('container').get(active=True)
-        except (Beamline.DoesNotExist, Dewar.DoesNotExist):
+            automounter = beamline.automounters.select_related('container').get(active=True)
+        except (Beamline.DoesNotExist, Automounter.DoesNotExist):
             raise http.Http404("Beamline or Automounter does not exist")
 
         lookups = ['container__{}'.format('__'.join(['parent']*(i+1))) for i in range(MAX_CONTAINER_DEPTH)]
         query = Q(container__status=Container.STATES.ON_SITE)
         query &= (
-            functools.reduce(operator.or_, [Q(**{lookup:dewar.container}) for lookup in lookups]) |
+            functools.reduce(operator.or_, [Q(**{lookup:automounter.container}) for lookup in lookups]) |
             functools.reduce(operator.and_, [Q(**{"{}__isnull".format(lookup):True}) for lookup in lookups])
         )
 
