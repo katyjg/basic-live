@@ -8,21 +8,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{% block page_title %}{% get_setting 'APP_NAME' %}{% endblock %}</title>
-    <link rel="icon" href="{% static 'img/icon.ico' %}">
+    <link rel="icon" href="{% static 'lims/img/icon.ico' %}">
 
     <!-- Styles -->
     {% block site_css %}
-        <link rel="stylesheet" href="{% static "themify-icons/themify-icons.css" %}">
-        <link rel="stylesheet" href="{% static "css/noty/noty.min.css" %}" type="text/css"/>
-        <link rel="stylesheet" href="{% static "css/jquery.scrollbar.css" %}"/>
-        <link rel="stylesheet" href="{% static "css/mxlive.min.css" %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'themify-icons/themify-icons.css' %}">
+        <link rel="stylesheet" href="{% static 'css/noty/noty.min.css' %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'css/jquery.scrollbar.css' %}"/>
+        <link rel="stylesheet" href="{% static 'lims/css/mxlive.min.css' %}" type="text/css"/>
     {% endblock %}
     {% block extra_css %}{% endblock %}
-    <script src="{% static "js/jquery/jquery-3.4.1.min.js" %}"></script>
+    <script src="{% static 'js/jquery/jquery-3.4.1.min.js' %}"></script>
     <script src="{% static 'js/misc/noty.min.js' %}"></script>
-    <script src="{% static "js/misc/underscore-min.js" %}"></script>
-    <script src="{% static "js/misc/jquery.cookie.min.js" %}"></script>
-    <script src="{% static "js/mxlive-modals.min.js" %}"></script>
+    <script src="{% static 'js/misc/underscore-min.js' %}"></script>
+    <script src="{% static 'js/misc/jquery.cookie.min.js' %}"></script>
+    <script src="{% static 'lims/js/mxlive-modals.min.js' %}"></script>
 
     {% block pre_js %}{% endblock %}
 
@@ -73,9 +73,9 @@
 {% include "lims/messages.html" %}
 {% block post_js %}{% endblock %}
 
-<script src="{% static "bootstrap/js/bootstrap.bundle.min.js" %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <!--script src="{% static "js/jquery/jquery-ui.min.js" %}"></script-->
-<script src="{% static "js/misc/jquery.scrollbar.min.js" %}"></script>
+<script src="{% static 'js/misc/jquery.scrollbar.min.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 <script>

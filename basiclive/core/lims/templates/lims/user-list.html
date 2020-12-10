@@ -2,7 +2,7 @@
 {% load icons %}
 {% block page_heading %}<h3>Project Accounts</h3>{% endblock %}
 {% block object_tools %}{% if user.is_superuser %}
-    <a href="#!0" data-form-link="{% url "new-project" %}" title="Add Account">
+    <a href="#!0" data-form-link="{% url 'new-project' %}" title="Add Account">
         {% show_icon label="Add Account" icon="ti ti-md ti-plus" %}
     </a>
 {% endif %}{% endblock %}

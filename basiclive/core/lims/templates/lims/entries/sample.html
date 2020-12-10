@@ -35,7 +35,7 @@
             <div class="col-3">
                 <small class="text-muted text-condensed">Shipment:</small><br>
                 {% if object.container.shipment %}
-                <a href="{% url "shipment-detail" object.container.shipment.pk %}">{{object.container.shipment.name}}</a>
+                <a href="{% url 'shipment-detail' object.container.shipment.pk %}">{{object.container.shipment.name}}</a>
                     {% else %}
                     Not in Shipment
                 {% endif  %}
@@ -46,11 +46,11 @@
             </div>
             <div class="col-3 pull-left">
                 <small class="text-muted text-condensed">Group:</small><br>
-                <a href="{% url "group-detail" object.group.pk %}">{{ object.group }}</a>
+                <a href="{% url 'group-detail' object.group.pk %}">{{ object.group }}</a>
             </div>
             <div class="col-2 pull-left">
                 <small class="text-muted text-condensed">Container:</small><br>
-                <a href="{% url "container-detail" object.container.pk %}">{{ object.container.name }}</a>
+                <a href="{% url 'container-detail' object.container.pk %}">{{ object.container.name }}</a>
             </div>
 
         </div>

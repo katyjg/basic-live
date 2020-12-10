@@ -16,7 +16,7 @@
         </div>
         <div class="pl-3 overflow-ellipsis text-muted align-self-center">
             <h5 class="m-0">
-                <a class="text-muted text-condensed" href="{% url "shipment-detail" shipment.pk %}"
+                <a class="text-muted text-condensed" href="{% url 'shipment-detail' shipment.pk %}"
                    title='View Shipment "{{ shipment.name }}"'>
                     <strong>{% if user.is_superuser %}{{ shipment.project.name|upper }}{% else %}
                         {{ shipment.identity }}{% endif %}</strong> | {{ shipment.name }}
@@ -30,26 +30,26 @@
         </div>
         <div class="tools-box ml-auto">
             {% if shipment.status >= shipment.STATES.ON_SITE %}
-                <a href="{% url "shipment-data" shipment.pk %}" title="Go to Data from this shipment">
+                <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
                     {% show_icon label='Data' badge=shipment.data_count icon='ti ti-md ti-layout-grid3' color='info' %}
                 </a>
-                <a href="{% url "shipment-reports" shipment.pk %}" title="Go to Reports from this shipment">
+                <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
                     {% show_icon label='Reports' badge=shipment.report_count icon='ti ti-md ti-bar-chart-alt' color='info' %}
                 </a>
                 <a class="separator"></a>
             {% endif %}
             {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
                 {% if shipment.status == shipment.STATES.ON_SITE %}
-                    <a data-form-link="{% url "shipment-return" shipment.pk %}" title="Return shipment">
+                    <a data-form-link="{% url 'shipment-return' shipment.pk %}" title="Return shipment">
                         {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
                     </a>
                 {% else %}
-                    <a data-form-link="{% url "shipment-receive" shipment.pk %}" title="Receive shipment">
+                    <a data-form-link="{% url 'shipment-receive' shipment.pk %}" title="Receive shipment">
                         {% show_icon label='Receive' icon='ti ti-md ti-shopping-cart-full' %}
                     </a>
                 {% endif %}
             {% elif shipment.status == shipment.STATES.DRAFT and not user.is_superuser %}
-                    <a data-form-link="{% url "shipment-send" shipment.pk %}" title="Send shipment">
+                    <a data-form-link="{% url 'shipment-send' shipment.pk %}" title="Send shipment">
                         {% show_icon label='Send' icon='ti ti-md ti-location-arrow' %}
                     </a>
             {% endif %}

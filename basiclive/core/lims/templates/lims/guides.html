@@ -40,7 +40,7 @@
                         {% elif guide.has_video or guide.get_kind_display == guide.TYPE.video %}
                             <a href="#!" data-link="{% guide_link guide %}">
                                 <div class="guide-overlaid-text">
-                                    <img src="{% static 'img/video-embed.png' %}" width="100%" />
+                                    <img src="{% static 'lims/img/video-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
                                 </div>
                                 <div class="guide-text-condensed guide-snippet">
@@ -50,7 +50,7 @@
                         {% elif guide.get_kind_display == guide.TYPE.image %}
                             <a href="#!" data-link="{% guide_link guide %}">
                                 <div class="guide-overlaid-text">
-                                    <img src="{% static 'img/image-embed.png' %}" width="100%" />
+                                    <img src="{% static 'lims/img/image-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
                                 </div>
                                 <div class="text-condensed guide-snippet">
@@ -91,11 +91,11 @@
                                 </a>
                             {% endif %}
                             {% if request.user.is_superuser %}
-                                <a href="#!" data-form-link="{% url "guide-edit" guide.pk %}" title="Edit"
+                                <a href="#!" data-form-link="{% url 'guide-edit' guide.pk %}" title="Edit"
                                    style="padding-left: 0; padding-right: 0;">
                                     {% show_icon icon='ti ti-md ti-pencil' %}
                                 </a>
-                                <a href="#!" data-form-link="{% url "guide-delete" guide.pk %}" title="Delete">
+                                <a href="#!" data-form-link="{% url 'guide-delete' guide.pk %}" title="Delete">
                                     {% show_icon icon='ti ti-md ti-trash' %}
                                 </a>
                             {% endif %}

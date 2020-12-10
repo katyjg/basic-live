@@ -26,7 +26,7 @@
 
 {% block object_tools %}
     {%  if object.status == object.STATES.DRAFT %}
-        <a href="#!" data-form-link="{% url "seat-samples" object.shipment.pk %}" title="Sample Seat Selection">
+        <a href="#!" data-form-link="{% url 'seat-samples' object.shipment.pk %}" title="Sample Seat Selection">
         {% if not objects.samples.exists %}
             {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
         {% else %}
@@ -52,7 +52,7 @@
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Shipment:</small><br>
-                {% if object.shipment %}<a href="{% url "shipment-detail" object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
+                {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Plan:</small><br>
@@ -109,7 +109,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
+    <script src="{% static 'js/jquery/jquery-ui.min.js' %}"></script>
     <script>
         $(".sortable tbody").sortable({
             items: "tr",

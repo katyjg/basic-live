@@ -6,8 +6,8 @@
 {% load icons %}
 
 {% block extra_css %}
-    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+    <link href="{% static 'css/c3.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block page_heading %}
@@ -21,13 +21,13 @@
 
 
 {% block object_tools %}
-    <a  href="{% url "project-statistics" username=object.username %}">
+    <a  href="{% url 'project-statistics' username=object.username %}">
         {% show_icon label='My Stats' icon='ti ti-md ti-pulse' %}
     </a>
-    <a  href="#!" data-form-link="{% url "new-sshkey" username=object.username %}">
+    <a  href="#!" data-form-link="{% url 'new-sshkey' username=object.username %}">
         {% show_icon label='Add SSH Key' icon='ti ti-md ti-key' %}
     </a>
-    <a  href="#!" data-form-link="{% url "edit-profile" username=object.username %}">
+    <a  href="#!" data-form-link="{% url 'edit-profile' username=object.username %}">
         {% show_icon label='Edit Profile' icon='ti ti-md ti-pencil' %}
     </a>
 {% endblock %}

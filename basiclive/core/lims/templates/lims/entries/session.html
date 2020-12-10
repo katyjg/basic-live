@@ -22,17 +22,17 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "session-reports" object.pk %}" title="Go to Reports from this session">
+    <a href="{% url 'session-reports' object.pk %}" title="Go to Reports from this session">
         {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=object.num_reports %}
     </a>
-    <a href="{% url "session-data" object.pk %}" title="Go to Data from this session">
+    <a href="{% url 'session-data' object.pk %}" title="Go to Data from this session">
         {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=object.datasets.count %}
     </a>
-    <a href="#!" data-link="{% url "session-history" object.pk %}">
+    <a href="#!" data-link="{% url 'session-history' object.pk %}">
         {% show_icon label='History' icon='ti ti-md ti-timer' %}
     </a>
     {% if user.is_superuser %}
-        <a href="{% url "session-statistics" pk=object.pk %}">
+        <a href="{% url 'session-statistics' pk=object.pk %}">
             {% show_icon label='Statistics' icon='ti ti-md ti-pulse' %}
         </a>
     {% endif %}
@@ -44,7 +44,7 @@
     {% endif %}
     {% get_setting "LIMS_USE_CRM" as crm %}
     {% if request.user == object.project and crm %}
-        <a href="{% url "session-feedback" key=object.feedback_key %}" title="Give feedback about this session">
+        <a href="{% url 'session-feedback' key=object.feedback_key %}" title="Give feedback about this session">
             {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
         </a>
     {% endif %}

@@ -10,7 +10,7 @@
     <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
     <script src="{% static "js/jquery/jquery-migrate.min.js" %}"></script>
     <script src="{% static "js/misc/jquery.mousewheel.min.js" %}"></script>
-    <script src="{% static "js/mxlive-diffviewer.min.js" %}"></script>
+    <script src="{% static "lims/js/mxlive-diffviewer.min.js" %}"></script>
 {% endblock  %}
 
 {% block modal_styles %}data-viewer{% endblock %}
@@ -46,13 +46,13 @@
             <strong>Group / Sample:</strong><br/>
             <span class="text-muted">
                 {% if object.group %}
-                    <a title="Group" href="{% url "group-detail" object.sample.group.pk %}">{{ object.group }}</a>
+                    <a title="Group" href="{% url 'group-detail' object.sample.group.pk %}">{{ object.group }}</a>
                 {% else %}
                     None
                 {% endif %}
             /
                 {% if object.sample %}
-                    <a title="Sample" href="{% url "sample-detail" object.sample.pk %}">{{ object.sample }}</a>
+                    <a title="Sample" href="{% url 'sample-detail' object.sample.pk %}">{{ object.sample }}</a>
                 {% else %}
                     None
                 {% endif %}
@@ -63,7 +63,7 @@
             <strong>Reports:</strong><br/>
             <span class="text-muted">
             {% for report in object.reports.all %}
-                <a href="{% url "report-detail" report.pk %}" title="View {{ report.name }} Report">
+                <a href="{% url 'report-detail' report.pk %}" title="View {{ report.name }} Report">
                     {% score_badge report.score %}
                 </a>
             {% endfor %}

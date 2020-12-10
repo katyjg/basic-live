@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "session-data" session.pk %}" title="Go to Data from this session">
+    <a href="{% url 'session-data' session.pk %}" title="Go to Data from this session">
         {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=session.datasets.count %}
     </a>
 {% endblock %}

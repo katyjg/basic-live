@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "session-reports" session.pk %}" title="Go to Reports from this session">
+    <a href="{% url 'session-reports' session.pk %}" title="Go to Reports from this session">
         {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=session.num_reports %}
     </a>
 {% endblock %}
@@ -23,7 +23,7 @@
         <div class="row">
             <div class="col-4">
                 <small class="text-muted text-condensed">Session:</small><br>
-                <a href="{% url "session-detail" session.pk %}">{{session.name}}</a>
+                <a href="{% url 'session-detail' session.pk %}">{{session.name}}</a>
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Total Time:</small><br>

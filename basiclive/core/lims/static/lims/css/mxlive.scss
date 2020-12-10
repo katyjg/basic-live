@@ -29,8 +29,7 @@ $modal-data: 526px !default;
 
 // import font and web-font and bootstrap
 @import url($web-font-path);
-@import "../bootstrap/scss/bootstrap";
-
+@import "../../bootstrap/scss/bootstrap";
 
 $gray-label: #555;
 $gray-alpha: rgba(0, 0, 0, 0.15);
@@ -206,7 +205,6 @@ main {
   }
 }
 
-
 .modal-header {
   min-height: 3.5rem;
   padding: 0.5rem 1rem;
@@ -215,7 +213,6 @@ main {
       line-height: .9;
   }
 }
-
 
 #spinner {
   &.loading {
@@ -949,7 +946,7 @@ a[data-link], .back text[port], .cursor {
   }
 
   img.nofile {
-    background: url('/static/img/diffract.png') no-repeat;
+    background: url('/static/lims/img/diffract.png') no-repeat;
     position: absolute;
     border: 1px solid #ccc;
   }
@@ -991,7 +988,7 @@ a[data-link], .back text[port], .cursor {
   z-index: 1104;
 
   div {
-    background-image: url("/static/img/fancybox.png");
+    background-image: url("/static/lims/img/fancybox.png");
     height: 480px;
     left: 0;
     position: absolute;
@@ -999,6 +996,7 @@ a[data-link], .back text[port], .cursor {
     width: 40px;
   }
 }
+
 
 #data-viewer {
   .viewer {

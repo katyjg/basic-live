@@ -18,10 +18,10 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "shipment-data" shipment.pk %}" title="Go to Data from this shipment">
+    <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
         {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=shipment.num_datasets %}
     </a>
-    <a href="{% url "shipment-protocol" shipment.pk %}">
+    <a href="{% url 'shipment-protocol' shipment.pk %}">
         {% show_icon label="Progress" icon="ti ti-md ti-layout-media-overlay" %}
     </a>
 {% endblock %}

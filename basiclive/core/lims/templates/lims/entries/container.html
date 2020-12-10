@@ -7,7 +7,7 @@
 {% block pre_js %}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
-    <script src="{% static "js/mxlive-layouts.min.js" %}"></script>
+    <script src="{% static 'lims/js/mxlive-layouts.min.js' %}"></script>
 {% endblock %}
 
 {% block page_heading %}
@@ -54,12 +54,12 @@
     {% endif %}
     {% include "lims/tools-base.html" %}
     {% if object.parent_history.exists %}
-        <a href="#!" data-link="{% url "container-history" object.pk %}">
+        <a href="#!" data-link="{% url 'container-history' object.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
     {% if object.children_history.exists %}
-        <a class="pull-right" data-link="{% url "automounter-history" object.pk %}">
+        <a class="pull-right" data-link="{% url 'automounter-history' object.pk %}">
             {% show_icon label='Load History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
@@ -80,10 +80,10 @@
             <div class="col-3">
             {% if object.accepts_children %}
                 <small class="text-muted text-condensed">Beamline:</small><br>
-                {% if object.automounter %}<a href="{% url "beamline-detail" object.automounter.beamline.pk %}">{{ object.automounter.beamline.acronym }}</a>{% endif %}
+                {% if object.automounter %}<a href="{% url 'beamline-detail' object.automounter.beamline.pk %}">{{ object.automounter.beamline.acronym }}</a>{% endif %}
             {% else %}
                 <small class="text-muted text-condensed">Shipment:</small><br>
-                {% if object.shipment %}<a href="{% url "shipment-detail" object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
+                {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
             {% endif %}
             </div>
             <div class="col-2 pull-right text-right">

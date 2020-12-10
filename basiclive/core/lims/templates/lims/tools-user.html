@@ -6,7 +6,7 @@
 {% url "project-profile" username=user.username as profile_url %}
 {% url "project-statistics" username=user.username as stats_url %}
 
-<a  href="{% url "session-list" %}">
+<a  href="{% url 'session-list' %}">
     {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
 </a>
 {% if schedule %}

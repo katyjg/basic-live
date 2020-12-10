@@ -31,7 +31,7 @@
 {% block pre_js %}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/mxlive-layouts.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/mxlive-layouts.min.js' %}"></script>
 {% endblock %}
 
 {% block object_tools %}
@@ -63,12 +63,12 @@
         </a>
     {% endif %}
     {% if crm %}
-        <a href="{% url "supportrecord-list" %}" title="User Support">
+        <a href="{% url 'supportrecord-list' %}" title="User Support">
             {% show_icon label="Support" icon="ti ti-md ti-headphone-alt" %}
         </a>
     {% endif %}
     <div class="separator"></div>
-    <a href="#!" data-form-link="{% url "new-guide" %}" title="Create Guide">
+    <a href="#!" data-form-link="{% url 'new-guide' %}" title="Create Guide">
         {% show_icon label="Add Guide" icon="ti ti-md ti-agenda" %}
     </a>
 {% endblock %}
@@ -81,7 +81,7 @@
                 <div class="list-group list-group-flush list-group-hover">
                 {% for bl in beamlines %}
                     {% with bl.active_automounter as automounter %}
-                        <a href="{% url "beamline-detail" pk=bl.pk %}" class="text-center list-group-item p-2">
+                        <a href="{% url 'beamline-detail' pk=bl.pk %}" class="text-center list-group-item p-2">
                             <div id="layout-{{ automounter.pk }}" class="layout-lg">
                                 <h5 class="text-condensed">
                                     <strong><span class="text-muted">{{ bl.acronym }}</span></strong> | {{ automounter.container.kind|default:"Manual Mounting" }}
@@ -129,7 +129,7 @@
                         {% include "lims/entries/shipment-list-item.html" %}
                     {% endfor %}
                         <div class="p-2 list-group-item empty">
-                            <a href="#!" data-form-link="{% url "shipment-new" %}" class="d-flex flex-row">
+                            <a href="#!" data-form-link="{% url 'shipment-new' %}" class="d-flex flex-row">
                             <div class="box-status">
                                 <div class="text-center text-muted">
                                     <div title="Create a Shipment" class="ti ti-md ti-plus"></div>
@@ -166,7 +166,7 @@
                             <div class="tools-box ml-auto">
                                 {% get_setting "LIMS_USE_CRM" as crm %}
                                 {% if crm %}
-                                <a href="#!" data-form-link="{% url "new-supportrecord" %}" title="Record User Support">
+                                <a href="#!" data-form-link="{% url 'new-supportrecord' %}" title="Record User Support">
                                     {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' badge='+' color='primary' %}
                                 </a>
                                 {% endif %}

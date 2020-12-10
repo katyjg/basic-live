@@ -2,7 +2,7 @@
 <header>
     <nav class="navbar navbar-expand navbar-dark fixed-top">
         <!-- Brand and toggle get grouped for better mobile display -->
-        <a class="navbar-brand" href="{% url "dashboard" %}">{% get_setting 'APP_NAME' %}</a>
+        <a class="navbar-brand" href="{% url 'dashboard' %}">{% get_setting 'APP_NAME' %}</a>
         <ul class="navbar-nav ml-auto">
             {% if user.is_superuser %}
                <li class="nav-item">
@@ -12,7 +12,7 @@
                </li>
             {% endif %}
             <li class="nav-item">
-                <a class="nav-link" href="{% url "dashboard" %}">
+                <a class="nav-link" href="{% url 'dashboard' %}">
                     <i class="ti ti-home"></i><span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
@@ -23,15 +23,15 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="search-menu">
                     <a class="dropdown-item" href='{% url "shipment-list" %}'>Shipments</a>
-                    <a class="dropdown-item" href="{% url "container-list" %}">Containers</a>
-                    <a class="dropdown-item" href="{% url "group-list" %}">Groups</a>
-                    <a class="dropdown-item" href="{% url "sample-list" %}">Samples</a>
+                    <a class="dropdown-item" href="{% url 'container-list' %}">Containers</a>
+                    <a class="dropdown-item" href="{% url 'group-list' %}">Groups</a>
+                    <a class="dropdown-item" href="{% url 'sample-list' %}">Samples</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url "data-list" %}">Datasets</a>
-                    <a class="dropdown-item" href="{% url "result-list" %}">Reports</a>
+                    <a class="dropdown-item" href="{% url 'data-list' %}">Datasets</a>
+                    <a class="dropdown-item" href="{% url 'result-list' %}">Reports</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url "session-list" %}">Sessions</a>
-                    <a class="dropdown-item" href="{% url "activitylog-list" %}">Activity Log</a>
+                    <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
+                    <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity Log</a>
                 </div>
             </li>
             <li class="nav-item dropdown">
@@ -44,7 +44,7 @@
                         {% include "lims/address.html" with user=user %}
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#!" data-form-link="{% url "edit-profile" user.username %}">Edit Profile</a>
+                    <a class="dropdown-item" href="#!" data-form-link="{% url 'edit-profile' user.username %}">Edit Profile</a>
                     <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
                 </div>
             </li>

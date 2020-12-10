@@ -5,8 +5,8 @@
 
 
 {% block extra_css %}
-    <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+    <link href="{% static 'css/c3.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block page_heading %}
@@ -19,24 +19,24 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "data-list" %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
+    <a href="{% url 'data-list' %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
         {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=object.datasets.count %}
     </a>
-    <a class="pull-right" href="{% url "result-list" %}?search={{ object.username }}" title="Go to Reports for {{ object.username }}">
+    <a class="pull-right" href="{% url 'result-list' %}?search={{ object.username }}" title="Go to Reports for {{ object.username }}">
         {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=object.reports.count %}
     </a>
-    <a class="pull-right" href="{% url "session-list" %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
+    <a class="pull-right" href="{% url 'session-list' %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
         {% show_icon label="Sessions" icon="ti ti-md ti-calendar" badge=object.sessions.count %}
     </a>
     {% if user.is_superuser %}
     <span class="separator"></span>
-    <a href="{% url "project-labels" object.username %}" title="Get Shipping Labels">
+    <a href="{% url 'project-labels' object.username %}" title="Get Shipping Labels">
         {% show_icon label="Labels" icon="ti ti-md ti-tag" %}
     </a>
-    <a href="#!" data-form-link="{% url "edit-profile" object.username %}" title="Edit Profile">
+    <a href="#!" data-form-link="{% url 'edit-profile' object.username %}" title="Edit Profile">
         {% show_icon label="Edit" icon="ti ti-md ti-pencil-alt" %}
     </a>
-    <a href="#!" data-form-link="{% url "project-reset" object.username %}" title="Reset API Key">
+    <a href="#!" data-form-link="{% url 'project-reset' object.username %}" title="Reset API Key">
         {% show_icon label="Reset Key" icon="ti ti-md ti-key" %}
     </a>
 {% endif %}
@@ -105,12 +105,12 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.v5.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.legend.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/d3/d3.timeline.min.js' %}"></script>
-    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/misc/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/misc/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.v2.min.js' %}"></script>
 
     <script type="text/javascript">
         var report = {{ report | safe }};
