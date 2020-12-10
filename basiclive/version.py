@@ -28,8 +28,8 @@ def get_version():
             release = check_output(release_cmd, shell=True).decode().strip()
             return f'{version}.{release}'.strip(PREFIX)
         except CalledProcessError:
-            version = 0
-            release = 0
+            version = 'dev'
+            release = 'unknown'
             return f'{version}.{release}'.strip(PREFIX)
             #raise RuntimeError('Unable to get version number from git tags')
     else:
