@@ -6,11 +6,11 @@
 {% load badges %}
 
 {% block modal_assets %}
-    <link rel="stylesheet" href="{% static "css/jquery.diffviewer.css" %}" />
-    <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
-    <script src="{% static "js/jquery/jquery-migrate.min.js" %}"></script>
-    <script src="{% static "js/misc/jquery.mousewheel.min.js" %}"></script>
-    <script src="{% static "lims/js/mxlive-diffviewer.min.js" %}"></script>
+    <link rel="stylesheet" href="{% static 'lims/css/diffviewer.min.css' %}" />
+    <script src="{% static 'js/jquery/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'js/jquery/jquery-migrate.min.js' %}"></script>
+    <script src="{% static 'js/misc/jquery.mousewheel.min.js' %}"></script>
+    <script src="{% static 'lims/js/mxlive-diffviewer.min.js' %}"></script>
 {% endblock  %}
 
 {% block modal_styles %}data-viewer{% endblock %}
