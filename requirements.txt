@@ -37,3 +37,4 @@ six
 sqlparse
 timezonefinder
 urllib3
+fastjsonschema

@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="#!"  data-form-link="{% url "shipment-new" %}">
+    <a href="#!"  data-form-link="{% url 'shipment-new' %}">
         {% show_icon label='New Shipment' icon='ti ti-md ti-plus' %}
     </a>
     {% include "lims/tools-user.html" %}
@@ -38,7 +38,7 @@
             <div class="list-group list-group-flush">
                 {{ show_info }}
                 <div class="list-group-item empty p-2">
-                    <a href="#!" data-form-link="{% url "shipment-new" %}" class="d-flex flex-row">
+                    <a href="#!" data-form-link="{% url 'shipment-new' %}" class="d-flex flex-row">
                         <div class="box-status">
                             <div class="text-center text-muted">
                                 <div title="Create a Shipment" class="ti ti-md ti-plus"></div>

@@ -8,7 +8,7 @@
 
 {% block extra_css %}
     <link href="{% static "css/c3.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/reports.min.css" %}" rel="stylesheet">
+    <link href="{% static "lims/css/reports.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block object_tools %}
@@ -34,18 +34,18 @@
             <div class="col">
                 <small class="text-muted text-condensed">Session:</small><br>
                 {% for session in object.sessions %}
-                    <a href="{% url "session-detail" session.pk %}">{{ session.name }}</a>
+                    <a href="{% url 'session-detail' session.pk %}">{{ session.name }}</a>
                     {% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}
                 {% empty %}
                     <span class="text-muted">Unrecorded Session</span>
                 {% endfor %}
                 {% if object.session %}
-                    <a href="{% url "session-detail" object.session.pk %}">{{ object.session.name }}</a>
+                    <a href="{% url 'session-detail' object.session.pk %}">{{ object.session.name }}</a>
                 {% endif %}
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Data:</small><br>
-                {% for data in object.data.all %}<a data-link="{% url "data-detail" data.pk %}">{{ data.name }}</a>{% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}{% endfor %}
+                {% for data in object.data.all %}<a data-link="{% url 'data-detail' data.pk %}">{{ data.name }}</a>{% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}{% endfor %}
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Uploaded:</small><br>
@@ -74,11 +74,11 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{% static "js/d3/d3.v5.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/d3/d3.legend.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/misc/showdown.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/misc/c3.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "js/mxlive-reports.v2.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.v5.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3/d3.legend.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/misc/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/misc/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.min.js' %}"></script>
     <script type="text/javascript">
         let report = {
             details: {{ object.details | jsonify }}

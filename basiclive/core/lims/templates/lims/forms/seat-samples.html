@@ -6,8 +6,8 @@
     {{ block.super }}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
-    <script src="{% static "js/mxlive-layouts.min.js" %}"></script>
-    <script src="{% static "js/mxlive-seater.min.js" %}"></script>
+    <script src="{% static "lims/js/mxlive-layouts.min.js" %}"></script>
+    <script src="{% static "lims/js/mxlive-seater.min.js" %}"></script>
 {% endblock %}
 {% block modal_styles %}modal-lg{% endblock %}
 {% block modal_title %}<i class="ti ti-paint-bucket text-muted"></i> &nbsp; <strong>{{ shipment }}</strong> | Sample Seat Selection{% endblock %}

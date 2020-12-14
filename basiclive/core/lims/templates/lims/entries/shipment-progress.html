@@ -4,7 +4,7 @@
 {% load progress_extras %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static "css/print.css" %}" type="text/css" media="print"/>
+    <link rel="stylesheet" href="{% static "lims/css/print.min.css" %}" type="text/css" media="print"/>
 {% endblock %}
 
 {% block page_heading %}
@@ -22,10 +22,10 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "shipment-data" object.pk %}" title="Go to Data from this shipment">
+    <a href="{% url 'shipment-data' object.pk %}" title="Go to Data from this shipment">
         {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=object.num_datasets %}
     </a>
-    <a href="{% url "shipment-reports" object.pk %}" title="Go to Reports from this shipment">
+    <a href="{% url 'shipment-reports' object.pk %}" title="Go to Reports from this shipment">
         {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=object.num_reports %}
     </a>
 {% endblock %}
@@ -35,7 +35,7 @@
         <div class="row">
             <div class="col">
                 <small class="text-muted text-condensed">Shipment:</small><br>
-                <a href="{% url "shipment-detail" object.pk %}">{{object.name}}</a>
+                <a href="{% url 'shipment-detail' object.pk %}">{{object.name}}</a>
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Samples:</small><br>

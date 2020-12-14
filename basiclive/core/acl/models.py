@@ -7,7 +7,7 @@ from django.utils import timezone
 from model_utils import Choices
 
 if settings.LIMS_USE_SCHEDULE:
-    from ..schedule.models import Beamtime
+    from basiclive.core.schedule.models import Beamtime
     HOURS_PER_SHIFT = getattr(settings, 'HOURS_PER_SHIFT', 8)
 
 

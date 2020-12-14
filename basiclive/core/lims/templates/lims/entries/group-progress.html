@@ -19,7 +19,7 @@
                 <td>
                     {% if sample.pk %}
                     <a href="#!"
-                       data-form-link="{% url "sample-admin-edit" sample.pk %}"
+                       data-form-link="{% url 'sample-admin-edit' sample.pk %}"
                        title="Edit Notes"
                     >
                         <i class="ti ti-comment{% if sample.staff_comments %}-alt{% endif %}"></i>
@@ -37,14 +37,14 @@
             {% endif %}
             >
                 {% if sample.pk %}
-                    <a href="{% url "sample-detail" sample.pk %}" {% if sample.staff_comments %}class="checkout-dot"{% endif %}>{{ sample.name }}</a>
+                    <a href="{% url 'sample-detail' sample.pk %}" {% if sample.staff_comments %}class="checkout-dot"{% endif %}>{{ sample.name }}</a>
                 {% else %}
                     {{ sample.name }}
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
                 {% if sample.pk %}
-                <a href="{% url "container-detail" sample.container.pk %}">{{ sample.container.name }}</a>
+                <a href="{% url 'container-detail' sample.container.pk %}">{{ sample.container.name }}</a>
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
@@ -60,7 +60,7 @@
                 <td>
                     {% if sample.pk %}
                     <a href="#!"
-                       data-form-link="{% url "sample-admin-edit" sample.pk %}"
+                       data-form-link="{% url 'sample-admin-edit' sample.pk %}"
                        title="Mark Complete/Incomplete"
                     >
                         {% if sample.collect_status %}

@@ -17,10 +17,10 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="{% url "shipment-reports" shipment.pk %}" title="Go to Reports from this shipment">
+    <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
         {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=shipment.num_reports %}
     </a>
-    <a href="{% url "shipment-protocol" shipment.pk %}">
+    <a href="{% url 'shipment-protocol' shipment.pk %}">
         {% show_icon label="Progress" icon="ti ti-md ti-layout-media-overlay" %}
     </a>
 {% endblock %}
@@ -30,7 +30,7 @@
         <div class="row">
             <div class="col">
                 <small class="text-muted text-condensed">Shipment:</small><br>
-                <a href="{% url "shipment-detail" shipment.pk %}">{{shipment.name}}</a>
+                <a href="{% url 'shipment-detail' shipment.pk %}">{{shipment.name}}</a>
             </div>
             <div class="col">
                 <small class="text-muted text-condensed">Samples:</small><br>

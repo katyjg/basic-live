@@ -44,7 +44,11 @@ setup(
         'basiclive':
             package_files('basiclive/core/lims/static') +
             package_files('basiclive/core/lims/templates') +
-            package_files('basiclive/core/templates')
+            package_files('basiclive/core/acl/templates') +
+            package_files('basiclive/core/crm/templates') +
+            package_files('basiclive/core/publicatons/templates') +
+            package_files('basiclive/core/schedule/templates') +
+            package_files('basiclive/core/schedule/static')
     },
     classifiers=[
         'Intended Audience :: Developers',

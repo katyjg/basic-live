@@ -34,7 +34,7 @@
         </div>
         <div class="col-6">
             <div class="text-center float-right">
-                <img src="/static/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
+                <img src="/static/lims/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
                      height="80px"
                      title="{{ object.carrier|default_if_none:'User'|title }}">
                 <h5>{{ object.account_number|default:"-- --- --- --" }}</h5>

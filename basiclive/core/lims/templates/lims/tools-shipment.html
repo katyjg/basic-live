@@ -2,13 +2,13 @@
 
 {% if shipment.status >= shipment.STATES.SENT %}
     {% comment %}Shipment Details{% endcomment %}
-    <a href="{% url "shipment-protocol" shipment.pk %}">
+    <a href="{% url 'shipment-protocol' shipment.pk %}">
         {% show_icon label='Progress' icon='ti ti-md ti-layout-media-overlay' %}
     </a>
-    <a href="{% url "shipment-data" shipment.pk %}" title="Go to Data from this shipment">
+    <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
         {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=shipment.num_datasets color='info' %}
     </a>
-    <a href="{% url "shipment-reports" shipment.pk %}" title="Go to Reports from this shipment">
+    <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
         {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=shipment.num_reports color='info' %}
     </a>
 {% endif %}
@@ -17,33 +17,33 @@
     {% if shipment.status == shipment.STATES.DRAFT %}
         {% include "lims/tools-shipment-edit.html" %}
         <div class="separator"></div>
-        <a href="#!" data-form-link="{% url "shipment-delete" shipment.pk %}">
+        <a href="#!" data-form-link="{% url 'shipment-delete' shipment.pk %}">
             {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
         </a>
-        <a href="#!" data-form-link="{% url "shipment-edit" shipment.pk %}">
+        <a href="#!" data-form-link="{% url 'shipment-edit' shipment.pk %}">
             {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
         </a>
-        <a href="#!" data-form-link="{% url "shipment-send" shipment.pk %}">
+        <a href="#!" data-form-link="{% url 'shipment-send' shipment.pk %}">
             {% show_icon label='Send' icon='ti ti-md ti-location-arrow'%}
         </a>
     {% endif %}
     {% if shipment.status == shipment.STATES.SENT %}
-        <a href="#!" data-form-link="{% url "shipment-update-send" shipment.pk %}">
+        <a href="#!" data-form-link="{% url 'shipment-update-send' shipment.pk %}">
             {% show_icon label='Recall' icon='ti ti-md ti-control-backward' %}
         </a>
     {% endif %}
     {% if shipment.status <= shipment.STATES.ON_SITE %}
-        <a href="{% url "shipment-labels" shipment.pk %}">
+        <a href="{% url 'shipment-labels' shipment.pk %}">
             {% show_icon label='Labels' icon='ti ti-md ti-tag' %}
         </a>
     {% endif %}
 {% elif user.is_superuser %}
     {% comment %}Staff Actions{% endcomment %}
     <div class="separator"></div>
-    <a href="{% url "shipment-labels" shipment.pk %}">
+    <a href="{% url 'shipment-labels' shipment.pk %}">
         {% show_icon label='Labels' icon='ti ti-md ti-tag' %}
     </a>
-    <a href="#!" data-form-link="{% url "shipment-comments" shipment.pk %}">
+    <a href="#!" data-form-link="{% url 'shipment-comments' shipment.pk %}">
         {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
     </a>
     {% if shipment.status == shipment.STATES.SENT %}

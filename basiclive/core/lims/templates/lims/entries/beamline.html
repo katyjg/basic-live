@@ -7,7 +7,7 @@
 {% block pre_js %}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
-    <script src="{% static "js/mxlive-layouts.min.js" %}"></script>
+    <script src="{% static 'lims/js/mxlive-layouts.min.js' %}"></script>
 {% endblock %}
 
 {% block page_heading %}
@@ -23,21 +23,21 @@
 {% block object_tools %}
     {% with object.active_automounter as automounter %}
     {% if automounter.container.children_history.all %}
-        <a href="#!" data-link="{% url "automounter-history" object.active_automounter.container.pk %}">
+        <a href="#!" data-link="{% url 'automounter-history' object.active_automounter.container.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
-    <a href="{% url "data-stats" %}?beamline__id__exact={{ object.pk }}">
+    <a href="{% url 'data-stats' %}?beamline__id__exact={{ object.pk }}">
         {% show_icon label='Stats' icon='ti ti-md ti-pulse' %}
     </a>
-    <a href="{% url "beamline-usage" %}?beamline__id__exact={{ object.pk }}">
+    <a href="{% url 'beamline-usage' %}?beamline__id__exact={{ object.pk }}">
         {% show_icon label='Usage' icon='ti ti-md ti-pie-chart' %}
     </a>
-    <a href="{% url "session-list" %}?beamline__id__exact={{ object.pk }}">
+    <a href="{% url 'session-list' %}?beamline__id__exact={{ object.pk }}">
         {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
     </a>
     {% if automounter %}
-        <a href="#!" data-form-link="{% url "automounter-edit" pk=automounter.pk %}">
+        <a href="#!" data-form-link="{% url 'automounter-edit' pk=automounter.pk %}">
             {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
         </a>
     {% endif %}

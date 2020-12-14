@@ -17,7 +17,7 @@
         <div class="pl-3 overflow-ellipsis align-self-center">
             <h5 class="m-0 text-condensed">
                 <span class="text-muted">
-                    <a href="#!" data-link="{% url "user-info" connection.user.username %}"
+                    <a href="#!" data-link="{% url 'user-info' connection.user.username %}"
                        title='View Contact Information for {{ connection.user.username }}'>
                         <i class="ti ti-sm ti-info-alt"></i>
                     </a>
@@ -46,7 +46,7 @@
         </div>
         <div class="tools-box ml-auto">
             {% for access, conn in connection.connections.items %}
-                <a href="{% url "connection-list" %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
+                <a href="{% url 'connection-list' %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
                    title='View {{ connection.user.username|upper }} Connections to {{ access }}'>
                     {% if conn|length is 1 %}
                         {% show_icon label=access|upper icon='ti ti-md ti-rss-alt' %}
@@ -56,7 +56,7 @@
                 </a>
             {% endfor %}
             {% for session in connection.sessions %}
-                <a href="{% url "session-detail" session.pk %}" title='View Session "{{ session.name }}"'>
+                <a href="{% url 'session-detail' session.pk %}" title='View Session "{{ session.name }}"'>
                     {% show_icon label=session.start.date|date:"M j"|upper icon='ti ti-md ti-calendar' %}
                 </a>
             {% endfor %}

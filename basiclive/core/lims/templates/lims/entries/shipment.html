@@ -8,7 +8,7 @@
 {% block pre_js %}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
-    <script src="{% static "js/mxlive-layouts.min.js" %}"></script>
+    <script src="{% static 'lims/js/mxlive-layouts.min.js' %}"></script>
 {% endblock %}
 
 {% block page_heading %}
@@ -122,7 +122,7 @@
                     <div class="{% container_col container %} text-center">
                         <div id="layout-{{ container.pk }}" class="layout-lg mt-4">
                             <h5 class="text-condensed">
-                                <a href="{% url "container-detail" pk=container.pk %}">
+                                <a href="{% url 'container-detail' pk=container.pk %}">
                                     {% if container.parent %}
                                         <span class="badge badge-primary text-thin" title="Loaded">
                                         {% if container.automounter %}{{ container.automounter.beamline }} |
@@ -151,7 +151,7 @@
                                 data-reference="{{ group.pk }}">
                                 <div class="d-flex flex-row justify-content-between">
                                     <div>
-                                        <a href="{% url "group-detail" pk=group.pk %}"><strong>{{ group.name }}</strong></a>
+                                        <a href="{% url 'group-detail' pk=group.pk %}"><strong>{{ group.name }}</strong></a>
                                         <div class="small">
                                             <span title="Type">{{ group.get_kind_display }}{% if group.absorption_edge %} ({{ group.absorption_edge }}){% endif %}</span>
                                             | <span title="Plan">{{ group.get_plan_display }}{% if group.resolution %} ({{ group.resolution }}Å){% endif %}</span>
@@ -159,7 +159,7 @@
                                     </div>
                                     {% if shipment.is_editable %}
                                         <div class="tools-box">
-                                            <a href="#!" data-form-link="{% url "group-edit" group.pk %}"
+                                            <a href="#!" data-form-link="{% url 'group-edit' group.pk %}"
                                                 title="Edit Group Parameters">
                                                 {% show_icon icon="ti ti-pencil" %}
                                             </a>

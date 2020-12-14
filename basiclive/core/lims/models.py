@@ -1,9 +1,8 @@
 import copy
 import hashlib
 import json
-import os
 import mimetypes
-
+import os
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
 
@@ -17,10 +16,10 @@ from django.db.models.functions import Coalesce, Concat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from jsonfield.fields import JSONField
+
+from memoize import memoize
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
-from memoize import memoize
 
 from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
@@ -29,19 +28,18 @@ from basiclive.utils.functions import ShiftEnd, ShiftStart
 IDENTITY_FORMAT = '-%y%m'
 RESTRICT_DOWNLOADS = getattr(settings, 'RESTRICT_DOWNLOADS', False)
 SHIFT_HRS = getattr(settings, 'HOURS_PER_SHIFT', 8)
-SHIFT_SECONDS = SHIFT_HRS*3600
+SHIFT_SECONDS = SHIFT_HRS * 3600
 
 MAX_CONTAINER_DEPTH = getattr(settings, 'MAX_CONTAINER_DEPTH', 2)
 SAMPLE_PORT_FIELDS = [
-    "container{}__location__name".format("__".join([""]+(["parent"]*i)))
-    for i in reversed(range(MAX_CONTAINER_DEPTH))
-] + ['location__name']
+                         "container{}__location__name".format("__".join([""] + (["parent"] * i)))
+                         for i in reversed(range(MAX_CONTAINER_DEPTH))
+                     ] + ['location__name']
 
 CONTAINER_PORT_FIELDS = [
-    "{}location__name".format("__".join((["parent"]*i)+[""]))
+    "{}location__name".format("__".join((["parent"] * i) + [""]))
     for i in reversed(range(MAX_CONTAINER_DEPTH))
 ]
-
 
 DRAFT = 0
 SENT = 1
@@ -155,7 +153,8 @@ class Project(AbstractUser):
     organisation = models.CharField(max_length=600, blank=True, null=True)
     show_archives = models.BooleanField(default=True)
     key = models.TextField(blank=True)
-    kind = models.ForeignKey(ProjectType, blank=True,null=True, on_delete=models.SET_NULL, verbose_name=_("Project Type"))
+    kind = models.ForeignKey(ProjectType, blank=True, null=True, on_delete=models.SET_NULL,
+                             verbose_name=_("Project Type"))
     alias = models.CharField(max_length=20, blank=True, null=True)
     designation = models.ManyToManyField(ProjectDesignation, verbose_name=_("Project Designation"), blank=True)
     created = models.DateTimeField(_('date created'), auto_now_add=True, editable=False)
@@ -193,7 +192,6 @@ class Project(AbstractUser):
             self.kind = ProjectType.objects.first()
         super().save(*args, **kwargs)
 
-
     class Meta:
         verbose_name = _("Project Account")
 
@@ -209,15 +207,19 @@ class SSHKey(TimeStampedModel):
     def fingerprint(self):
         import hashlib
         fp = hashlib.md5(self.key.encode()).hexdigest()
-        return ':'.join(a+b for a,b in zip(fp[::2], fp[1::2]))
+        return ':'.join(a + b for a, b in zip(fp[::2], fp[1::2]))
 
 
 class StretchQuerySet(models.QuerySet):
 
-    def active(self, extras={}):
+    def active(self, extras=None):
+        if extras is None:
+            extras = {}
         return self.filter(end__isnull=True, **extras)
 
-    def recent(self, extras={}):
+    def recent(self, extras=None):
+        if extras is None:
+            extras = {}
         recently = timezone.now() - timedelta(minutes=5)
         return self.filter(end__gte=recently, **extras)
 
@@ -312,10 +314,12 @@ class Session(models.Model):
 
     def num_datasets(self):
         return self.datasets.count()
+
     num_datasets.short_description = _("Datasets")
 
     def num_reports(self):
         return self.reports().count()
+
     num_reports.short_description = _("Reports")
 
     def samples(self):
@@ -354,7 +358,8 @@ class Session(models.Model):
         """
         total = self.stretches.with_duration().aggregate(time=Sum('duration'))
 
-        return total['time'].total_seconds()/3600
+        return total['time'].total_seconds() / 3600
+
     total_time.short_description = _("Duration")
 
     @memoize(60)
@@ -382,7 +387,6 @@ class Session(models.Model):
             )
             for first, second in zip(data[:-1], data[1:]) if (second.start_time - first.end_time) > max_gap
         ]
-
 
 
 class Stretch(models.Model):
@@ -722,7 +726,7 @@ class ContainerType(models.Model):
         STATES.LOADED: [STATES.PENDING],
     }
     name = models.CharField(max_length=20)
-    layout = JSONField(null=True, blank=True)
+    layout = models.JSONField(default=dict)
     height = models.FloatField(default=1.0)
     radius = models.FloatField(default=8.0)
     envelope = models.CharField(max_length=200, blank=True)
@@ -968,6 +972,58 @@ class Automounter(models.Model):
         }
 
 
+REQUEST_SPEC_SCHEMA = {
+    "title": "Request Type Schema",
+    "type": "object",
+    "propertyNames": {
+        "pattern": r"^[^\d\W]\w*\Z$"
+    },
+    "additionalProperties": { "$ref": "#/definitions/field"},
+    "definitions": {
+        "field": {
+            "title": "Request Type Specification",
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "description": "A human readable text label for display purposes"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["string", "boolean", "number"],
+                    "description": "Data type"
+                },
+                "choices": {
+                    "type": "array",
+                    "description": "Data type",
+                    "items": { "$ref": "#/definitions/choice" },
+                    "uniqueItems": True
+                },
+                "required": {"type": "boolean", "default": False}
+            },
+            "required": ["label", "type"]
+        },
+        "choice": {
+            "type": "array",
+            "items": [
+                {"type": "string"},
+                {"type": "string"}
+            ],
+            "additionalItems": False
+        }
+    }
+}
+
+
+class RequestType(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    spec = models.JSONField()
+
+    def __str__(self):
+        return self.name
+
+
 class Group(ProjectObjectMixin):
     STATUS_CHOICES = (
         (ProjectObjectMixin.STATES.DRAFT, _('Draft')),
@@ -1070,7 +1126,8 @@ class Sample(ProjectObjectMixin):
         'comments': _('You can use restructured text formatting in this field'),
         'location': _('This field is required only if a container has been selected'),
         'group': _('This field is optional here.  Samples can also be added to a group on the groups page.'),
-        'container': _('This field is optional here.  Samples can also be added to a container on the containers page.'),
+        'container': _(
+            'This field is optional here.  Samples can also be added to a container on the containers page.'),
     }
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='samples')
     barcode = models.SlugField(null=True, blank=True)
@@ -1159,7 +1216,7 @@ class DataType(models.Model):
     acronym = models.SlugField(unique=True)
     description = models.TextField()
     template = models.CharField(max_length=100)
-    metadata = JSONField(default=[])
+    metadata = models.JSONField(default=list)
 
     objects = DataTypeManager()
 
@@ -1194,13 +1251,13 @@ class Data(ActiveStatusMixin):
     url = models.CharField(max_length=200)
     kind = models.ForeignKey(DataType, on_delete=models.PROTECT, related_name='datasets', null=True)
     download = models.BooleanField(default=False)
-    meta_data = JSONField(default={})
+    meta_data = models.JSONField(default=dict)
 
     objects = DataManager()
 
     class Meta:
         verbose_name = _('Dataset')
-        ordering = ['created',]
+        ordering = ['created', ]
 
     def __str__(self):
         return '%s (%d)' % (self.name, self.num_frames)
@@ -1258,7 +1315,7 @@ class AnalysisReport(ActiveStatusMixin):
     score = models.FloatField(_("Analysis Report Score"), null=True, default=0.0)
     data = models.ManyToManyField(Data, blank=True, related_name="reports")
     url = models.CharField(max_length=200)
-    details = JSONField(default=[])
+    details = models.JSONField(default=list)
 
     objects = ProjectObjectManager()
 
