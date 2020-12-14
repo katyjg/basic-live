@@ -15,28 +15,7 @@
 {% if user == shipment.project %}
     <div class="separator"></div>
     {% if shipment.status == shipment.STATES.DRAFT %}
-        <a href="#!"  data-form-link="{% url "shipment-add-containers" shipment.pk %}" title="Containers">
-            {% show_icon icon="ti ti-md ti-package" label="Containers" %}
-        </a>
-        <a href="#!"  data-form-link="{% url "shipment-add-groups" shipment.pk %}" title="Groups">
-            {% show_icon icon="ti ti-md ti-layout-accordion-list" label="Groups" %}
-        </a>
-        <a  href="#!" data-form-link="{% url "seat-samples" shipment.pk %}"
-            {% if shipment.num_samples == 0 %}
-                title="No Samples"
-                data-toggle="popover"
-                data-trigger="hover"
-                data-placement="bottom"
-                data-type="popover-primary"
-                data-content="Click here to add samples"
-            {% endif %}
-            >
-        {% if shipment.num_samples == 0 %}
-            {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
-        {% else %}
-            {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
-        {% endif %}
-        </a>
+        {% include "lims/tools-shipment-edit.html" %}
         <div class="separator"></div>
         <a href="#!" data-form-link="{% url "shipment-delete" shipment.pk %}">
             {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
@@ -68,17 +47,21 @@
         {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
     </a>
     {% if shipment.status == shipment.STATES.SENT %}
-    <a href="#!" data-form-link="{% url "shipment-receive" shipment.pk %}">
-        {% show_icon label='Receive' icon='ti ti-md ti-shopping-cart-full' %}
-    </a>
+        <a href="#!" data-form-link="{% url "shipment-receive" shipment.pk %}">
+            {% show_icon label='Receive' icon='ti ti-md ti-shopping-cart-full' %}
+        </a>
     {% elif shipment.status == shipment.STATES.ON_SITE %}
-    <a href="#!" data-form-link="{% url "shipment-return" shipment.pk %}">
-        {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
-    </a>
+        <a href="#!" data-form-link="{% url "shipment-return" shipment.pk %}">
+            {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
+        </a>
+        <div class="separator"></div>
+        <a href="{% url 'shipment-revise' shipment.pk %}">
+            {% show_icon label='Revise' icon='ti ti-md ti-pencil'%}
+        </a>
     {% elif shipment.status == shipment.STATES.RETURNED %}
-    <a href="#!" data-form-link="{% url "shipment-update-return" shipment.pk %}">
-        {% show_icon label='Recall' icon='ti ti-md ti-control-backward' %}
-    </a>
+        <a href="#!" data-form-link="{% url "shipment-update-return" shipment.pk %}">
+            {% show_icon label='Recall' icon='ti ti-md ti-control-backward' %}
+        </a>
     {% endif %}
 {% endif %}
 

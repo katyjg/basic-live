@@ -29,6 +29,7 @@ urlpatterns = [
     path('shipments/<int:pk>/data/', views.ShipmentDataList.as_view(), name='shipment-data'),
     path('shipments/<int:pk>/reports/', views.ShipmentReportList.as_view(), name='shipment-reports'),
     path('shipments/<int:pk>/edit/', views.ShipmentEdit.as_view(), name='shipment-edit'),
+    path('shipments/<int:pk>/revise/', views.ShipmentRevise.as_view(), name='shipment-revise'),
     path('shipments/<int:pk>/delete/', views.ShipmentDelete.as_view(), name='shipment-delete'),
     path('shipments/<int:pk>/send/', views.SendShipment.as_view(), name='shipment-send'),
     path('shipments/<int:pk>/comments/', views.ShipmentComments.as_view(), name='shipment-comments'),

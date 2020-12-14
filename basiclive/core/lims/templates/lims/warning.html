@@ -1,0 +1,39 @@
+{% extends "lims/base.html" %}
+
+{% load static %}
+{% load settings %}
+{% load icons %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">Warning |</span>
+        <span class="text-condensed">
+            <strong>There's been a problem.</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+        <i class="text-muted ti ti-lock"></i>
+        UH-OH | Please contact staff or go back.
+    </span>
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-12">
+                <small class="text-muted text-condensed">Feel free to contact us for assistance:</small><br>
+                <a href="mailto:{% get_setting "SUPPORT_EMAIL" %}" title="Email {% get_setting "SUPPORT_EMAIL" %}">
+                    <strong>{% get_setting "SUPPORT_EMAIL" %}</strong>
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block full %}
+<div id="content" class="row">
+    <div class="col-12" style="padding: 3em 8em;">
+        <img src="{% static 'img/cls-unplugged.png' %}" style="max-width: 100%;"/>
+    </div>
+</div>
+{% endblock %}

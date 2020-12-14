@@ -1,0 +1,7 @@
+{% extends "lims/entries/shipment.html" %}
+
+{% block object_tools %}
+    {% if user.is_superuser and shipment.status == shipment.STATES.ON_SITE %}
+        {% include "lims/tools-shipment-edit.html" %}
+    {% endif %}
+{% endblock %}

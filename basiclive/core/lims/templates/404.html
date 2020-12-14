@@ -1,0 +1,17 @@
+{% extends "lims/warning.html" %}
+
+{% load icons %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">Warning |</span>
+        <span class="text-condensed">
+            <strong>We can't find {{ request_path }}</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+        <i class="text-muted ti ti-help-alt"></i>
+        UH-OH-404 | Please contact staff for assistance or go back to the <a href="{% url 'dashboard' %}">Dashboard</a>
+        and try again.
+    </span>
+{% endblock %}
