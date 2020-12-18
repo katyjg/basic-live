@@ -1,0 +1,16 @@
+{% extends "lims/warning.html" %}
+
+{% load icons %}
+
+{% block page_heading %}
+    <h3>
+        <span class="text-thin">CSRF Warning |</span>
+        <span class="text-condensed">
+            <strong>You're not allowed to do that.</strong>
+        </span>
+    </h3>
+    <span class="text-muted">
+        <i class="text-muted ti ti-lock"></i>
+        UH-OH-403 | Please contact staff or go back.
+    </span>
+{% endblock %}

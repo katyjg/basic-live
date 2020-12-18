@@ -1,0 +1,30 @@
+{% load icons %}
+
+<a href="#!"  data-form-link="{% url 'shipment-add-containers' shipment.pk %}" title="Containers">
+    {% show_icon icon="ti ti-md ti-package" label="Containers" %}
+</a>
+<a href="#!"  data-form-link="{% url 'shipment-add-groups' shipment.pk %}" title="Groups">
+    {% show_icon icon="ti ti-md ti-layout-accordion-list" label="Groups" %}
+</a>
+<a  href="#!" data-form-link="{% url 'seat-samples' shipment.pk %}"
+    {% if shipment.num_samples == 0 %}
+        title="No Samples"
+        data-toggle="popover"
+        data-trigger="hover"
+        data-placement="bottom"
+        data-type="popover-primary"
+        data-content="Click here to add samples"
+    {% endif %}
+    >
+{% if shipment.num_samples == 0 %}
+    {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
+{% else %}
+    {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
+{% endif %}
+</a>
+{% if user.is_superuser and shipment.status == shipment.STATES.ON_SITE %}
+    <div class="separator"></div>
+    <a href="{% url 'shipment-detail' shipment.pk %}">
+        {% show_icon label='Done' icon='ti ti-md ti-check'%}
+    </a>
+{% endif %}

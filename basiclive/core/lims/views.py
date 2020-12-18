@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
-from django.http import JsonResponse, Http404, HttpResponseRedirect
+from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
 from django.views.generic import edit, detail, View
@@ -402,6 +402,16 @@ class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
         initial = super(ShipmentEdit, self).get_initial()
         initial.update(project=self.request.user)
         return initial
+
+
+class ShipmentRevise(AdminRequiredMixin, ShipmentDetail):
+    template_name = 'lims/entries/shipment-edit.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.status != obj.STATES.ON_SITE:
+            return HttpResponseNotAllowed
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -1137,7 +1147,8 @@ class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMix
                     'kind': models.ContainerType.objects.get(pk=form.cleaned_data['kind_set'][i]),
                     'name': name.upper(),
                     'shipment': data['shipment'],
-                    'project': self.request.user
+                    'project': self.request.user,
+                    'status': data['shipment'].status
                 }
                 models.Container.objects.get_or_create(**info)
         return HttpResponseRedirect(reverse('shipment-add-groups', kwargs={'pk': self.kwargs.get('pk')}))
