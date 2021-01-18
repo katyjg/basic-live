@@ -51,7 +51,7 @@ class SupportAreaList(ListViewMixin, ItemListView):
 
 class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SupportAreaForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SupportArea
     success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been created"
@@ -59,7 +59,7 @@ class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin,
 
 class SupportAreaEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SupportAreaForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SupportArea
     success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been updated"
@@ -164,7 +164,7 @@ class FeedbackStats(PlotViewMixin, FeedbackList):
 
 class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SupportEntryForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SupportRecord
     success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been created"
@@ -181,7 +181,7 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin
 
 class SupportEntryEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SupportEntryForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SupportRecord
     success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been updated"

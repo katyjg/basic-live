@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+
 def humanize_duration(duration, sec=False):
     if isinstance(duration, (int, float)):
         return natural_seconds(timedelta(hours=duration).total_seconds())
@@ -22,7 +23,6 @@ def natural_seconds(seconds, depth=2):
     ]
 
     return ' '.join(entries[:depth]) or '0 minutes'
-
 
 
 def natural_duration(delta):

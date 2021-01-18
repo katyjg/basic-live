@@ -26,11 +26,15 @@
                     <a class="dropdown-item" href="{% url 'container-list' %}">Containers</a>
                     <a class="dropdown-item" href="{% url 'group-list' %}">Groups</a>
                     <a class="dropdown-item" href="{% url 'sample-list' %}">Samples</a>
+                    <a class="dropdown-item" href="{% url 'request-list' %}">Requests</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'data-list' %}">Datasets</a>
                     <a class="dropdown-item" href="{% url 'result-list' %}">Reports</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
+                    {% if user.is_superuser %}
+                        <a class="dropdown-item" href="{% url 'requesttype-list' %}">Request Types</a>
+                    {% endif %}
                     <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity Log</a>
                 </div>
             </li>

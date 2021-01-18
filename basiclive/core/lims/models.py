@@ -1018,10 +1018,65 @@ REQUEST_SPEC_SCHEMA = {
 class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    spec = models.JSONField()
+    spec = models.JSONField(blank=True)
 
     def __str__(self):
         return self.name
+
+
+class Request(ProjectObjectMixin):
+    STATUS_CHOICES = Choices(
+        (0, 'DRAFT', _('Draft')),
+        (1, 'PENDING', _('Pending')),
+        (2, 'COMPLETE', _('Complete')),
+    )
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='requests')
+    kind = models.ForeignKey(RequestType, on_delete=models.CASCADE, related_name='requests')
+    status = models.IntegerField(choices=STATUS_CHOICES, default=STATUS_CHOICES.DRAFT)
+    parameters = models.JSONField(blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    priority = models.IntegerField(blank=True, null=True)
+    samples = models.ManyToManyField('Sample', blank=True, related_name='requests')
+    groups = models.ManyToManyField('Group', blank=True, related_name='requests')
+
+    objects = ProjectObjectManager()
+
+    class Meta:
+        verbose_name = _('Request')
+        ordering = ['priority']
+
+    def identity(self):
+        return 'REQ-{:07,d}'.format(self.id).replace(',', '-')
+
+    def parameter_labels(self):
+        parameters = self.parameters or {}
+        return {self.kind.spec.get(k, {}).get('label', k): v for k, v in parameters.items() if v not in [None, '']}
+
+    def shipment(self):
+        group = self.groups.first()
+        sample = self.samples.first()
+        return group and group.shipment or sample and sample.container.shipment or None
+
+    def num_samples(self):
+        return len(self.sample_list())
+
+    def sample_list(self):
+        samples = list(self.samples.all())
+        for group in self.groups.all():
+            samples += list(group.samples.all())
+        return list(set(samples))
+
+    def json_dict(self):
+        return {
+            'project_id': self.project.pk,
+            'id': self.pk,
+            'kind_id': self.kind.pk,
+            'kind_name': self.kind.name,
+            'name': self.name,
+            'comments': self.comments,
+            'parameters': self.parameters
+        }
 
 
 class Group(ProjectObjectMixin):

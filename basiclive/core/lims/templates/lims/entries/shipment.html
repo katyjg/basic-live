@@ -142,46 +142,43 @@
             </div>
         </div>
         <div class="col-sm-4 col-12">
+            <!-- div class="card mb-3">
+                <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
+                <ul class="list-group list-group-flush">
+                    {% for request in shipment.requests.all %}
+                        {% include "lims/entries/request-list-item.html" with editable=shipment.is_editable %}
+                    {% empty %}
+                        <div class="list-group-item">
+                            <div class="d-flex flex-row">
+                                <div class="pl-3 flex-shrink-1 align-self-center">
+                                    <small class="p-0 m-0 text-condensed">Use Requests to communicate intended experiments and procedures for this set of samples,
+                                    especially if beamline staff will be collecting the data.</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if shipment.is_editable %}
+                        <li class="list-group-item empty p-2">
+                            <a href="#!" data-form-link="{% url 'request-new' %}" class="d-flex flex-row">
+                                <div class="box-status">
+                                    <div class="text-center text-muted">
+                                        <div title="Create a new request" class="ti ti-md ti-plus"></div>
+                                        <div><small>Start Now</small></div>
+                                    </div>
+                                </div>
+                                <div class="pl-3 overflow-ellipsis flex-shrink-1 align-self-center">
+                                    <small class="p-0 m-0 text-condensed">Click here to start a new request!</small>
+                                </div>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div-->
             <div class="card">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
                 <ul class="list-group list-group-flush">
                     {% for group in shipment.groups_by_priority %}
-                        {% with num_samples=group.samples.count %}
-                            <li class="list-group-item" id="group-{{ group.pk }}" data-highlight="group"
-                                data-reference="{{ group.pk }}">
-                                <div class="d-flex flex-row justify-content-between">
-                                    <div>
-                                        <a href="{% url 'group-detail' pk=group.pk %}"><strong>{{ group.name }}</strong></a>
-                                        <div class="small">
-                                            <span title="Type">{{ group.get_kind_display }}{% if group.absorption_edge %} ({{ group.absorption_edge }}){% endif %}</span>
-                                            | <span title="Plan">{{ group.get_plan_display }}{% if group.resolution %} ({{ group.resolution }}Å){% endif %}</span>
-                                        </div>
-                                    </div>
-                                    {% if shipment.is_editable %}
-                                        <div class="tools-box">
-                                            <a href="#!" data-form-link="{% url 'group-edit' group.pk %}"
-                                                title="Edit Group Parameters">
-                                                {% show_icon icon="ti ti-pencil" %}
-                                            </a>
-                                        </div>
-                                    {% else %}
-                                        <div class="small text-info">
-                                        <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% if group.is_editable and num_samples == 0 %}
-                                    <div class="small text-warning">
-                                        <strong>No samples</strong>
-                                    </div>
-                                {% elif group.is_editable %}
-                                    <div class="small">
-                                        <span class="text-success"><strong>{{ num_samples }}</strong> sample{{ num_samples|pluralize }} assigned.</span>
-                                        {% if group.comments %}&nbsp;<span class="text-secondary">{{ group.comments }}</span>{% endif %}
-                                    </div>
-                                {% endif %}
-                            </li>
-                        {% endwith %}
+                        {% include "lims/entries/group-list-item.html" with group=group editable=shipment.is_editable %}
                     {% endfor %}
                 </ul>
             </div>

@@ -31,6 +31,21 @@ class FetchReport(LoginRequiredMixin, View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class FetchRequest(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        try:
+            experiment_request = models.Request.objects.get(pk=request.GET.get('pk'))
+        except models.Request.DoesNotExist:
+            raise http.Http404("Request does not exist.")
+
+        if experiment_request.project != request.user and not request.user.is_superuser:
+            raise http.Http404()
+
+        return JsonResponse(experiment_request.json_dict(), safe=False)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class UpdatePriority(LoginRequiredMixin, View):
 
     @transaction.atomic

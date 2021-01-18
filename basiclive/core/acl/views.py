@@ -43,7 +43,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
 
 class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = AccessForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.AccessList
     success_url = reverse_lazy('access-list')
     success_message = "Remote access list has been updated."

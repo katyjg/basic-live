@@ -1,7 +1,7 @@
 import json
 from datetime import timedelta
-
 import requests
+
 from django import http
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -266,7 +266,7 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ProjectForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Project
     success_message = "Profile has been updated."
 
@@ -391,7 +391,7 @@ class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
 
 class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ShipmentForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been updated."
 
@@ -416,7 +416,7 @@ class ShipmentRevise(AdminRequiredMixin, ShipmentDetail):
 
 class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ShipmentCommentsForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been edited by staff."
 
@@ -433,7 +433,7 @@ class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
 
 
 class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Shipment
     success_message = "Shipment has been deleted."
     success_url = reverse_lazy('dashboard')
@@ -537,6 +537,36 @@ class ReceiveShipment(ShipmentEdit):
         return super(ReceiveShipment, self).form_valid(form)
 
 
+class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
+    model = models.RequestType
+    template_name = "lims/requesttype-list.html"
+    list_columns = ['id', 'name', 'description']
+    list_search = ['name', 'spec', 'description']
+    link_field = 'name'
+    link_url = 'requesttype-edit'
+    link_attr = 'data-form-link'
+    ordering = ['name']
+    ordering_proxies = {}
+    list_transforms = {}
+    show_project = False
+
+
+class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+    form_class = forms.RequestTypeForm
+    template_name = "lims/forms/add-wizard.html"
+    model = models.RequestType
+    success_url = reverse_lazy('requesttype-list')
+    success_message = "Request Type has been created."
+
+
+class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+    form_class = forms.RequestTypeForm
+    template_name = "lims/forms/add-wizard.html"
+    model = models.RequestType
+    success_url = reverse_lazy('requesttype-list')
+    success_message = "Request Type has been updated."
+
+
 class SampleList(ListViewMixin, ItemListView):
     model = models.Sample
     list_filters = ['modified']
@@ -565,7 +595,7 @@ class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SampleForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Sample
     success_url = reverse_lazy('sample-list')
     success_message = "Sample has been updated."
@@ -576,7 +606,7 @@ class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
 
 class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Sample
     success_message = "Sample has been deleted."
 
@@ -631,7 +661,7 @@ class ContainerDetail(DetailListMixin, SampleList):
 
 class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.ContainerForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Container
     success_message = "Container has been updated."
 
@@ -646,7 +676,7 @@ class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class ContainerLoad(AdminRequiredMixin, ContainerEdit):
     form_class = forms.ContainerLoadForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
@@ -705,7 +735,7 @@ class LocationLoad(AdminRequiredMixin, ContainerEdit):
 
 class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
     form_class = forms.EmptyContainers
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Project
     success_message = "Containers have been removed for {username}."
     success_url = reverse_lazy('dashboard')
@@ -736,7 +766,7 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
 
 class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Container
     success_message = "Container has been deleted."
 
@@ -813,7 +843,7 @@ class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.Up
 
 class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
     success_url = reverse_lazy('dashboard')
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Group
     success_message = "Group has been deleted."
 
@@ -822,7 +852,7 @@ class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
         super(GroupDelete, self).delete(request, *args, **kwargs)
         models.ActivityLog.objects.log_activity(self.request, group, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': group.shipment.get_absolute_url()})
+        return JsonResponse({'url': group.shipment and group.shipment.get_absolute_url() or reverse_lazy('group-list')})
 
 
 class DataList(ListViewMixin, ItemListView):
@@ -953,6 +983,137 @@ class ShipmentReportList(ReportList):
         return context
 
 
+class RequestList(ListViewMixin, ItemListView):
+    model = models.Request
+    list_filters = [
+        'kind',
+        'status',
+        filters.YearFilterFactory('created', reverse=True),
+        filters.MonthFilterFactory('created'),
+        filters.QuarterFilterFactory('created'),
+        'project__designation',
+        'project__kind',
+    ]
+    list_columns = ['kind', 'created', 'num_samples', 'status']
+    list_search = ['kind__name', 'kind__description', 'comments', 'parameters']
+    link_field = 'kind'
+    link_url = 'request-detail'
+    ordering = ['-created']
+    list_transforms = {}
+
+
+class RequestDetail(DetailListMixin, SampleList):
+    extra_model = models.Request
+    template_name = "lims/entries/request.html"
+    list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
+    list_transforms = {
+        'priority': movable,
+    }
+    link_url = 'sample-edit'
+    link_attr = 'data-form-link'
+    detail_target = '#modal-target'
+
+    def page_title(self):
+        obj = self.get_object()
+        if 'project' in self.list_columns:
+            self.list_columns.pop(0)
+        return 'Samples in {}'.format(obj.name)
+
+    def get_object(self):
+        obj = super().get_object()
+        if obj.status != self.extra_model.STATES.DRAFT:
+            self.detail_ajax = False
+            self.detail_target = None
+        return obj
+
+    def get_detail_url(self, obj):
+        if self.get_object().status == self.extra_model.STATES.DRAFT:
+            return super().get_detail_url(obj)
+        return reverse_lazy('sample-detail', kwargs={'pk': obj.pk})
+
+
+class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
+    form_list = [('start', forms.RequestForm),
+                 ('parameters', forms.RequestParameterForm)]
+    template_name = "lims/forms/add-request.html"
+
+    def get_context_data(self, form, **kwargs):
+        ctx = super().get_context_data(form, **kwargs)
+        ctx['form_title'] = "Create a Request"
+        return ctx
+
+    def get_form_initial(self, step):
+        if step == 'start':
+            project = self.request.user
+            groups = project.sample_groups.filter(pk__in=self.request.GET.getlist('groups')).values_list('pk', flat=True)
+            samples = project.samples.filter(pk__in=self.request.GET.getlist('samples')).values_list('pk', flat=True)
+            return self.initial_dict.get(step, {
+                'project': self.request.user,
+                'groups': groups and list(groups) or None,
+                'samples': samples and list(samples) or None
+            })
+        elif step == 'parameters':
+            start_data = self.storage.get_step_data('start')
+            if start_data:
+                kind = start_data.get('start-kind')
+
+                return self.initial_dict.get(step, {'kind': kind,
+                                                    'comments': start_data.get('start-comments'),
+                                                    'name': start_data.get('start-name')})
+        return self.initial_dict.get(step, {})
+
+    @transaction.atomic
+    def done(self, form_list, **kwargs):
+        info = {}
+        related = {}
+        for label, form in kwargs['form_dict'].items():
+            if label == 'start':
+                info = form.cleaned_data
+                for field in ['groups', 'samples']:
+                    related[field] = info.pop(field)
+                info.pop('template')
+                info.update({'project': models.Project.objects.get(username=self.request.user.username)})
+            elif label == 'parameters':
+                for field in ['comments', 'name', 'parameters']:
+                    info[field] = form.cleaned_data.get(field)
+                request, created = models.Request.objects.get_or_create(**info)
+                request.groups.add(*[g for g in related['groups']])
+                request.samples.add(*[s for s in related['samples']])
+        return JsonResponse({})
+
+
+class RequestEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+    form_class = forms.RequestParameterForm
+    template_name = "modal/form.html"
+    model = models.Request
+    success_message = "Request has been updated."
+    success_url = reverse_lazy('request-list')
+
+    def form_valid(self, form):
+        super().form_valid(form)
+        for s in self.object.samples.all():
+            if self.original_name in s.name:
+                models.Sample.objects.filter(pk=s.pk).update(name=s.name.replace(self.original_name, self.object.name))
+        return JsonResponse({})
+
+    def get_success_url(self):
+        return reverse_lazy('shipment-detail', kwargs={'pk': self.object.shipment().pk})
+
+
+class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+    success_url = reverse_lazy('dashboard')
+    template_name = "modal/delete.html"
+    model = models.Request
+    success_message = "Request has been deleted."
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        super().delete(request, *args, **kwargs)
+        models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.DELETE,
+                                                self.success_message)
+        return JsonResponse({'url': obj.shipment() and obj.shipment().get_absolute_url() or reverse_lazy('request-list')})
+
+
 class SessionDataList(ShipmentDataList):
     template_name = "lims/entries/session-data.html"
     lookup = 'session__pk'
@@ -1026,7 +1187,7 @@ class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
 
 class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.AutomounterForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Automounter
     success_url = reverse_lazy('dashboard')
     success_message = "Comments have been updated."
@@ -1036,7 +1197,12 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
     form_list = [('shipment', forms.AddShipmentForm),
                  ('containers', forms.ShipmentContainerForm),
                  ('groups', forms.ShipmentGroupForm)]
-    template_name = "lims/modal/wizard.html"
+    template_name = "modal/wizard.html"
+
+    def get_context_data(self, form, **kwargs):
+        ctx = super().get_context_data(form, **kwargs)
+        ctx['form_title'] = "Create a Shipment"
+        return ctx
 
     def get_form_initial(self, step):
         if step == 'shipment':
@@ -1253,7 +1419,7 @@ class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView
 
 class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.SSHKeyForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been created"
@@ -1277,14 +1443,14 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.SSHKeyForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been updated"
 
 
 class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.SSHKey
     success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been deleted"
@@ -1314,7 +1480,7 @@ class GuideView(detail.DetailView):
 
 class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.GuideForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been created"
@@ -1322,14 +1488,14 @@ class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
 
 class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.GuideForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been updated"
 
 
 class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Guide
     success_url = reverse_lazy('dashboard')
     success_message = "Guide has been deleted"
@@ -1398,7 +1564,7 @@ class UserStats(UserDetail):
 
 class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.NewProjectForm
-    template_name = "lims/modal/form.html"
+    template_name = "modal/form.html"
     model = models.Project
     success_url = reverse_lazy('user-list')
     success_message = "New Account '%(username)s' has been created."
@@ -1416,7 +1582,7 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 
 class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "lims/modal/delete.html"
+    template_name = "modal/delete.html"
     model = models.Project
     success_url = reverse_lazy('user-list')
     success_message = "Account has been deleted"

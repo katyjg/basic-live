@@ -6,7 +6,7 @@
 
 {% block page_heading %}
     <h3>
-        <span class="text-thin">Group |</span>
+        <span class="text-thin">Request |</span>
         <span class="text-condensed">
             <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
         </span>
@@ -16,30 +16,15 @@
         {{ object.identity }} |
         {% if object.shipment %}
             {% with object.shipment.groups.count as count %}
-            <strong>1</strong> of <strong>{{ count }}</strong> Group{{ count|pluralize }} in Shipment {{object.shipment.name}}
+            <strong>1</strong> of <strong>{{ count }}</strong> Requests{{ count|pluralize }} in Shipment {{object.shipment.name}}
             {% endwith %}
         {% else %}
-            Group not in a shipment.
+            Request not in a shipment.
         {% endif %}
     </span>
 {% endblock %}
 
 {% block object_tools %}
-    {%  if object.status == object.STATES.DRAFT %}
-        {% if object.shipment %}
-            <a href="#!" data-form-link="{% url 'seat-samples' object.shipment.pk %}" title="Sample Seat Selection">
-            {% if not objects.samples.exists %}
-                {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
-            {% else %}
-                {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
-            {% endif %}
-            </a>
-        {% endif %}
-        <a href="#!" data-form-link="{% url 'request-new' %}?groups={{ object.pk }}" title="Add a Request">
-            {% show_icon label='Request' icon="ti ti-md ti-ruler-pencil" badge="+" color="primary" %}
-        </a>
-        <div class="separator"></div>
-    {% endif %}
     {% include "lims/tools-base.html" %}
 {% endblock %}
 
@@ -48,24 +33,19 @@
         <div class="row">
             <div class="col d-flex flex-row">
                 <h3 class="align-self-center m-0 p-0">
-                    <span class="badge badge-{% if object.status == object.STATES.ACTIVE %}info
+                    <span class="badge badge-{% if object.status == object.STATES.PENDING %}info
                                 {% elif object.status == object.STATES.DRAFT %}warning
                                 {% elif object.status == object.STATES.COMPLETE %}success
-                                {% elif object.status == object.STATES.ARCHIVED and not user.is_superuser %}success
                                 {% else %}primary{% endif %}">{{ object.get_status_display }}</span>
                 </h3>
             </div>
             <div class="col">
+                <small class="text-muted text-condensed">Type:</small><br>
+                {{ object.kind.name }}
+            </div>
+            <div class="col">
                 <small class="text-muted text-condensed">Shipment:</small><br>
                 {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Plan:</small><br>
-                {{ object.get_plan_display }} {% if object.resolution %}({{ object.resolution }}Å){% endif %}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Type:</small><br>
-                {{ object.get_kind_display }} {% if object.absorption_edge %}({{ object.absorption_edge }}){% endif %}
             </div>
             <div class="col pull-right text-right">
                 <small class="text-muted text-condensed">Number of Samples:</small><br>
@@ -77,7 +57,7 @@
 
 {% block full %}
 <div class="row">
-    <div class="col-sm-12 bulk-edit">
+    <div class="col-sm-9 bulk-edit">
         {% if object.status == object.STATES.DRAFT %}
             <div class="item-list sortable">
             <table class="table table-hover table-sm">
@@ -92,7 +72,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for sample in object.samples.all %}
+                {% for sample in object.sample_list %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
                         <td><span class='cursor'><i class='movable ti ti-move'></i></span></td>
                         <td><a href="#!" data-form-link="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
@@ -106,8 +86,18 @@
             </table>
             </div>
         {% else %}
-            {% include "lims/entries/group-progress.html" with samples=object.samples.all %}
+            {% include "lims/entries/group-progress.html" with samples=object.sample_list %}
         {% endif %}
+    </div>
+    <div class="col-sm-3">
+        <div class="card">
+            <div class="card-header p-1 text-center text-wide text-muted"><small>PARAMETERS</small></div>
+                <ul class="list-group list-group-flush">
+                    {% for k, v in object.parameter_labels.items %}
+                        <li class="list-group-item py-2"><strong>{{ k|title }}: </strong> <span class="float-right">{{ v }}</span></li>
+                    {% endfor %}
+                </ul>
+        </div>
     </div>
 </div>
     {% include "lims/comments.html" with object=object %}

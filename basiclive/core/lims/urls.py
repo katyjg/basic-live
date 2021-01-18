@@ -21,6 +21,16 @@ urlpatterns = [
     path('beamline/usage/', views.UsageSummary.as_view(), name='beamline-usage'),
     path('automounter/<int:pk>/edit/', views.AutomounterEdit.as_view(), name='automounter-edit'),
 
+    path('requesttype/', views.RequestTypeList.as_view(), name='requesttype-list'),
+    path('requesttype/new/', views.RequestTypeCreate.as_view(), name='new-requesttype'),
+    path('requesttype/<int:pk>/edit/', views.RequestTypeEdit.as_view(), name='requesttype-edit'),
+
+    path('requests/', views.RequestList.as_view(), name='request-list'),
+    path('requests/<int:pk>/', views.RequestDetail.as_view(), name='request-detail'),
+    path('requests/new/', views.RequestWizardCreate.as_view(), name='request-new'),
+    path('requests/<int:pk>/edit/', views.RequestEdit.as_view(), name='request-edit'),
+    path('requests/<int:pk>/delete/', views.RequestDelete.as_view(), name='request-delete'),
+
     path('shipments/', views.ShipmentList.as_view(), name='shipment-list'),
     path('shipments/new/', views.ShipmentCreate.as_view(), name='shipment-new'),
     path('shipments/<int:pk>/', views.ShipmentDetail.as_view(), name='shipment-detail'),
@@ -87,6 +97,7 @@ urlpatterns = [
     path('ajax/update_locations/<int:pk>/', ajax_views.UpdateLocations.as_view(), name='update-locations'),
     path('ajax/update_priority/', cache_page(60*60*24)(ajax_views.UpdatePriority.as_view()), name='update-priority'),
     path('ajax/report/<int:pk>/', ajax_views.FetchReport.as_view(), name='fetch-report'),
+    path('ajax/request/', ajax_views.FetchRequest.as_view(), name='fetch-request'),
     path('ajax/bulk_edit/', ajax_views.BulkSampleEdit.as_view(), name='bulk-edit'),
     path('ajax/layout/<int:pk>/', ajax_views.FetchContainerLayout.as_view(), name='fetch-layout'),
 

@@ -1,0 +1,34 @@
+{% load icons %}
+
+{% with request.num_samples as num_samples %}
+        <div class="d-flex flex-row justify-content-between">
+            {% if editable %}
+                <div class="border-right mr-2 mb-2">
+                    <a href="#!" data-form-link="{% url 'request-edit' request.pk %}"
+                        title="Edit Request Parameters">
+                        {% show_icon icon="ti ti-pencil" %}
+                    </a>
+                </div>
+            {% else %}
+                <div class="small text-info">
+                    <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
+                </div>
+            {% endif %}
+            <div class="text-left flex-fill">
+                <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
+                <div class="small">
+                    {% for label, val in request.parameter_labels.items %}
+                        <span title="{{ label }}">{{ val }}</span>
+                        {% if not forloop.last %} | {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% if editable %}
+                <div class="tools-box">
+
+                </div>
+            {% endif %}
+        </div>
+
+{% endwith %}

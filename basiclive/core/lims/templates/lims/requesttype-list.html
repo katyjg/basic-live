@@ -1,0 +1,8 @@
+{% extends "lims/list.html" %}
+{% load icons %}
+{% block page_heading %}<h3>Request Types</h3>{% endblock %}
+{% block object_tools %}{% if user.is_superuser %}
+    <a href="#!0" data-form-link="{% url 'new-requesttype' %}" title="Add Request Type">
+        {% show_icon label="Add Request Type" icon="ti ti-md ti-plus" %}
+    </a>
+{% endif %}{% endblock %}

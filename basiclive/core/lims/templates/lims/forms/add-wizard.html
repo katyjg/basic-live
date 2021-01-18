@@ -1,4 +1,4 @@
-{% extends "lims/modal/form.html" %}
+{% extends "modal/form.html" %}
 
 {% load static %}
 
@@ -10,6 +10,7 @@
 {% block modal_scripts %}
     <script>
         initShipmentWizard();
-        {% if form.repeated_data %}setInitial({{ form.repeated_data|safe }});{% endif %}
+        {% if form.repeated_data %}
+            setInitial({{ form.repeated_data|safe }});{% endif %}
     </script>
 {% endblock %}

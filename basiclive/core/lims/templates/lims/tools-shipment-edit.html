@@ -6,7 +6,7 @@
 <a href="#!"  data-form-link="{% url 'shipment-add-groups' shipment.pk %}" title="Groups">
     {% show_icon icon="ti ti-md ti-layout-accordion-list" label="Groups" %}
 </a>
-<a  href="#!" data-form-link="{% url 'seat-samples' shipment.pk %}"
+<a  href="#!" data-form-link="{% url 'seat-samples' shipment.pk %}" title="Samples"
     {% if shipment.num_samples == 0 %}
         title="No Samples"
         data-toggle="popover"

@@ -1,4 +1,5 @@
 import re
+import fastjsonschema
 
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
@@ -9,7 +10,7 @@ from django.conf import settings
 from django.urls import reverse_lazy
 
 from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
-from .models import Guide, ProjectType, SSHKey
+from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
 
 
 class BodyHelper(FormHelper):
@@ -167,6 +168,249 @@ class NewProjectForm(forms.ModelForm):
         self.footer.layout = Layout(
             StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
         )
+
+
+class RequestTypeForm(forms.ModelForm):
+    parameter = forms.CharField(max_length=32, required=False, label=_("Parameter*"))
+    required = forms.ChoiceField(choices=((False, 'Optional'), (True, 'Required')), required=False)
+    label = forms.CharField(max_length=64, required=False, label=_("Human-readable label*"))
+    kind = forms.ChoiceField(choices=(("string", "Text"), ("number", "Number"), ("boolean", "Boolean")), required=False)
+    choices = forms.CharField(max_length=512, required=False, help_text=_("Comma-separated list"))
+
+    class Meta:
+        model = RequestType
+        fields = ('name', 'description', 'spec')
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': "1"}),
+            'spec': disabled_widget
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pk = self.instance.pk
+
+        self.repeated_fields = ['parameter', 'required', 'label', 'kind', 'choices']
+        self.repeated_data = {}
+        for f in self.repeated_fields:
+            self.fields['{}_set'.format(f)] = forms.CharField(required=False)
+        if pk:
+            spec = self.instance.spec
+            parameters = spec.keys()
+            self.repeated_data['parameter_set'] = [param for param in parameters]
+            self.repeated_data['kind_set'] = [spec[param]['type'] for param in parameters]
+            self.repeated_data['label_set'] = [spec[param]['label'] for param in parameters]
+            self.repeated_data['choices_set'] = [spec[param].get('choices') and ', '.join(c[0] for c in spec[param]['choices']) or '' for param in parameters]
+            self.repeated_data['required_set'] = [str(spec[param]['required']) for param in parameters]
+
+        self.body = BodyHelper(self)
+        self.footer = FooterHelper(self)
+
+        if pk:
+            self.body.title = u"Edit Request Type"
+            self.body.form_action = reverse_lazy('requesttype-edit', kwargs={'pk': pk})
+        else:
+            self.body.title = u"Create New Request Type"
+            self.body.form_action = reverse_lazy('new-requesttype')
+
+        self.body.layout = Layout(
+            self.help_text(),
+            Div(
+                'spec',
+                Div('name', css_class='col-12'),
+                Div('description', css_class='col-12'),
+                css_class="form-row"
+            ),
+            Div(
+                Div(
+                    Div(
+                        Div(
+                            Div(Field('parameter'), css_class="col-3"),
+                            Div(Field('label'), css_class="col-6"),
+                            Div(Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
+                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
+                            Div(Field('choices'), css_class="col-6"),
+                            Div(
+                                Div(
+                                    HTML('<label>&nbsp;</label>'),
+                                    Div(
+                                        StrictButton(
+                                            '<i class="ti ti-minus"></i>',
+                                            css_class="btn btn-warning float-right safe-remove"
+                                        ),
+                                    ),
+                                    css_class="form-group"
+                                ),
+                                css_class="col-3"
+                            ),
+                            css_class="repeat-row template row"
+                        ),
+                        css_class="col-12 repeat-group repeat-container"
+                    ),
+                    Div(
+                        StrictButton(
+                            "<i class='ti ti-plus'></i> Add Parameter", type="button",
+                            css_class='btn btn-sm btn-success add'
+                        ),
+                        css_class="col-12 mt-2"
+                    ),
+                    css_class="row repeat-wrapper"
+                ),
+                css_class='repeat'
+            ),
+        )
+
+        self.footer.layout = Layout(
+            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
+            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        )
+
+    def help_text(self):
+        return Div(
+            HTML(
+                'Define the parameters you expect users to specify when requesting this type of experiment.'
+            ),
+            css_class="text-condensed mb-1"
+        )
+
+    def clean(self):
+        self.repeated_data = {}
+        cleaned_data = super().clean()
+        for field in self.repeated_fields:
+            cleaned_data['{}_set'.format(field)] = self.data.getlist(field)
+            self.fields[field].initial = cleaned_data['{}_set'.format(field)]
+        if not self.is_valid():
+            for k, v in cleaned_data.items():
+                if isinstance(v, list):
+                    self.repeated_data[k] = [str(e) for e in v]
+        return cleaned_data
+
+    def clean_spec(self):
+        data = self.clean()
+        spec = {}
+        for i, param in enumerate(data['parameter_set']):
+            spec[param] = {
+                "label": data['label_set'][i],
+                "type": data['kind_set'][i],
+                "required": data['required_set'][i] == 'True'
+            }
+            if data['choices_set'][i]:
+                spec[param]["choices"] = [(c.strip(), c.strip()) for c in data['choices_set'][i].split(',')]
+        validate = fastjsonschema.compile(REQUEST_SPEC_SCHEMA)
+        try:
+            validate(spec)
+        except:
+            raise forms.ValidationError('Something is wrong with the defined parameters')
+        return spec
+
+
+class RequestForm(forms.ModelForm):
+    template = forms.ModelChoiceField(label=_("Use settings from a past request"), queryset=Request.objects.all(), required=False)
+
+    class Meta:
+        model = Request
+        fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples')
+        widgets = {'project': disabled_widget,
+                   'groups': forms.MultipleHiddenInput,
+                   'samples': forms.MultipleHiddenInput,
+                   'comments': forms.Textarea(attrs={'rows': "2"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pk = self.instance.pk
+        self.body = BodyHelper(self)
+        self.footer = FooterHelper(self)
+        old_requests = Request.objects.filter(project=self.initial['project'])
+        if not old_requests.exists():
+            self.fields['template'].widget = forms.HiddenInput()
+        self.fields['template'].queryset = Request.objects.filter(project=self.initial['project'])
+        if pk:
+            self.body.title = u"Edit {} Request".format(self.instance.kind.name)
+            self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
+            self.fields['template'].widget = forms.HiddenInput()
+        else:
+            self.body.title = u"Create New Request"
+            self.body.form_action = reverse_lazy('request-new')
+
+        self.body.layout = Layout(
+            'project', 'groups', 'samples',
+            Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request')),
+            Field('name', css_id='name'),
+            Field('kind', css_id='kind'),
+            Field('comments', css_id='comments')
+        )
+        self.footer.layout = Layout(
+            StrictButton("Continue", type="submit", value="Continue", css_class='btn btn-primary'),
+        )
+
+
+class RequestParameterForm(forms.ModelForm):
+
+    class Meta:
+        model = Request
+        fields = ('name', 'comments', 'kind', 'parameters')
+        widgets = {'kind': disabled_widget,
+                   'parameters': forms.HiddenInput,
+                   'comments': forms.Textarea(attrs={'rows': "2"})}
+        help_texts = {
+            'name': "Choose a recognizable name to reuse your settings in future requests."
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pk = self.instance.pk
+        kind = pk and self.instance.kind or RequestType.objects.filter(pk=self.initial.get('kind')).first()
+        self.body = BodyHelper(self)
+        self.footer = FooterHelper(self)
+
+        parameters = Div(
+            css_class="form-row"
+        )
+        if pk:
+            self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
+            self.footer.layout = Layout(
+                StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
+                StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+            )
+        else:
+            self.body.form_action = reverse_lazy('request-new')
+            self.footer.layout = Layout(
+                StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
+            )
+        if kind:
+            self.body.title = u"{} Request Parameters".format(kind.name)
+            self.fields['kind'].widget = disabled_widget
+            for param, info in kind.spec.items():
+                field_type = info.pop('type')
+                choices = info.get('choices')
+                if info.get('choices'):
+                    info['choices'] = tuple(tuple(c) for c in choices)
+                info = {k: v for k, v in info.items() if k not in ['type', 'choices']}
+                if pk:
+                    info['initial'] = self.instance.parameters.get(param)
+                if field_type == 'string':
+                    self.fields[param] = forms.CharField(**info)
+                elif field_type == 'number':
+                    self.fields[param] = forms.FloatField(**info)
+                elif field_type == 'boolean':
+                    self.fields[param] = forms.BooleanField(**info)
+                if choices:
+                    self.fields[param].widget=forms.Select(choices=choices)
+                parameters.append(Div(param, css_class='col-6'))
+
+
+        self.body.layout = Layout(
+            'kind', 'name', 'parameters', parameters, 'comments'
+        )
+
+    def clean_parameters(self):
+        cleaned_data = self.cleaned_data
+        parameters = {}
+        prefix = ""
+        if 'request_wizard_create-current_step' in self.data:
+            prefix = "{}-".format(self.data.get('request_wizard_create-current_step', [""]))
+        for param in cleaned_data['kind'].spec.keys():
+            parameters[param] = self.data.get("{}{}".format(prefix, param))
+        return parameters
 
 
 class ShipmentForm(forms.ModelForm):
@@ -907,6 +1151,7 @@ class ShipmentGroupForm(forms.ModelForm):
                 'kind_set': [str(group.kind) for group in groups],
                 'absorption_edge_set': [str(group.absorption_edge) for group in groups],
                 'resolution_set': [group.resolution or '' for group in groups],
+                'comments_set': [group.comments or '' for group in groups]
             }
 
             self.footer.layout.append(

@@ -1,5 +1,7 @@
 {% extends "lims/base.html" %}
 
+{% load icons %}
+
 {% block page_heading %}
     <h3 class="text-condensed">
         <i class="text-muted fa fa-fw {% if object.is_editable %}fa-unlock{% else %}fa-lock{% endif %}"></i>
@@ -16,7 +18,24 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}{% include "lims/tools-base.html" %}{% endblock %}
+{% block object_tools %}
+    {%  if object.container.status == object.container.STATES.DRAFT %}
+        <a href="#!" data-form-link="{% url 'request-new' %}?samples={{ object.pk }}" title="Add a Request">
+            {% show_icon label='Request' icon="ti ti-md ti-ruler-pencil" badge="+" color="primary" %}
+        </a>
+        <div class="separator"></div>
+    {% endif %}
+    {% if object.container.status == object.container.STATES.DRAFT or object.comments or object.staff_comments %}
+    {% if object.container.status == object.container.STATES.DRAFT %}
+        <a href="#!" data-form-link="{{ handler }}edit/">
+            {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+        </a>
+        <a href="#!" data-form-link="{{ handler }}delete/">
+            {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+        </a>
+    {% endif %}
+{% endif %}
+{% endblock %}
 
 {% block object_status %}
     <div class="status-bar">

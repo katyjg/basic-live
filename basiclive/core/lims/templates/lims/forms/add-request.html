@@ -1,0 +1,31 @@
+{% extends "modal/wizard.html" %}
+{% load layout %}
+{% load static %}
+
+{% block modal_scripts %}
+    {{ block.super }}
+    <script>
+        $('[css-id="request-template"]').on('change', function (e) {
+            let el = e.target;
+            $.ajax({
+                type: 'get',
+                dataType: "json",
+                url: $(el).data('post-action'),
+                data: {'pk': el.value},
+                beforeSend: function (xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", $.cookie('csrftoken'));
+                },
+                success: function (data, status, xhr) {
+                    let kind = $('[css-id="kind"]').parent().find('span[role="textbox"]');
+                    $('[css-id="name"]').val(data['name'] + ' - copy');
+                    $('[css-id="kind"]').find('option[value="' + data['kind_id'] + '"]').attr('selected', 'selected');
+                    kind.text(data['kind_name']);
+                    $('[css-id="comments"]').val(data['comments']);
+                },
+                error: function () {
+                    $(el).shake();
+                }
+            });
+        });
+    </script>
+{% endblock %}
