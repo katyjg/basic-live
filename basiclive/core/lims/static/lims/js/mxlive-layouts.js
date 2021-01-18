@@ -373,8 +373,12 @@ function unloadUpdateData(element, settings) {
 // Initialize global Layout Event handlers for env
 $(document).ready(function () {
     $(document).on('mouseenter', '[data-highlight]', function () {
-        let sel = "svg[data-" + $(this).data('highlight') + "='" + $(this).data('reference') + "'] >:first-child";
-        $(sel).addClass('active-envelope');
+        let highlight = $(this).data('highlight');
+        let refs = String($(this).data('reference')).split(" ");
+        $.each(refs, function(i, ref) {
+            let sel = "svg[data-" + highlight + "='" + ref + "'] >:first-child";
+            $(sel).addClass('active-envelope');
+        });
     });
     $(document).on('mouseleave', '[data-highlight]', function () {
         $('svg > .active-envelope').removeClass('active-envelope');

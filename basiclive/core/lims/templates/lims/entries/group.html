@@ -59,14 +59,6 @@
                 <small class="text-muted text-condensed">Shipment:</small><br>
                 {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
             </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Plan:</small><br>
-                {{ object.get_plan_display }} {% if object.resolution %}({{ object.resolution }}Å){% endif %}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Type:</small><br>
-                {{ object.get_kind_display }} {% if object.absorption_edge %}({{ object.absorption_edge }}){% endif %}
-            </div>
             <div class="col pull-right text-right">
                 <small class="text-muted text-condensed">Number of Samples:</small><br>
                 <strong>{{ object.num_samples }}</strong>
@@ -95,7 +87,7 @@
                 {% for sample in object.samples.all %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
                         <td><span class='cursor'><i class='movable ti ti-move'></i></span></td>
-                        <td><a href="#!" data-form-link="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
+                        <td><a href="{% url 'sample-detail' sample.pk %}">{{ sample.name }}</a></td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>
                         <td>{{ sample.barcode|default_if_none:"&mdash;" }}</td>

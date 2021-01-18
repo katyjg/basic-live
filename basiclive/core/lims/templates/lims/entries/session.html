@@ -83,11 +83,7 @@
     <div class="col-12">
         {% for group in object.groups %}
             <h4>
-                <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a> |
-                <span class="text-muted text-thin">
-                    {{ group.get_kind_display }}{% if group.resolution %}({{ group.resolution }}Å){% endif %} |
-                    {{ group.get_plan_display }}{% if group.absorption_edge %}({{ group.absorption_edge }}){% endif %}
-                </span>
+                <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a>
             </h4>
             {% include "lims/entries/group-progress.html" with samples=group.samples.all %}
             <hr />

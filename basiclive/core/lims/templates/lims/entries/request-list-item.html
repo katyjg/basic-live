@@ -1,19 +1,9 @@
 {% load icons %}
 
 {% with request.num_samples as num_samples %}
+    <div class="list-group-item" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
+         data-reference="{% for s in request.sample_list %}{{ s.pk }} {% endfor %}">
         <div class="d-flex flex-row justify-content-between">
-            {% if editable %}
-                <div class="border-right mr-2 mb-2">
-                    <a href="#!" data-form-link="{% url 'request-edit' request.pk %}"
-                        title="Edit Request Parameters">
-                        {% show_icon icon="ti ti-pencil" %}
-                    </a>
-                </div>
-            {% else %}
-                <div class="small text-info">
-                    <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
-                </div>
-            {% endif %}
             <div class="text-left flex-fill">
                 <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
                 <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
@@ -26,9 +16,16 @@
             </div>
             {% if editable %}
                 <div class="tools-box">
-
+                    <a href="#!" data-form-link="{% url 'request-edit' request.pk %}"
+                        title="Edit Request Parameters">
+                        {% show_icon icon="ti ti-md ti-pencil" color="primary" %}
+                    </a>
+                </div>
+            {% else %}
+                <div class="small text-info">
+                <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
                 </div>
             {% endif %}
         </div>
-
+    </div>
 {% endwith %}

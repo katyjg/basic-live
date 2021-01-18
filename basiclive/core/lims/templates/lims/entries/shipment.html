@@ -142,10 +142,10 @@
             </div>
         </div>
         <div class="col-sm-4 col-12">
-            <!-- div class="card mb-3">
+            <div class="card mb-3">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
                 <ul class="list-group list-group-flush">
-                    {% for request in shipment.requests.all %}
+                    {% for request in shipment.requests %}
                         {% include "lims/entries/request-list-item.html" with editable=shipment.is_editable %}
                     {% empty %}
                         <div class="list-group-item">
@@ -157,23 +157,8 @@
                             </div>
                         </div>
                     {% endfor %}
-                    {% if shipment.is_editable %}
-                        <li class="list-group-item empty p-2">
-                            <a href="#!" data-form-link="{% url 'request-new' %}" class="d-flex flex-row">
-                                <div class="box-status">
-                                    <div class="text-center text-muted">
-                                        <div title="Create a new request" class="ti ti-md ti-plus"></div>
-                                        <div><small>Start Now</small></div>
-                                    </div>
-                                </div>
-                                <div class="pl-3 overflow-ellipsis flex-shrink-1 align-self-center">
-                                    <small class="p-0 m-0 text-condensed">Click here to start a new request!</small>
-                                </div>
-                            </a>
-                        </li>
-                    {% endif %}
                 </ul>
-            </div-->
+            </div>
             <div class="card">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
                 <ul class="list-group list-group-flush">
@@ -185,4 +170,20 @@
         </div>
     </div>
     {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        $(document).ready(function () {
+            $(document).on('mouseenter', '[data-requests]', function () {
+                let refs = String($(this).data('requests')).split(" ");
+                $.each(refs, function(i, ref) {
+                    $("#request-" + ref).addClass('list-group-item-warning');
+                });
+            });
+            $(document).on('mouseleave', '[data-highlight]', function () {
+                $('.list-group-item-warning').removeClass('list-group-item-warning');
+            });
+        });
+</script>
 {% endblock %}

@@ -1,8 +1,8 @@
 {% load icons %}
 
-{% with num_samples=group.samples.count %}
-    <div class="list-group-item" id="group-{{ group.pk }}" data-highlight="group"
-        data-reference="{{ group.pk }}">
+{% with num_samples=group.samples.count num_requests=group.requests.count %}
+    <div class="list-group-item" id="group-{{ group.pk }}" data-highlight="group" data-reference="{{ group.pk }}"
+         data-requests="{% for request in group.requests.all %}{{ request.pk }} {% endfor %}">
         <div class="d-flex flex-row justify-content-between">
             <div class="flex-fill">
                 <a href="{% url 'group-detail' pk=group.pk %}"><strong>{{ group.name }}</strong></a>
@@ -11,15 +11,13 @@
                     <span class="small text-{% if num_samples %}success{% else %}warning{% endif %}"><strong>
                     {% if num_samples %} {{ num_samples }}{% else %}No{% endif %} sample{{ num_samples|pluralize }}
                     </strong></span>
-                    {% if group.comments %} <span class="small"> | </span>{% endif %}
+                    {% if num_requests %}<span class="small"> | </span>{% endif %}
                 {% endif %}
-                {% if group.comments %}<span class="small text-secondary">{{ group.comments }}</span>{% endif %}
+                {% if num_requests %}<span class="small">
+                    <strong class="text-info">{{ num_requests }} request{{ num_requests|pluralize }}</strong>
+                </span>{% endif %}
+                {% if group.comments %}<br/><span class="small text-secondary">{{ group.comments }}</span>{% endif %}
                 </div>
-
-                <!--div class="small">
-                    <span title="Type">{{ group.get_kind_display }}{% if group.absorption_edge %} ({{ group.absorption_edge }}){% endif %}</span>
-                    | <span title="Plan">{{ group.get_plan_display }}{% if group.resolution %} ({{ group.resolution }}Å){% endif %}</span>
-                </div-->
             </div>
             {% if editable %}
                 <div class="tools-box">
@@ -33,12 +31,6 @@
                 <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
                 </div>
             {% endif %}
-        </div>
-        <div>
-            {% for request in group.requests.all %}
-                {% if forloop.first %}<hr class="my-2"/>{% endif %}
-                {% include "lims/entries/request-list-item.html" with request=request %}
-            {% endfor %}
         </div>
     </div>
 {% endwith %}

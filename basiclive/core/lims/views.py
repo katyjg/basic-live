@@ -637,26 +637,12 @@ class ContainerDetail(DetailListMixin, SampleList):
     extra_model = models.Container
     template_name = "lims/entries/container.html"
     list_columns = ['name', 'barcode', 'group', 'location', 'comments']
-    link_url = 'sample-edit'
-    link_attr = None
+    link_url = 'sample-detail'
     show_project = False
 
     def page_title(self):
         obj = self.get_object()
         return 'Samples in {}'.format(obj.name)
-
-    def get_link_attr(self, obj):
-        if obj.container.status == obj.container.STATES.DRAFT:
-            return "data-form-link"
-        else:
-            return self.link_attr
-
-    def get_link_url(self, obj):
-        if obj.container.status == obj.container.STATES.DRAFT:
-            link_url = "sample-edit"
-        else:
-            link_url = "sample-detail"
-        return reverse_lazy(link_url, kwargs={'pk': obj.pk})
 
 
 class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -780,7 +766,7 @@ class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, e
 class GroupList(ListViewMixin, ItemListView):
     model = models.Group
     list_filters = ['modified', 'status']
-    list_columns = ['id', 'name', 'kind', 'plan', 'num_samples', 'status']
+    list_columns = ['id', 'name', 'num_samples', 'status']
     list_search = ['project__name', 'comments', 'name']
     link_url = 'group-detail'
     ordering = ['-modified', '-priority']
@@ -799,9 +785,7 @@ class GroupDetail(DetailListMixin, SampleList):
     list_transforms = {
         'priority': movable,
     }
-    link_url = 'sample-edit'
-    link_attr = 'data-form-link'
-    detail_target = '#modal-target'
+    link_url = 'sample-detail'
 
     def page_title(self):
         obj = self.get_object()
@@ -815,11 +799,6 @@ class GroupDetail(DetailListMixin, SampleList):
             self.detail_ajax = False
             self.detail_target = None
         return obj
-
-    def get_detail_url(self, obj):
-        if self.get_object().status == self.extra_model.STATES.DRAFT:
-            return super(GroupDetail, self).get_detail_url(obj)
-        return reverse_lazy('sample-detail', kwargs={'pk': obj.pk})
 
 
 class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -1266,18 +1245,10 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                         if name:
                             data = {
                                 field: form.cleaned_data['{}_set'.format(field)][i]
-                                for field in ['name', 'kind', 'comments', 'plan', 'absorption_edge']
+                                for field in ['name', 'comments']
                             }
-                            resolution = None
-                            if form.cleaned_data.get('resolution_set'):
-                                res = form.cleaned_data['resolution_set'][i]
-                                try:
-                                    resolution = float(res)
-                                except ValueError:
-                                    resolution = None
 
                             data.update({
-                                'resolution': resolution,
                                 'shipment': self.shipment,
                                 'project': project,
                                 'priority': i + 1
@@ -1347,9 +1318,8 @@ class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
         for i, name in enumerate(data['name_set']):
             info = {
                 field: data['{}_set'.format(field)][i]
-                for field in ['name', 'kind', 'plan', 'comments', 'absorption_edge']}
+                for field in ['name', 'comments']}
             info.update({
-                'resolution': data['resolution_set'][i] and float(data['resolution_set'][i]) or None,
                 'shipment': data['shipment'],
                 'project': self.request.user,
                 'priority': i + 1

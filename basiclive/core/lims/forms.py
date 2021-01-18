@@ -352,7 +352,7 @@ class RequestParameterForm(forms.ModelForm):
                    'parameters': forms.HiddenInput,
                    'comments': forms.Textarea(attrs={'rows': "2"})}
         help_texts = {
-            'name': "Choose a recognizable name to reuse your settings in future requests."
+            'name': "Choose a recognizable name to reuse these settings in future requests."
         }
 
     def __init__(self, *args, **kwargs):
@@ -786,10 +786,9 @@ class ContainerForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
-        fields = ('project', 'name', 'kind', 'plan', 'resolution', 'absorption_edge', 'comments')
+        fields = ('project', 'name', 'comments')
         widgets = {
             'project': disabled_widget,
-            'resolution': forms.TextInput(attrs={'pattern': '\d+\.?\d*'}),
             'comments': forms.Textarea(attrs={'rows': 5}),
         }
 
@@ -809,16 +808,6 @@ class GroupForm(forms.ModelForm):
             'project',
             Div(
                 Div('name', css_class="col-12"),
-                css_class="form-row"
-            ),
-            Div(
-                Div(Field('kind', css_class="select", css_id="kind"), css_class="col-6"),
-                Div(Field('plan', css_class="select", css_id="plan"), css_class="col-6"),
-                css_class="form-row"
-            ),
-            Div(
-                Div(Field('absorption_edge', css_id="absorption_edge"), css_class="col-6"),
-                Div(Field('resolution', css_id="resolution"), css_class="col-6"),
                 css_class="form-row"
             ),
             Div(
@@ -1126,7 +1115,7 @@ class ShipmentGroupForm(forms.ModelForm):
     class Meta:
         model = Group
         fields = [
-            'shipment', 'id', 'priority', 'kind', 'resolution', 'absorption_edge', 'name', 'plan', 'comments'
+            'shipment', 'id', 'priority', 'name', 'comments'
         ]
         widgets = {
             'comments': forms.TextInput(),
@@ -1137,7 +1126,6 @@ class ShipmentGroupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ShipmentGroupForm, self).__init__(*args, **kwargs)
         self.fields['name'].required = False
-        self.fields['plan'].required = False
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
         self.footer.layout = Layout()
@@ -1147,10 +1135,6 @@ class ShipmentGroupForm(forms.ModelForm):
                 'name_set': [str(group.name) for group in groups],
                 'priority_set': [group.priority or 0 for group in groups],
                 'id_set': [group.pk for group in groups],
-                'plan_set': [str(group.plan) for group in groups],
-                'kind_set': [str(group.kind) for group in groups],
-                'absorption_edge_set': [str(group.absorption_edge) for group in groups],
-                'resolution_set': [group.resolution or '' for group in groups],
                 'comments_set': [group.comments or '' for group in groups]
             }
 
@@ -1175,8 +1159,7 @@ class ShipmentGroupForm(forms.ModelForm):
                 Div(
                     Div(
                         Div(
-                            Div('name', css_class="col-4"),
-                            Div(Field('plan', css_class="select-alt"), css_class="col-4"),
+                            Div('name', css_class="col-8"),
                             Div(
                                 Div(
                                     HTML(
@@ -1202,9 +1185,6 @@ class ShipmentGroupForm(forms.ModelForm):
                             ),
                             Div(
                                 Div(
-                                    Div(Field('kind', css_class="select-alt"), css_class="col-4"),
-                                    Div(Field('absorption_edge'), css_class="col-4"),
-                                    Div(Field('resolution'), css_class="col-4"),
                                     Div(Field('comments'), css_class="col-12"),
                                     css_class="form-row"
                                 ),

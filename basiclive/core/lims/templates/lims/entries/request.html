@@ -13,14 +13,7 @@
     </h3>
     <span class="text-muted">
         {% if not object.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
-        {{ object.identity }} |
-        {% if object.shipment %}
-            {% with object.shipment.groups.count as count %}
-            <strong>1</strong> of <strong>{{ count }}</strong> Requests{{ count|pluralize }} in Shipment {{object.shipment.name}}
-            {% endwith %}
-        {% else %}
-            Request not in a shipment.
-        {% endif %}
+        {{ object.identity }} | {{ object.kind.name }}
     </span>
 {% endblock %}
 
@@ -63,7 +56,6 @@
             <table class="table table-hover table-sm">
                 <thead>
                     <tr>
-                        <th class="">Priority</th>
                         <th class="">Name</th>
                         <th class="">Location</th>
                         <th class="">Container</th>
@@ -74,7 +66,6 @@
                 <tbody>
                 {% for sample in object.sample_list %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
-                        <td><span class='cursor'><i class='movable ti ti-move'></i></span></td>
                         <td><a href="#!" data-form-link="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>
@@ -101,49 +92,4 @@
     </div>
 </div>
     {% include "lims/comments.html" with object=object %}
-{% endblock %}
-
-{% block extra_js %}
-    <script src="{% static 'js/jquery/jquery-ui.min.js' %}"></script>
-    <script>
-        $(".sortable tbody").sortable({
-            items: "tr",
-            handle: ".cursor",
-            cursor: 'move',
-            opacity: 0.9,
-            axis: 'y',
-            update: function () {
-                let priorities = $(this).sortable("toArray", {key: 'sample', attribute: 'data-sample'});
-                $.ajax({
-                    type: "POST",
-                    dataType: "json",
-                    url: "{% url 'update-priority' %}",
-                    data: {
-                        'group': {{ object.pk }},
-                        'samples': priorities
-                    },
-                    success: function (response) {
-                        new Noty({
-                            text: "Priorities updated!",
-                            type: "success",
-                            layout: 'bottomRight',
-                            theme: 'sunset',
-                            timeout: 4000,
-                            visibilityControl: true
-                        }).show()
-                    },
-                    error: function (response) {
-                        new Noty({
-                            text: "Could not update sample priorities!",
-                            type: "error",
-                            layout: 'bottomRight',
-                            theme: 'sunset',
-                            timeout: 4000,
-                            visibilityControl: true
-                        }).show()
-                    }
-                });
-            }
-        });
-    </script>
 {% endblock %}

@@ -638,6 +638,9 @@ class Shipment(TransitStatusMixin):
     def groups(self):
         return self.groups.order_by('-priority')
 
+    def requests(self):
+        return self.project.requests.filter(Q(groups__shipment=self) | Q(samples__group__shipment=self))
+
     def receive(self, request=None):
         self.date_received = timezone.now()
         self.save()
@@ -1088,38 +1091,12 @@ class Group(ProjectObjectMixin):
         (ProjectObjectMixin.STATES.ARCHIVED, _('Archived'))
     )
 
-    HELP = {
-        'cascade': _('samples, datasets and results'),
-        'cascade_help': _('All associated samples will be left without a group'),
-        'kind': _("If SAD or MAD, be sure to provide the absorption edge below. Otherwise Se-K will be assumed."),
-        'plan': _("Select the plan which describes your instructions for all samples in this group."),
-        'delta_angle': _('If left blank, an appropriate value will be calculated during screening.'),
-        'total_angle': _('The total angle range to collect.'),
-        'multiplicity': _('Values entered here take precedence over the specified "Angle Range".'),
-    }
-    EXP_TYPES = Choices(
-        (0, 'NATIVE', _('Native')),
-        (1, 'MAD', _('MAD')),
-        (2, 'SAD', _('SAD')),
-        (3, 'S_SAD', _('S-SAD'))
-    )
-    EXP_PLANS = Choices(
-        (0, 'COLLECT_BEST', _('Collect best')),
-        (1, 'COLLECT_FIRST_GOOD', _('Collect first good')),
-        (2, 'SCREEN_AND_CONFIRM', _('Screen and confirm')),
-        (4, 'JUST_COLLECT', _('Collect all')),
-    )
     TRANSITIONS = copy.deepcopy(ProjectObjectMixin.TRANSITIONS)
     TRANSITIONS[ProjectObjectMixin.STATES.DRAFT] = [ProjectObjectMixin.STATES.ACTIVE]
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='sample_groups')
     status = models.IntegerField(choices=STATUS_CHOICES, default=ProjectObjectMixin.STATES.DRAFT)
     shipment = models.ForeignKey(Shipment, null=True, blank=True, on_delete=models.SET_NULL, related_name='groups')
-    energy = models.DecimalField(null=True, max_digits=10, decimal_places=4, blank=True)
-    resolution = models.FloatField(_('Desired Resolution (&#8491;)'), null=True, blank=True)
-    kind = models.IntegerField(_('exp. type'), choices=EXP_TYPES, default=EXP_TYPES.NATIVE)
-    absorption_edge = models.CharField(max_length=5, null=True, blank=True)
-    plan = models.IntegerField(choices=EXP_PLANS, default=EXP_PLANS.COLLECT_BEST)
     comments = models.TextField(blank=True, null=True)
     priority = models.IntegerField(blank=True, null=True)
 
@@ -1143,13 +1120,6 @@ class Group(ProjectObjectMixin):
 
     def complete(self):
         return not self.samples.filter(collect_status=False).exists()
-
-    def best_sample(self):
-        # need to change to [id, score]
-        if self.plan == Group.EXP_PLANS.COLLECT_BEST:
-            results = self.project.reports.filter(group=self, sample__in=self.samples.all()).order_by('-score')
-            if results:
-                return [results[0].sample.pk, results[0].score]
 
     def is_closable(self):
         return self.samples.all().exists() and not self.samples.exclude(
