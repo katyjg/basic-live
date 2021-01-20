@@ -1,0 +1,51 @@
+{% load badges %}
+{% load icons %}
+{% load misc_tags %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
+            <ul class="list-group list-group-flush">
+            {% for request in requests %}
+                <li class="list-group-item py-2">
+                    <div class="d-flex flex-row py-2">
+                        <div class="box-status text-center mr-3">
+                            {% if user.is_superuser%}
+                                <a href="#!" data-form-link="{% url 'request-admin-edit' request.pk %}"
+                                   title="Update Status">
+                                    {% if request.staff_comments %}
+                                        {% show_icon label=request.get_status_display icon='ti ti-md ti-comment-alt' %}
+                                    {% else %}
+                                        {% show_icon label=request.get_status_display icon='ti ti-md ti-comment' %}
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                {% if request.status == request.STATUS_CHOICES.COMPLETE %}
+                                    {% show_icon label=request.get_status_display icon='ti ti-md ti-check-box' tooltip=request.get_status_display %}
+                                {% else %}
+                                    {% show_icon label=request.get_status_display icon='ti ti-md ti-layout-width-full' tooltip=request.get_status_display %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                            <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
+                            <div class="small">
+                                {% for label, val in request.parameter_labels.items %}
+                                    <span title="{{ label }}"><strong>{{ label|title }}: </strong>{{ val }}</span>
+                                    {% if not forloop.last %} | {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if request.comments %}<div class="small"><strong>Comments: </strong>{{ request.comments }}</div>{% endif %}
+                            {% if request.staff_comments %}<div class="small"><strong>Staff Comments: </strong>{{ request.staff_comments }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% if show_samples %}
+                        {% include "lims/entries/group-progress.html" with samples=request.samples.all %}
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

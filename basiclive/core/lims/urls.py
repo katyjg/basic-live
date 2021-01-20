@@ -30,6 +30,7 @@ urlpatterns = [
     path('requests/new/', views.RequestWizardCreate.as_view(), name='request-new'),
     path('requests/<int:pk>/edit/', views.RequestEdit.as_view(), name='request-edit'),
     path('requests/<int:pk>/delete/', views.RequestDelete.as_view(), name='request-delete'),
+    path('requests/<int:pk>/staff/edit/', views.RequestEdit.as_view(form_class=forms.RequestAdminForm), name='request-admin-edit'),
 
     path('shipments/', views.ShipmentList.as_view(), name='shipment-list'),
     path('shipments/new/', views.ShipmentCreate.as_view(), name='shipment-new'),

@@ -368,6 +368,13 @@ class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Shipment
     template_name = "lims/entries/shipment.html"
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['automounters'] = {
+            container.pk: container.automounter() for container in self.object.containers.all()
+        }
+        return ctx
+
 
 class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
     template_name = "lims/pdf/send_labels.html"
@@ -1035,8 +1042,9 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
             start_data = self.storage.get_step_data('start')
             if start_data:
                 kind = start_data.get('start-kind')
-
                 return self.initial_dict.get(step, {'kind': kind,
+                                                    'template': start_data.get('start-template'),
+                                                    'request': start_data.get('start-request'),
                                                     'comments': start_data.get('start-comments'),
                                                     'name': start_data.get('start-name')})
         return self.initial_dict.get(step, {})
@@ -1053,9 +1061,11 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 info.pop('template')
                 info.update({'project': models.Project.objects.get(username=self.request.user.username)})
             elif label == 'parameters':
-                for field in ['comments', 'name', 'parameters']:
-                    info[field] = form.cleaned_data.get(field)
-                request, created = models.Request.objects.get_or_create(**info)
+                request = info.pop('request')
+                if not request:
+                    for field in ['comments', 'name', 'parameters']:
+                        info[field] = form.cleaned_data.get(field)
+                    request, created = models.Request.objects.get_or_create(**info)
                 request.groups.add(*[g for g in related['groups']])
                 request.samples.add(*[s for s in related['samples']])
         return JsonResponse({})

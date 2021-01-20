@@ -639,7 +639,10 @@ class Shipment(TransitStatusMixin):
         return self.groups.order_by('-priority')
 
     def requests(self):
-        return self.project.requests.filter(Q(groups__shipment=self) | Q(samples__group__shipment=self))
+        return self.project.requests.filter(Q(groups__shipment=self) | Q(samples__group__shipment=self)).distinct()
+
+    def sample_requests(self):
+        return self.project.requests.filter(samples__group__shipment=self)
 
     def receive(self, request=None):
         self.date_received = timezone.now()
@@ -655,6 +658,7 @@ class Shipment(TransitStatusMixin):
             for obj in self.containers.all():
                 obj.send(request=request)
             self.groups.all().update(status=Group.STATES.ACTIVE)
+            self.requests().update(status=Request.STATUS_CHOICES.PENDING)
             super(Shipment, self).send(request=request)
 
     def unsend(self, request=None):
@@ -665,6 +669,7 @@ class Shipment(TransitStatusMixin):
             for obj in self.containers.all():
                 obj.unsend()
             self.groups.all().update(status=Group.STATES.DRAFT)
+            self.requests().update(status=Request.STATUS_CHOICES.DRAFT)
 
     def unreturn(self, request=None):
         if self.status == self.STATES.RETURNED:

@@ -7,6 +7,7 @@ from crispy_forms.layout import HTML, Div, Field, Layout
 from django.utils.translation import ugettext as _
 from django import forms
 from django.conf import settings
+from django.db.models import Q
 from django.urls import reverse_lazy
 
 from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
@@ -304,7 +305,10 @@ class RequestTypeForm(forms.ModelForm):
 
 
 class RequestForm(forms.ModelForm):
-    template = forms.ModelChoiceField(label=_("Use settings from a past request"), queryset=Request.objects.all(), required=False)
+    template = forms.ModelChoiceField(label=_("Copy settings from past request"), queryset=Request.objects.all(),
+                                      required=False)
+    request = forms.ModelChoiceField(label=_("Use existing request"), queryset=Request.objects.all(),
+                                     required=False)
 
     class Meta:
         model = Request
@@ -319,10 +323,34 @@ class RequestForm(forms.ModelForm):
         pk = self.instance.pk
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
+
         old_requests = Request.objects.filter(project=self.initial['project'])
+        self.fields['template'].queryset = Request.objects.filter(project=self.initial['project'])
+
+        group_pk = self.initial['groups'] and self.initial['groups'][0] or None
+        if self.initial['samples']:
+            group_pk = Sample.objects.filter(pk=self.initial['samples'][0]).first().group
+        shipment = Group.objects.filter(pk=group_pk).first() and Group.objects.filter(pk=group_pk).first().shipment
+        requests = self.initial['project'].requests.exclude(groups__pk=group_pk).filter(
+            Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
+        self.fields['request'].queryset = requests
+        prepopulate = Div(css_class='row')
+        if not requests.exists():
+            self.fields['request'].widget = forms.HiddenInput()
+        else:
+            prepopulate.append(Div(
+                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
+                      css_class="select"), css_class="{}".format(old_requests.exists() and "col-5" or "col-12")))
+        if requests.exists() and old_requests.exists():
+            prepopulate.append(Div(HTML("""OR"""), css_class="col-2 text-center"))
         if not old_requests.exists():
             self.fields['template'].widget = forms.HiddenInput()
-        self.fields['template'].queryset = Request.objects.filter(project=self.initial['project'])
+        else:
+            prepopulate.append(Div(
+                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
+                      css_class="select"), css_class="{}".format(requests.exists() and "col-5" or "col-12")))
+        if requests.exists() or old_requests.exists():
+            prepopulate.append(Div(HTML("""<hr/>"""), css_class="col-12"))
         if pk:
             self.body.title = u"Edit {} Request".format(self.instance.kind.name)
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
@@ -333,7 +361,7 @@ class RequestForm(forms.ModelForm):
 
         self.body.layout = Layout(
             'project', 'groups', 'samples',
-            Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request')),
+            prepopulate,
             Field('name', css_id='name'),
             Field('kind', css_id='kind'),
             Field('comments', css_id='comments')
@@ -344,11 +372,15 @@ class RequestForm(forms.ModelForm):
 
 
 class RequestParameterForm(forms.ModelForm):
+    template = forms.ModelChoiceField(label=_("Copy settings from past request"), queryset=Request.objects.all(), required=False)
+    request = forms.ModelChoiceField(label=_("Use existing request"), queryset=Request.objects.all(), required=False)
 
     class Meta:
         model = Request
         fields = ('name', 'comments', 'kind', 'parameters')
         widgets = {'kind': disabled_widget,
+                   'template': disabled_widget,
+                   'request': disabled_widget,
                    'parameters': forms.HiddenInput,
                    'comments': forms.Textarea(attrs={'rows': "2"})}
         help_texts = {
@@ -365,6 +397,11 @@ class RequestParameterForm(forms.ModelForm):
         parameters = Div(
             css_class="form-row"
         )
+        request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
+        template = self.initial.get('template') and Request.objects.filter(pk=self.initial.get('template')).first() or None
+        if request:
+            self.fields['name'].widget.attrs['readonly'] = True
+            self.fields['comments'].widget.attrs['readonly'] = True
         if pk:
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
             self.footer.layout = Layout(
@@ -387,6 +424,10 @@ class RequestParameterForm(forms.ModelForm):
                 info = {k: v for k, v in info.items() if k not in ['type', 'choices']}
                 if pk:
                     info['initial'] = self.instance.parameters.get(param)
+                elif request:
+                    info['initial'] = request.parameters.get(param)
+                elif template:
+                    info['initial'] = template.parameters.get(param)
                 if field_type == 'string':
                     self.fields[param] = forms.CharField(**info)
                 elif field_type == 'number':
@@ -395,6 +436,8 @@ class RequestParameterForm(forms.ModelForm):
                     self.fields[param] = forms.BooleanField(**info)
                 if choices:
                     self.fields[param].widget=forms.Select(choices=choices)
+                if request:
+                    self.fields[param].widget.attrs['readonly'] = True
                 parameters.append(Div(param, css_class='col-6'))
 
 
@@ -411,6 +454,54 @@ class RequestParameterForm(forms.ModelForm):
         for param in cleaned_data['kind'].spec.keys():
             parameters[param] = self.data.get("{}{}".format(prefix, param))
         return parameters
+
+
+class RequestAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = Request
+        fields = ('staff_comments','status')
+        widgets = {
+            'staff_comments': forms.Textarea(attrs={'rows': "4"}),
+            'status': forms.HiddenInput,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pk = self.instance.pk
+
+        self.body = BodyHelper(self)
+        self.footer = FooterHelper(self)
+        self.body.title = u"Update Request"
+        self.body.form_action = reverse_lazy('request-admin-edit', kwargs={'pk': pk})
+        if self.instance.status != self.instance.STATUS_CHOICES.COMPLETE:
+            mark_btn = StrictButton("Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success')
+        else:
+            mark_btn = StrictButton("Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning')
+
+        self.body.layout = Layout(
+            Div(
+                Div('staff_comments', css_class='col-12'),
+                css_class="form-row"
+            )
+        )
+        self.footer.layout = Layout(
+            Field('status'),
+            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary mr-auto"),
+            mark_btn,
+            StrictButton('Save Comments', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        )
+
+    def clean(self):
+        status = self.instance.status
+        if self.data.get('submit') == 'done':
+            if status != self.instance.STATUS_CHOICES.COMPLETE:
+                status = self.instance.STATUS_CHOICES.COMPLETE
+            else:
+                status = self.instance.STATUS_CHOICES.PENDING
+        cleaned_data = super().clean()
+        cleaned_data['status'] = status
+        return cleaned_data
 
 
 class ShipmentForm(forms.ModelForm):

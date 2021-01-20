@@ -5,6 +5,7 @@
 {% load markup %}
 {% load static %}
 {% load icons %}
+{% load misc_tags %}
 {% block pre_js %}
     <script src="{% static 'js/d3/d3.v5.min.js' %}"></script>
     <script src="{% static 'js/d3/d3-selection-multi.v1.min.js' %}"></script>
@@ -116,7 +117,7 @@
 
 {% block full %}
     <div class="row">
-        <div class="col-sm-8 col-12">
+        <div class="col-sm-7 col-12">
             <div class="row">
                 {% for container in shipment.containers.all %}
                     <div class="{% container_col container %} text-center">
@@ -125,9 +126,11 @@
                                 <a href="{% url 'container-detail' pk=container.pk %}">
                                     {% if container.parent %}
                                         <span class="badge badge-primary text-thin" title="Loaded">
-                                        {% if container.automounter %}{{ container.automounter.beamline }} |
-                                            {% else %}{{ container.parent.kind.name }} {{ container.parent.name }}
-                                            |{% endif %}{{ container.port }}&nbsp;|&nbsp;{{ container.name }}
+                                        {% with automounters|get_item:container.pk as am %}
+                                            {% if am %}{{ am.beamline }} |
+                                            {% else %}{{ container.parent.kind.name }} {{ container.parent.name }} |
+                                            {% endif %}{{ container.port }}&nbsp;|&nbsp;{{ container.name }}
+                                        {% endwith %}
                                     </span>
                                     {% else %}
                                         <span class="badge badge-secondary text-thin">{{ container.name }}</span>
@@ -141,7 +144,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="col-sm-4 col-12">
+        <div class="col-sm-5 col-12">
             <div class="card mb-3">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
                 <ul class="list-group list-group-flush">

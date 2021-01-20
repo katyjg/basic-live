@@ -1,4 +1,9 @@
 {% load badges %}
+{% load icons %}
+{% load misc_tags %}
+{% if group.requests.count %}
+    {% include "lims/entries/request-summary.html" with requests=group.requests.all %}
+{% endif %}
 {% if samples %}
 <table class="table table-sm text-condensed">
     <thead>
@@ -48,7 +53,7 @@
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
-                <div>{{ sample.automounter.beamline.acronym|default:'' }}&nbsp;{{ sample.port }}</div>
+                <div>{% with automounters|get_item:sample.container.pk as am %}{{ am.beamline.acronym|default:'' }}{% endwith %}&nbsp;{{ sample.port }}</div>
             </td>
             <td>
                 {% include "lims/entries/sample-data.html" %}
