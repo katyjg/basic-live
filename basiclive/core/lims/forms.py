@@ -312,7 +312,7 @@ class RequestForm(forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples')
+        fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
         widgets = {'project': disabled_widget,
                    'groups': forms.MultipleHiddenInput,
                    'samples': forms.MultipleHiddenInput,
@@ -324,44 +324,45 @@ class RequestForm(forms.ModelForm):
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
 
-        old_requests = Request.objects.filter(project=self.initial['project'])
-        self.fields['template'].queryset = Request.objects.filter(project=self.initial['project'])
-
-        group_pk = self.initial['groups'] and self.initial['groups'][0] or None
-        if self.initial['samples']:
-            group_pk = Sample.objects.filter(pk=self.initial['samples'][0]).first().group
+        group_pk = self.initial['groups'] and self.initial['groups'][0] or self.initial['samples'] and Sample.objects.filter(pk=self.initial['samples'][0]).first().group.pk or None
         shipment = Group.objects.filter(pk=group_pk).first() and Group.objects.filter(pk=group_pk).first().shipment
         requests = self.initial['project'].requests.exclude(groups__pk=group_pk).filter(
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
-        self.fields['request'].queryset = requests
-        prepopulate = Div(css_class='row')
-        if not requests.exists():
-            self.fields['request'].widget = forms.HiddenInput()
+        old_requests = Request.objects.filter(project=self.initial['project'])
+
+        is_requests = shipment and requests.exists()
+        is_template = old_requests.exists()
+
+        if is_template:
+            self.fields['template'].queryset = old_requests
         else:
-            prepopulate.append(Div(
-                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
-                      css_class="select"), css_class="{}".format(old_requests.exists() and "col-5" or "col-12")))
-        if requests.exists() and old_requests.exists():
-            prepopulate.append(Div(HTML("""OR"""), css_class="col-2 text-center"))
-        if not old_requests.exists():
             self.fields['template'].widget = forms.HiddenInput()
+        if is_requests:
+            self.fields['request'].queryset = requests
         else:
-            prepopulate.append(Div(
-                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
-                      css_class="select"), css_class="{}".format(requests.exists() and "col-5" or "col-12")))
-        if requests.exists() or old_requests.exists():
-            prepopulate.append(Div(HTML("""<hr/>"""), css_class="col-12"))
+            self.fields['request'].widget = forms.HiddenInput()
+
+        autofill = Div(
+            is_requests and Div(
+                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
+            is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
+            is_template and Div(
+                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+            css_class='row'
+        )
+
         if pk:
             self.body.title = u"Edit {} Request".format(self.instance.kind.name)
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
-            self.fields['template'].widget = forms.HiddenInput()
         else:
             self.body.title = u"Create New Request"
             self.body.form_action = reverse_lazy('request-new')
 
         self.body.layout = Layout(
             'project', 'groups', 'samples',
-            prepopulate,
+            autofill,
             Field('name', css_id='name'),
             Field('kind', css_id='kind'),
             Field('comments', css_id='comments')
@@ -372,8 +373,8 @@ class RequestForm(forms.ModelForm):
 
 
 class RequestParameterForm(forms.ModelForm):
-    template = forms.ModelChoiceField(label=_("Copy settings from past request"), queryset=Request.objects.all(), required=False)
-    request = forms.ModelChoiceField(label=_("Use existing request"), queryset=Request.objects.all(), required=False)
+    template = forms.ModelChoiceField(queryset=Request.objects.all(), required=False)
+    request = forms.ModelChoiceField(queryset=Request.objects.all(), required=False)
 
     class Meta:
         model = Request

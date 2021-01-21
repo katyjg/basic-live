@@ -1123,6 +1123,9 @@ class Group(ProjectObjectMixin):
     def num_samples(self):
         return self.samples.count()
 
+    def all_requests(self):
+        return self.project.requests.filter(Q(groups=self) | Q(samples__group=self)).distinct()
+
     def complete(self):
         return not self.samples.filter(collect_status=False).exists()
 

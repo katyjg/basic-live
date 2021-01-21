@@ -57,6 +57,7 @@
                 <thead>
                     <tr>
                         <th class="">Name</th>
+                        <th class="">Group</th>
                         <th class="">Location</th>
                         <th class="">Container</th>
                         <th class="">Barcode</th>
@@ -67,6 +68,7 @@
                 {% for sample in object.sample_list %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
                         <td><a href="#!" data-form-link="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
+                        <td>{{ sample.group }}</td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>
                         <td>{{ sample.barcode|default_if_none:"&mdash;" }}</td>

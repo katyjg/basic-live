@@ -22,6 +22,11 @@ def group_samples(group, session=None):
 
 
 @register.filter
+def request_samples(request, group):
+    return group.samples.filter(pk__in=[s.pk for s in request.sample_list()])
+
+
+@register.filter
 def group_parameters(group):
     parameters = [
         None if not group.resolution else '{:0.1f} Å'.format(group.resolution),

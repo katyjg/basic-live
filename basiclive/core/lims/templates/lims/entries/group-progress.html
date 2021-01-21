@@ -1,37 +1,42 @@
 {% load badges %}
 {% load icons %}
 {% load misc_tags %}
-{% if group.requests.count %}
-    {% include "lims/entries/request-summary.html" with requests=group.requests.all %}
-{% endif %}
 {% if samples %}
 <table class="table table-sm text-condensed">
     <thead>
         <tr>
-            {% if user.is_superuser %}<th></th>{% endif %}
+            <th></th>
             <th>Sample</th>
             <th>Container</th>
             <th>Location</th>
             <th>Data&nbsp;Sets</th>
             <th>Analysis&nbsp;Reports</th>
-            {% if user.is_superuser %}<th></th>{% endif %}
         </tr>
     </thead>
     <tbody>
         {% for sample in samples %}
         <tr>
-            {% if user.is_superuser %}
-                <td>
+
+            <td class="text-center">
+                {% if user.is_superuser %}
                     {% if sample.pk %}
-                    <a href="#!"
-                       data-form-link="{% url 'sample-admin-edit' sample.pk %}"
-                       title="Edit Notes"
-                    >
-                        <i class="ti ti-comment{% if sample.staff_comments %}-alt{% endif %}"></i>
-                    </a>
+                        <a href="#!" data-form-link="{% url 'sample-admin-edit' sample.pk %}" title="Edit Notes">
+                            <i class="ti ti-comment{% if sample.staff_comments %}-alt{% endif %}"></i>
+                        </a>
                     {% endif %}
-                </td>
-            {% endif %}
+                {% else %}
+                    {% if sample.staff_comments %}
+                        <span title="Staff Comments"
+                              data-toggle="popover"
+                              data-content="{{ sample.staff_comments|default:''}}"
+                              data-placement="bottom"
+                              data-trigger="hover">
+                            <i class="ti ti-comment-alt"></i> </span>
+                    {% endif %}
+                    {% if sample.collect_status %}<i class="ti ti-check-box"></i>{% endif %}
+                {% endif %}
+            </td>
+
             <td class="overflow-ellipsis"
             {% if sample.staff_comments %}
                 title="Staff Comments"
@@ -53,7 +58,7 @@
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
-                <div>{% with automounters|get_item:sample.container.pk as am %}{{ am.beamline.acronym|default:'' }}{% endwith %}&nbsp;{{ sample.port }}</div>
+                <div>{% if automounters %}{% with automounters|get_item:sample.container.pk as am %}{{ am.beamline.acronym|default:'' }}{% endwith %}{% else %}{{ sample.automounter.beamline.acronym|default:'' }}{% endif %}&nbsp;{{ sample.port }}</div>
             </td>
             <td>
                 {% include "lims/entries/sample-data.html" %}
@@ -61,22 +66,6 @@
             <td>
                 {% include "lims/entries/sample-reports.html" %}
             </td>
-            {% if user.is_superuser%}
-                <td>
-                    {% if sample.pk %}
-                    <a href="#!"
-                       data-form-link="{% url 'sample-admin-edit' sample.pk %}"
-                       title="Mark Complete/Incomplete"
-                    >
-                        {% if sample.collect_status %}
-                            <i class="ti ti-check-box"></i>
-                        {% else %}
-                            <i class="ti ti-pencil"></i>
-                        {% endif %}
-                    </a>
-                    {% endif %}
-                </td>
-            {% endif %}
         </tr>
     {% endfor %}
     </tbody>
