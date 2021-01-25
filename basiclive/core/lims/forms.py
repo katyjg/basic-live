@@ -54,25 +54,22 @@ class ProjectForm(forms.ModelForm):
             self.body.title = _("Create New Profile")
             self.body.form_action = reverse_lazy('new-project')
 
-        if self.user.is_superuser:
-            kind = Field('kind', css_class="select")
-            alias = Field('alias')
-            primary = Div(
+        if not self.user.is_superuser:
+            for f in ['kind', 'alias', 'first_name', 'last_name', 'email', 'designation']:
+                self.fields[f].widget.attrs['readonly'] = True
+            self.fields['designation'].widget = forms.MultipleHiddenInput()
+
+        self.body.layout = Layout(
+            Div(
                 Div('first_name', css_class='col-6'),
                 Div('last_name', css_class='col-6'),
-                Div('email', css_class='col-6'),
-                Div(Field('designation', css_class='select'), css_class='col-6'),
+                Div('email', css_class='col-{}'.format(self.user.is_superuser and '6' or '12')),
+                self.user.is_superuser and Div(Field('designation', css_class='select'), css_class='col-6') or Div('designation'),
                 css_class='form-row'
-            )
-        else:
-            kind = Field('kind', css_class="select", readonly=True)
-            alias = Field('alias', readonly=True)
-            primary = Div()
-        self.body.layout = Layout(
-            primary,
+            ),
             Div(
-                Div(kind, css_class='col-6'),
-                Div(alias, css_class='col-6'),
+                Div(Field('kind', css_class='select'), css_class='col-6'),
+                Div('alias', css_class='col-6'),
                 Div('contact_person', css_class='col-12'),
                 css_class="form-row"
             ),
