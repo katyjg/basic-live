@@ -77,6 +77,68 @@ class UpdatePriority(LoginRequiredMixin, View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class UpdateRequestPriority(LoginRequiredMixin, View):
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        try:
+            shipment = models.Shipment.objects.get(pk=request.POST.get('shipment'))
+        except models.Shipment.DoesNotExist:
+            raise http.Http404("Shipment does not exist.")
+
+        if shipment.project != request.user:
+            raise http.Http404()
+
+        pks = [int(u) for u in request.POST.getlist('priorities[]') if u]
+        priorities = {
+            pk: i + 1
+            for i, pk in enumerate(pks)
+        }
+
+        to_update = []
+        for request in shipment.requests():
+            new_priority = priorities.get(request.pk, request.priority)
+            if request.priority != new_priority:
+                request.priority = new_priority
+                to_update.append(request)
+
+        shipment.requests().bulk_update(to_update, fields=["priority"])
+
+        return JsonResponse([], safe=False)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateGroupPriority(LoginRequiredMixin, View):
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        try:
+            shipment = models.Shipment.objects.get(pk=request.POST.get('shipment'))
+        except models.Shipment.DoesNotExist:
+            raise http.Http404("Shipment does not exist.")
+
+        if shipment.project != request.user:
+            raise http.Http404()
+
+        pks = [int(u) for u in request.POST.getlist('priorities[]') if u]
+        priorities = {
+            pk: i + 1
+            for i, pk in enumerate(pks)
+        }
+
+        to_update = []
+        for group in shipment.groups.all():
+            new_priority = priorities.get(group.pk, group.priority)
+            if group.priority != new_priority:
+                group.priority = new_priority
+                to_update.append(group)
+
+        shipment.groups.all().bulk_update(to_update, fields=["priority"])
+
+        return JsonResponse([], safe=False)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class BulkSampleEdit(LoginRequiredMixin, View):
 
     @transaction.atomic

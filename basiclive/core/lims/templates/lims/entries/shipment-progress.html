@@ -60,11 +60,7 @@
                      | <span class="text-muted text-thin text-condensed">{{ group.num_samples }} sample{{ group.num_samples|pluralize }}</span>
                     {% if group.comments %} | <span class="text-muted text-thin text-condensed">{{ group.comments }}</span>{% endif %}
                 </h4>
-                {% if group.requests.count %}
-                    {% include "lims/entries/request-summary.html" with requests=group.all_requests %}
-                {% else %}
-                    {% include "lims/entries/group-progress.html" with samples=group.samples.all %}
-                {% endif %}
+                {% include "lims/entries/request-summary.html" with requests=group.all_requests %}
                 <hr />
             {% endfor %}
         </div>

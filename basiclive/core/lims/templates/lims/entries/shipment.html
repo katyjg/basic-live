@@ -147,15 +147,17 @@
         <div class="col-sm-5 col-12">
             <div class="card mb-3">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
-                <ul class="list-group list-group-flush">
+                <ul class="list-group list-group-flush sortable" data-url="{% url 'update-request-priority' %}" data-sort="request">
                     {% for request in shipment.requests %}
                         {% include "lims/entries/request-list-item.html" with editable=shipment.is_editable %}
                     {% empty %}
                         <div class="list-group-item">
                             <div class="d-flex flex-row">
                                 <div class="pl-3 flex-shrink-1 align-self-center">
-                                    <small class="p-0 m-0 text-condensed">Use Requests to communicate intended experiments and procedures for this set of samples,
-                                    especially if beamline staff will be collecting the data.</small>
+                                    <small class="p-0 m-0 text-condensed">
+                                        Use Requests to communicate intended experiments and procedures for this set of
+                                        samples, especially if beamline staff will be collecting the data.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +166,7 @@
             </div>
             <div class="card">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
-                <ul class="list-group list-group-flush">
+                <ul class="list-group list-group-flush sortable" data-url="{% url 'update-group-priority' %}" data-sort="group">
                     {% for group in shipment.groups_by_priority %}
                         {% include "lims/entries/group-list-item.html" with group=group editable=shipment.is_editable %}
                     {% endfor %}
@@ -188,5 +190,54 @@
                 $('.list-group-item-warning').removeClass('list-group-item-warning');
             });
         });
-</script>
+    </script>
+    <script src="{% static 'js/jquery/jquery-ui.min.js' %}"></script>
+    <script>
+        function update_priority(url, data) {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url,
+                data: data,
+                success: function (response) {
+                    new Noty({
+                        text: "Priorities updated!",
+                        type: "success",
+                        layout: 'bottomRight',
+                        theme: 'sunset',
+                        timeout: 4000,
+                        visibilityControl: true
+                    }).show()
+                },
+                error: function (response) {
+                    new Noty({
+                        text: "Could not update priorities!",
+                        type: "error",
+                        layout: 'bottomRight',
+                        theme: 'sunset',
+                        timeout: 4000,
+                        visibilityControl: true
+                    }).show()
+                }
+            });
+        }
+
+        $(".sortable").sortable({
+            items: "li",
+            handle: ".cursor",
+            cursor: 'move',
+            opacity: 0.9,
+            axis: 'y',
+            update: function () {
+                let el = $(this).sortable("instance").element;
+                let sort = $(el).data('sort');
+                let priorities = $(this).sortable("toArray", {key: sort, attribute: 'data-' + sort});
+                let data = {
+                    'shipment': {{ object.pk }},
+                    'priorities': priorities
+                };
+                update_priority($(el).data('url'), data)
+            }
+        });
+    </script>
 {% endblock %}

@@ -1078,13 +1078,6 @@ class RequestEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
     success_message = "Request has been updated."
     success_url = reverse_lazy('request-list')
 
-    def form_valid(self, form):
-        super().form_valid(form)
-        for s in self.object.samples.all():
-            if self.original_name in s.name:
-                models.Sample.objects.filter(pk=s.pk).update(name=s.name.replace(self.original_name, self.object.name))
-        return JsonResponse({})
-
     def get_success_url(self):
         return reverse_lazy('shipment-detail', kwargs={'pk': self.object.shipment().pk})
 

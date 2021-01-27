@@ -171,9 +171,10 @@ class NewProjectForm(forms.ModelForm):
 class RequestTypeForm(forms.ModelForm):
     parameter = forms.CharField(max_length=32, required=False, label=_("Parameter*"))
     required = forms.ChoiceField(choices=((False, 'Optional'), (True, 'Required')), required=False)
-    label = forms.CharField(max_length=64, required=False, label=_("Human-readable label*"))
-    kind = forms.ChoiceField(choices=(("string", "Text"), ("number", "Number"), ("boolean", "Boolean")), required=False)
+    label = forms.CharField(max_length=64, required=False)
+    kind = forms.ChoiceField(required=False)
     choices = forms.CharField(max_length=512, required=False, help_text=_("Comma-separated list"))
+    style = forms.ChoiceField(required=False, initial="col-6")
 
     class Meta:
         model = RequestType
@@ -187,9 +188,15 @@ class RequestTypeForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.repeated_fields = ['parameter', 'required', 'label', 'kind', 'choices']
+        properties = REQUEST_SPEC_SCHEMA['definitions']['field']['properties']
+        self.repeated_fields = ['parameter', 'required', 'label', 'kind', 'choices', 'style']
         self.repeated_data = {}
         for f in self.repeated_fields:
+            info = properties.get(f == 'kind' and 'type' or f, {})
+            if info.get('enum'): self.fields[f].choices = ((c, c.title()) for c in info['enum'])
+            if info.get('description'):
+                self.fields[f].widget.attrs['label'] = info['description']
+                self.fields[f].label = info['description']
             self.fields['{}_set'.format(f)] = forms.CharField(required=False)
         if pk:
             spec = self.instance.spec
@@ -199,6 +206,7 @@ class RequestTypeForm(forms.ModelForm):
             self.repeated_data['label_set'] = [spec[param]['label'] for param in parameters]
             self.repeated_data['choices_set'] = [spec[param].get('choices') and ', '.join(c[0] for c in spec[param]['choices']) or '' for param in parameters]
             self.repeated_data['required_set'] = [str(spec[param]['required']) for param in parameters]
+            self.repeated_data['style_set'] = [spec[param].get('style', 'col-6') for param in parameters]
 
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
@@ -227,6 +235,7 @@ class RequestTypeForm(forms.ModelForm):
                             Div(Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
                             Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
                             Div(Field('choices'), css_class="col-6"),
+                            Div(Field('style', css_class="select-alt", data_repeat_enable="true"), css_class="col-2"),
                             Div(
                                 Div(
                                     HTML('<label>&nbsp;</label>'),
@@ -238,7 +247,7 @@ class RequestTypeForm(forms.ModelForm):
                                     ),
                                     css_class="form-group"
                                 ),
-                                css_class="col-3"
+                                css_class="col-1"
                             ),
                             css_class="repeat-row template row"
                         ),
@@ -289,7 +298,8 @@ class RequestTypeForm(forms.ModelForm):
             spec[param] = {
                 "label": data['label_set'][i],
                 "type": data['kind_set'][i],
-                "required": data['required_set'][i] == 'True'
+                "required": data['required_set'][i] == 'True',
+                "style": data['style_set'][i]
             }
             if data['choices_set'][i]:
                 spec[param]["choices"] = [(c.strip(), c.strip()) for c in data['choices_set'][i].split(',')]
@@ -375,7 +385,7 @@ class RequestParameterForm(forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ('name', 'comments', 'kind', 'parameters')
+        fields = ('name', 'comments', 'kind', 'parameters', 'groups', 'samples')
         widgets = {'kind': disabled_widget,
                    'template': disabled_widget,
                    'request': disabled_widget,
@@ -401,12 +411,16 @@ class RequestParameterForm(forms.ModelForm):
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['comments'].widget.attrs['readonly'] = True
         if pk:
+            self.fields['groups'].queryset = self.instance.project.sample_groups.filter(shipment=self.instance.shipment())
+            self.fields['samples'].queryset = self.instance.project.samples.filter(container__shipment=self.instance.shipment())
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
             self.footer.layout = Layout(
                 StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
                 StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
             )
         else:
+            self.fields['groups'].widget = forms.MultipleHiddenInput()
+            self.fields['samples'].widget = forms.MultipleHiddenInput()
             self.body.form_action = reverse_lazy('request-new')
             self.footer.layout = Layout(
                 StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
@@ -417,9 +431,10 @@ class RequestParameterForm(forms.ModelForm):
             for param, info in kind.spec.items():
                 field_type = info.pop('type')
                 choices = info.get('choices')
+                style = info.get('style', 'col-6')
                 if info.get('choices'):
                     info['choices'] = tuple(tuple(c) for c in choices)
-                info = {k: v for k, v in info.items() if k not in ['type', 'choices']}
+                info = {k: v for k, v in info.items() if k not in ['type', 'choices', 'style']}
                 if pk:
                     info['initial'] = self.instance.parameters.get(param)
                 elif request:
@@ -436,11 +451,15 @@ class RequestParameterForm(forms.ModelForm):
                     self.fields[param].widget=forms.Select(choices=choices)
                 if request:
                     self.fields[param].widget.attrs['readonly'] = True
-                parameters.append(Div(param, css_class='col-6'))
-
-
+                parameters.append(Div(param, css_class=style))
         self.body.layout = Layout(
-            'kind', 'name', 'parameters', parameters, 'comments'
+            'kind', 'name', 'parameters', parameters, 'comments',
+            pk and Div(HTML("""<hr/>""")) or Div(),
+            Div(
+                Div(Field('groups', css_class='select'), css_class='col-6'),
+                Div(Field('samples', css_class='select'), css_class='col-6'),
+                css_class='row'
+            )
         )
 
     def clean_parameters(self):

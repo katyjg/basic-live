@@ -6,7 +6,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
-            <ul class="list-group list-group-flush">
+            <ul class="list-group list-group-flush list-group-hover">
                 {% for request in requests %}
                     <li class="list-group-item py-2">
                         <div class="d-flex flex-row py-2">
@@ -41,10 +41,10 @@
                                 {% if request.staff_comments %}<div class="small"><strong>Staff Comments: </strong>{{ request.staff_comments }}</div>{% endif %}
                             </div>
                             <div class="tools-box">
-                                <span class="large">
+                                <span class="large pl-3">
                                 {% if group in request.groups.all %}
-                                    <h4 class="text-success text-bold">All</h4>
-                                    samples
+                                    <h4 class="text-success text-bold" title="Samples in this group">All ({{ group.num_samples }})</h4>
+                                    sample{{ group.num_samples|pluralize }}
                                 {% else %}
                                     {% with request|request_samples:group as sample_list %}
                                         <span title="Samples from Group '{{ group.name }}'"
@@ -59,11 +59,22 @@
                                     {% endwith %}
                                 {% endif %}
                                 </span>
+                                <span class="large text-thin text-secondary" style="font-size: 3rem;">
+                                    /
+                                </span>
+                                <span class="large">
+                                    <h4 class="text-secondary text-bold" title="Requested samples">{{ request.num_samples }}</h4>
+                                    total
+                                </span>
                             </div>
                         </div>
                         {% if show_samples %}
                             {% include "lims/entries/group-progress.html" with samples=request.samples.all %}
                         {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty">
+                        No specific requests for these samples.
                     </li>
                 {% endfor %}
             </ul>

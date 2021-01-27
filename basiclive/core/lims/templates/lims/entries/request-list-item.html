@@ -1,10 +1,15 @@
 {% load icons %}
 
 {% with request.num_samples as num_samples %}
-    <div class="list-group-item" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
+    <li class="list-group-item pl-2" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
          data-reference="{% for s in request.sample_list %}{{ s.pk }} {% endfor %}">
         <div class="d-flex flex-row justify-content-between">
-            <div class="text-left flex-fill">
+            <div class="box-status text-center" style="width: 50px; min-width: 50px;">
+                <span class='cursor'>
+                    {% show_icon icon='ti ti-md ti-move' tooltip='Priority' %}
+                </span>
+            </div>
+            <div class="text-left flex-fill pl-3">
                 <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
                 <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
                 <div class="small">
@@ -27,5 +32,5 @@
                 </div>
             {% endif %}
         </div>
-    </div>
+    </li>
 {% endwith %}

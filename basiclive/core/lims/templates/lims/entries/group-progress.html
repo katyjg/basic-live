@@ -7,7 +7,6 @@
         <tr>
             <th></th>
             <th>Sample</th>
-            <th>Container</th>
             <th>Location</th>
             <th>Data&nbsp;Sets</th>
             <th>Analysis&nbsp;Reports</th>
@@ -53,12 +52,15 @@
                 {% endif %}
             </td>
             <td class="overflow-ellipsis">
-                {% if sample.pk %}
-                <a href="{% url 'container-detail' sample.container.pk %}">{{ sample.container.name }}</a>
+                {% if automounters %}{% with automounters|get_item:sample.container.pk as am %}
+                    {{ am.beamline.acronym|default:'' }}{% if am and sample.pk %} | {% endif %}
+                {% endwith %}{% else %}
+                    {{ sample.automounter.beamline.acronym|default:'' }}{% if sample.automounter and sample.pk %} | {% endif %}
                 {% endif %}
-            </td>
-            <td class="overflow-ellipsis">
-                <div>{% if automounters %}{% with automounters|get_item:sample.container.pk as am %}{{ am.beamline.acronym|default:'' }}{% endwith %}{% else %}{{ sample.automounter.beamline.acronym|default:'' }}{% endif %}&nbsp;{{ sample.port }}</div>
+                {% if sample.pk %}
+                    <a href="{% url 'container-detail' sample.container.pk %}">{{ sample.container.name }}</a>
+                {% endif %}
+                <span> |&nbsp;{{ sample.port }}</span>
             </td>
             <td>
                 {% include "lims/entries/sample-data.html" %}
