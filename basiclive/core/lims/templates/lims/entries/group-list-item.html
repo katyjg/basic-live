@@ -4,11 +4,13 @@
     <li class="list-group-item px-2" id="group-{{ group.pk }}" data-highlight="group" data-reference="{{ group.pk }}"
         data-group="{{ group.pk }}" data-requests="{% for request in group.requests.all %}{{ request.pk }} {% endfor %}">
         <div class="d-flex flex-row justify-content-between">
-            <div class="box-status text-center align-middle pt-2" style="width: 50px; min-width: 50px;">
-                <span class='cursor'>
-                    {% show_icon icon='ti ti-md ti-move' tooltip='Priority' %}
-                </span>
-            </div>
+            {% if editable %}
+                <div class="box-status text-center align-middle pt-2" style="width: 50px; min-width: 50px;">
+                    <span class='cursor'>
+                        {% show_icon icon='ti ti-md ti-move' tooltip='Priority' %}
+                    </span>
+                </div>
+            {% endif %}
             <div class="flex-fill pl-3">
                 <a href="{% url 'group-detail' pk=group.pk %}"><strong>{{ group.name }}</strong></a>
                 <div>
