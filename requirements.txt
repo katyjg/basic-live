@@ -1,6 +1,7 @@
 Click
 Django
 Markdown
+Pillow
 asgiref
 asn1crypto
 certifi

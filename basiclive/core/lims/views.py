@@ -550,17 +550,26 @@ class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
     list_columns = ['id', 'name', 'description']
     list_search = ['name', 'spec', 'description']
     link_field = 'name'
-    link_url = 'requesttype-edit'
-    link_attr = 'data-form-link'
+    link_url = 'requesttype-detail'
     ordering = ['name']
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
 
 
+class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
+    model = models.RequestType
+    template_name = "lims/entries/requesttype.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form'] = forms.RequestParameterForm(kind=self.object.pk)
+        return ctx
+
+
 class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.RequestTypeForm
-    template_name = "lims/forms/add-wizard.html"
+    template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
     success_url = reverse_lazy('requesttype-list')
     success_message = "Request Type has been created."
@@ -568,10 +577,29 @@ class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin,
 
 class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.RequestTypeForm
-    template_name = "lims/forms/add-wizard.html"
+    template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
-    success_url = reverse_lazy('requesttype-list')
     success_message = "Request Type has been updated."
+
+    def get_success_url(self):
+        return reverse_lazy('requesttype-detail', kwargs={'pk': self.object.pk})
+
+
+class RequestTypeLayout(RequestTypeEdit):
+    form_class = forms.RequestTypeLayoutForm
+    template_name = "lims/forms/add-wizard.html"
+
+
+
+class RequestTypeView(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+    form_class = forms.RequestParameterForm
+    template_name = "modal/form.html"
+    model = models.Request
+    success_message = "Request has been updated."
+    success_url = reverse_lazy('request-list')
+
+    def get_success_url(self):
+        return reverse_lazy('shipment-detail', kwargs={'pk': self.object.shipment().pk})
 
 
 class SampleList(ListViewMixin, ItemListView):

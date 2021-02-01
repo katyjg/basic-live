@@ -22,8 +22,10 @@ urlpatterns = [
     path('automounter/<int:pk>/edit/', views.AutomounterEdit.as_view(), name='automounter-edit'),
 
     path('requesttype/', views.RequestTypeList.as_view(), name='requesttype-list'),
+    path('requesttype/<int:pk>/', views.RequestTypeDetail.as_view(), name='requesttype-detail'),
     path('requesttype/new/', views.RequestTypeCreate.as_view(), name='new-requesttype'),
     path('requesttype/<int:pk>/edit/', views.RequestTypeEdit.as_view(), name='requesttype-edit'),
+    path('requesttype/<int:pk>/layout/', views.RequestTypeLayout.as_view(), name='requesttype-layout'),
 
     path('requests/', views.RequestList.as_view(), name='request-list'),
     path('requests/<int:pk>/', views.RequestDetail.as_view(), name='request-detail'),
