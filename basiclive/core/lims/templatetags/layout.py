@@ -7,7 +7,7 @@ register = template.Library()
 @memoize(timeout=3600)
 def get_kind_col(container):
     kind = container.kind
-    height = kind.layout.get('height', 1.0)
+    height = kind.height
     envelope = kind.envelope
     if envelope == 'circle' or height >= 0.75:
         return 'col-3'

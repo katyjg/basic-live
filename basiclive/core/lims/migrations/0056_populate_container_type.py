@@ -12,8 +12,8 @@ def load_fixture(apps, schema_editor):
     db_alias = schema_editor.connection.alias
 
     # Create container types, if they do not already exist
-    if not ContainerType.objects.using(db_alias).all():
-        call_command('loaddata', 'container-data', app_label='lims')
+    #if not ContainerType.objects.using(db_alias).all():
+    #    call_command('loaddata', 'container-data', app_label='lims')
 
 
 class Migration(migrations.Migration):
