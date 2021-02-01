@@ -1,0 +1,69 @@
+{% extends "lims/base.html" %}
+
+{% load icons %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static "css/select2.min.css" %}" media="screen"/>
+    <link rel="stylesheet" href="{% static "css/select2-bootstrap4.min.css" %}" media="screen"/>
+    <script src="{% static "js/misc/jquery.form.min.js" %}"></script>
+    <script src="{% static "js/misc/select2.full.min.js" %}"></script>
+    <script src="{% static "js/jquery/jquery-ui.min.js" %}"></script>
+    <script src="{% static "js/misc/repeatable-fields.min.js" %}"></script>
+{% endblock %}
+
+{% block page_heading %}
+    <h3 class="text-condensed">
+        <i class="text-muted fa fa-fw"></i>
+        <strong>{{ object.name }}</strong>
+    </h3>
+    <span class="text-muted">
+        {{ object.description }}
+    </span>
+{% endblock %}
+
+{% block object_tools %}
+    <a href="#!" data-form-link="{% url 'requesttype-layout' object.pk %}">
+        {% show_icon label='Layout' icon='ti ti-md ti-layout' %}
+    </a>
+    <span class="separator"></span>
+    <a href="#!" data-form-link="{{ handler }}edit/">
+        {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+    </a>
+    <a href="#!" data-form-link="{{ handler }}delete/">
+        {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+    </a>
+{% endblock %}
+
+{% block object_status %}
+    <div class="status-bar">
+        <div class="row">
+            <div class="col-2">
+                <h3 class="no-vmargin">
+                    <span class="badge badge-{% if object.active %}success{% else %}default{% endif %}">
+                        {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
+                    </span>
+                </h3>
+            </div>
+            <div class="col-10 pull-right text-right">
+                <small class="text-muted text-condensed">Template:</small><br>
+                {{ object.template }}
+            </div>
+        </div>
+    </div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body" id="modal-content">
+                    {% crispy form form.body %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

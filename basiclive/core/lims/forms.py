@@ -1,5 +1,6 @@
 import re
 import fastjsonschema
+from collections import OrderedDict
 
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
@@ -169,16 +170,15 @@ class NewProjectForm(forms.ModelForm):
 
 
 class RequestTypeForm(forms.ModelForm):
-    parameter = forms.CharField(max_length=32, required=False, label=_("Parameter*"))
-    required = forms.ChoiceField(choices=((False, 'Optional'), (True, 'Required')), required=False)
+    parameter = forms.CharField(max_length=32, required=False, label=_("Field*"))
+    required = forms.ChoiceField(choices=((False, 'No'), (True, 'Yes')), required=False)
     label = forms.CharField(max_length=64, required=False)
     kind = forms.ChoiceField(required=False)
-    choices = forms.CharField(max_length=512, required=False, help_text=_("Comma-separated list"))
-    style = forms.ChoiceField(required=False, initial="col-6")
+    choices = forms.CharField(max_length=512, required=False)
 
     class Meta:
         model = RequestType
-        fields = ('name', 'description', 'spec')
+        fields = ('name', 'description', 'spec', 'template')
         widgets = {
             'description': forms.Textarea(attrs={'rows': "1"}),
             'spec': disabled_widget
@@ -189,7 +189,7 @@ class RequestTypeForm(forms.ModelForm):
         pk = self.instance.pk
 
         properties = REQUEST_SPEC_SCHEMA['definitions']['field']['properties']
-        self.repeated_fields = ['parameter', 'required', 'label', 'kind', 'choices', 'style']
+        self.repeated_fields = ['parameter', 'required', 'label', 'kind', 'choices']
         self.repeated_data = {}
         for f in self.repeated_fields:
             info = properties.get(f == 'kind' and 'type' or f, {})
@@ -206,7 +206,6 @@ class RequestTypeForm(forms.ModelForm):
             self.repeated_data['label_set'] = [spec[param]['label'] for param in parameters]
             self.repeated_data['choices_set'] = [spec[param].get('choices') and ', '.join(c[0] for c in spec[param]['choices']) or '' for param in parameters]
             self.repeated_data['required_set'] = [str(spec[param]['required']) for param in parameters]
-            self.repeated_data['style_set'] = [spec[param].get('style', 'col-6') for param in parameters]
 
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
@@ -222,7 +221,8 @@ class RequestTypeForm(forms.ModelForm):
             self.help_text(),
             Div(
                 'spec',
-                Div('name', css_class='col-12'),
+                Div('name', css_class='col-6'),
+                Div('template', css_class='col-6'),
                 Div('description', css_class='col-12'),
                 css_class="form-row"
             ),
@@ -230,12 +230,11 @@ class RequestTypeForm(forms.ModelForm):
                 Div(
                     Div(
                         Div(
-                            Div(Field('parameter'), css_class="col-3"),
-                            Div(Field('label'), css_class="col-6"),
-                            Div(Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
-                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-3"),
-                            Div(Field('choices'), css_class="col-6"),
-                            Div(Field('style', css_class="select-alt", data_repeat_enable="true"), css_class="col-2"),
+                            Div(Field('parameter'), css_class="col-2"),
+                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-2"),
+                            Div(Field('label'), css_class="col-3"),
+                            Div(Field('choices'), css_class="col-3"),
+                            Div(Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-1"),
                             Div(
                                 Div(
                                     HTML('<label>&nbsp;</label>'),
@@ -299,7 +298,6 @@ class RequestTypeForm(forms.ModelForm):
                 "label": data['label_set'][i],
                 "type": data['kind_set'][i],
                 "required": data['required_set'][i] == 'True',
-                "style": data['style_set'][i]
             }
             if data['choices_set'][i]:
                 spec[param]["choices"] = [(c.strip(), c.strip()) for c in data['choices_set'][i].split(',')]
@@ -309,6 +307,99 @@ class RequestTypeForm(forms.ModelForm):
         except:
             raise forms.ValidationError('Something is wrong with the defined parameters')
         return spec
+
+
+WIDTH_CHOICES = (
+    (12, 'Full'),
+    (6, 'Half'),
+    (4, 'Third'),
+    (3, 'Quarter'),
+    (2, 'Sixth'),
+    (0, 'Hidden')
+)
+
+
+class RequestTypeLayoutForm(forms.ModelForm):
+
+    class Meta:
+        model = RequestType
+        fields = ('layout',)
+        widgets = {
+            'layout': forms.HiddenInput
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pk = self.instance.pk
+
+        field_styles = self.instance.field_styles()
+        parameter_list = Div(css_class="col-12 repeat-group repeat-container")
+        for f, style in field_styles.items():
+            self.fields[f] = forms.CharField(initial=f)
+            self.fields[f].widget.attrs['readonly'] = True
+            self.fields["{}_width".format(f)] = forms.CharField(initial=style, label=_('Display Width'))
+            self.fields["{}_width".format(f)].widget = forms.Select(choices=WIDTH_CHOICES)
+            parameter_list.append(
+                Div(
+                    Div(Field(f), css_class="col-5"),
+                    Div(Field("{}_width".format(f), css_class="select"), css_class="col-5"),
+                    Div(
+                        Div(
+                            HTML('<label>&nbsp;</label>'),
+                            HTML(
+                                '<a title="Drag to change priority" class="move btn btn-white"><i class="ti ti-move"></i></a>'
+                            ),
+                            css_class="form-group"
+                        ),
+                        css_class="col-1"
+                    ),
+                    css_class="repeat-row row"
+                )
+            )
+
+        self.body = BodyHelper(self)
+        self.footer = FooterHelper(self)
+
+        self.body.title = u"Edit Request Type Layout"
+        self.body.form_action = reverse_lazy('requesttype-layout', kwargs={'pk': pk})
+
+        self.body.layout = Layout(
+            self.help_text(),
+            'layout',
+            Div(
+                Div(
+                    parameter_list,
+                    css_class="row repeat-wrapper"
+                ),
+                css_class="repeat"
+            )
+        )
+
+        self.footer.layout = Layout(
+            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
+            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        )
+
+    def help_text(self):
+        return Div(
+            HTML(
+                'Re-order the fields and specify how much space each one should be given.'
+            ),
+            css_class="text-condensed mb-1"
+        )
+
+    def clean_layout(self):
+        ordered_fields = [f for f in self.data.keys() if f in self.instance.spec.keys()]
+        layout = []
+        row = []
+        for f in ordered_fields:
+            width = int(self.data.get("{}_width".format(f)))
+            if (sum([r[1] for r in row]) + width) > 12:
+                layout.append(row)
+                row = []
+            row.append([f, width])
+        layout.append(row)
+        return layout
 
 
 class RequestForm(forms.ModelForm):
@@ -396,15 +487,18 @@ class RequestParameterForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        kind_pk = kwargs.pop('kind', None)
         super().__init__(*args, **kwargs)
         pk = self.instance.pk
-        kind = pk and self.instance.kind or RequestType.objects.filter(pk=self.initial.get('kind')).first()
+        if pk:
+            kind = self.instance.kind
+        else:
+            kind_pk = self.initial.get('kind', kind_pk)
+            kind = RequestType.objects.filter(pk=kind_pk).first()
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
 
-        parameters = Div(
-            css_class="form-row"
-        )
+        parameters = Div()
         request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
         template = self.initial.get('template') and Request.objects.filter(pk=self.initial.get('template')).first() or None
         if request:
@@ -428,30 +522,40 @@ class RequestParameterForm(forms.ModelForm):
         if kind:
             self.body.title = u"{} Request Parameters".format(kind.name)
             self.fields['kind'].widget = disabled_widget
-            for param, info in kind.spec.items():
-                field_type = info.pop('type')
-                choices = info.get('choices')
-                style = info.get('style', 'col-6')
-                if info.get('choices'):
-                    info['choices'] = tuple(tuple(c) for c in choices)
-                info = {k: v for k, v in info.items() if k not in ['type', 'choices', 'style']}
-                if pk:
-                    info['initial'] = self.instance.parameters.get(param)
-                elif request:
-                    info['initial'] = request.parameters.get(param)
-                elif template:
-                    info['initial'] = template.parameters.get(param)
-                if field_type == 'string':
-                    self.fields[param] = forms.CharField(**info)
-                elif field_type == 'number':
-                    self.fields[param] = forms.FloatField(**info)
-                elif field_type == 'boolean':
-                    self.fields[param] = forms.BooleanField(**info)
-                if choices:
-                    self.fields[param].widget=forms.Select(choices=choices)
-                if request:
-                    self.fields[param].widget.attrs['readonly'] = True
-                parameters.append(Div(param, css_class=style))
+            for row in kind.layout:
+                param_row = Div(css_class='form-row')
+                for param, style in row:
+                    info = kind.spec.get(param, {})
+                    field_type = 'type' in info and info.pop('type') or 'string'
+                    choices = info.get('choices')
+                    if info.get('choices'):
+                        info['choices'] = tuple(tuple(c) for c in choices)
+                    info = {k: v for k, v in info.items() if k not in ['type', 'choices']}
+                    if pk:
+                        info['initial'] = self.instance.parameters.get(param)
+                    elif request:
+                        info['initial'] = request.parameters.get(param)
+                    elif template:
+                        info['initial'] = template.parameters.get(param)
+                    if field_type in ['string', 'json']:
+                        self.fields[param] = forms.CharField(**info)
+                    elif field_type == 'number':
+                        self.fields[param] = forms.FloatField(**info)
+                    elif field_type == 'boolean':
+                        self.fields[param] = forms.BooleanField(**info)
+                    if choices:
+                        self.fields[param].widget=forms.Select(choices=choices)
+                    if request:
+                        self.fields[param].widget.attrs['readonly'] = True
+                    if style == 'hidden':
+                        if choices:
+                            self.fields[param].widget = forms.MultipleHiddenInput()
+                        else:
+                            self.fields[param].widget = forms.HiddenInput()
+                        param_row.append(param)
+                    else:
+                        param_row.append(Div(param, css_class='col-{}'.format(style)))
+                parameters.append(param_row)
         self.body.layout = Layout(
             'kind', 'name', 'parameters', parameters, 'comments',
             pk and Div(HTML("""<hr/>""")) or Div(),
@@ -600,6 +704,13 @@ class AutomounterForm(forms.ModelForm):
 
 class SampleForm(forms.ModelForm):
 
+    class Meta:
+        model = Sample
+        fields = ('name', 'barcode', 'comments', 'image')
+        widgets = {
+            'comments': forms.Textarea(attrs={'rows': "4"}),
+        }
+
     def __init__(self, *args, **kwargs):
         super(SampleForm, self).__init__(*args, **kwargs)
         pk = self.instance.pk
@@ -618,6 +729,7 @@ class SampleForm(forms.ModelForm):
                 Div('name', css_class='col-6'),
                 Div('barcode', css_class='col-6'),
                 Div('comments', css_class='col-12'),
+                Div('image', css_class='col-12'),
                 css_class="form-row"
             )
         )
@@ -633,13 +745,6 @@ class SampleForm(forms.ModelForm):
             if not re.compile('^[a-zA-Z0-9-_]+[\w]+$').match(self.cleaned_data['name']):
                 self._errors['name'] = self.error_class(['Name cannot contain any spaces or special characters'])
         return self.cleaned_data
-
-    class Meta:
-        model = Sample
-        fields = ('name', 'barcode', 'comments')
-        widgets = {
-            'comments': forms.Textarea(attrs={'rows': "4"}),
-        }
 
 
 class SampleAdminForm(forms.ModelForm):
@@ -1254,7 +1359,8 @@ class ShipmentGroupForm(forms.ModelForm):
             self.body.form_action = reverse_lazy('shipment-add-groups', kwargs={'pk': self.initial['shipment'].pk})
         else:
             self.footer.layout.append(
-                StrictButton('Fill Containers', type='submit', name="submit", value='Fill', css_class='mr-auto btn btn-warning'),
+                StrictButton('Fill Containers', title='Auto-create one group per container (filled with samples) ignoring the groups defined above',
+                             type='submit', name="submit", value='Fill', css_class='mr-auto btn btn-warning'),
             )
             self.footer.layout.append(
                 StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
@@ -1333,9 +1439,8 @@ class ShipmentGroupForm(forms.ModelForm):
             return Div(
                 HTML(
                     '<h5 class="my-0"><strong>Add Groups</strong></h5>'
-                    'Specify groups for similar samples. Use the <i class="ti ti-paint-bucket"></i> tool to add samples '
-                    'after your shipment is created. "Fill Containers" to auto-create one group per container filled '
-                    'with samples ignoring the groups defined below.'
+                    'Specify groups for similar samples. Groups names will be used as the prefix for sample names. '
+                    'Use the <i class="ti ti-paint-bucket"></i> tool to add samples after your shipment is created. '
                 ),
                 css_class="text-condensed mb-1"
             )

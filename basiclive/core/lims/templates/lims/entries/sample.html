@@ -79,7 +79,7 @@
 
 {% block full %}
     <div class="row">
-        <div class="col-12">
+        <div class="{% if sample.image %}col-md-7 {% endif %}col-12">
             <div class="list-group list-group-hover">
                 {% include "lims/entries/sample-data.html" %}
                 {% if not object.datasets.count %}
@@ -87,6 +87,11 @@
                 {% endif %}
             </div>
         </div>
+        {% if sample.image %}
+            <div class="pull-right col-md-5 pl-md-4 pt-4 pt-md-0 col-12">
+                <img src="{{ sample.image.url }}" width="100%"/>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
 

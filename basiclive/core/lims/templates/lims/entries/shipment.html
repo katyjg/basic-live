@@ -145,6 +145,7 @@
             </div>
         </div>
         <div class="col-sm-5 col-12">
+            {% if shipment.requests or shipment.is_editable %}
             <div class="card mb-3">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-request-priority' %}" data-sort="request">
@@ -164,6 +165,7 @@
                     {% endfor %}
                 </ul>
             </div>
+            {% endif %}
             <div class="card">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-group-priority' %}" data-sort="group">

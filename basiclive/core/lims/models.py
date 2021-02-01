@@ -994,25 +994,20 @@ REQUEST_SPEC_SCHEMA = {
             "properties": {
                 "label": {
                     "type": "string",
-                    "description": "Human-readable label for display*"
+                    "description": "Human-readable label*"
                 },
                 "type": {
                     "type": "string",
-                    "enum": ["string", "boolean", "number"],
-                    "description": "Data type"
+                    "enum": ["string", "boolean", "number", "json"],
+                    "description": "Type"
                 },
                 "choices": {
                     "type": "array",
-                    "description": "Choices",
+                    "description": "Choices (comma-separated list)",
                     "items": { "$ref": "#/definitions/choice" },
                     "uniqueItems": True
                 },
                 "required": {"type": "boolean", "default": False},
-                "style": {
-                    "type": "string",
-                    "enum": ["col-1", "col-2", "col-3", "col-4", "col-5", "col-6", "col-7", "col-8", "col-9", "col-10", "col-11", "col-12"],
-                    "description": "CSS-style"
-                }
             },
             "required": ["label", "type"]
         },
@@ -1031,10 +1026,18 @@ REQUEST_SPEC_SCHEMA = {
 class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    template = models.CharField(max_length=100, default="modal/form.html")
     spec = models.JSONField(blank=True)
+    layout = models.JSONField(blank=True)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
+
+    def field_styles(self):
+        layout = {k: v for row in self.layout for k, v in row if k in self.spec.keys()}
+        layout.update({k: 'hidden' for k in self.spec.keys() if k not in layout.keys()})
+        return layout
 
 
 class Request(ProjectObjectMixin):
@@ -1064,7 +1067,8 @@ class Request(ProjectObjectMixin):
 
     def parameter_labels(self):
         parameters = self.parameters or {}
-        return {self.kind.spec.get(k, {}).get('label', k): v for k, v in parameters.items() if v not in [None, '']}
+        p = {self.kind.spec.get(k, {}).get('label') or k: v for k, v in parameters.items() if v not in [None, '']}
+        return p
 
     def shipment(self):
         group = self.groups.first()
@@ -1145,6 +1149,10 @@ class Group(ProjectObjectMixin):
         super(Group, self).archive(request=request)
 
 
+def get_sample_path(instance, filename):
+    return os.path.join('uploads/', 'samples', filename)
+
+
 class SampleQuerySet(models.QuerySet):
     def with_port(self):
         return self.annotate(port_name=Concat(*SAMPLE_PORT_FIELDS))
@@ -1157,15 +1165,8 @@ class SampleManager(models.Manager.from_queryset(SampleQuerySet)):
 
 class Sample(ProjectObjectMixin):
     HELP = {
-        'cascade': _('datasets and results'),
-        'cascade_help': _('All associated datasets and results will be left without a sample'),
         'name': _("Avoid using spaces or special characters in sample names"),
         'barcode': _("If there is a data-matrix code on sample, please scan or input the value here"),
-        'comments': _('You can use restructured text formatting in this field'),
-        'location': _('This field is required only if a container has been selected'),
-        'group': _('This field is optional here.  Samples can also be added to a group on the groups page.'),
-        'container': _(
-            'This field is optional here.  Samples can also be added to a container on the containers page.'),
     }
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='samples')
     barcode = models.SlugField(null=True, blank=True)
@@ -1175,6 +1176,7 @@ class Sample(ProjectObjectMixin):
     collect_status = models.BooleanField(default=False)
     priority = models.IntegerField(null=True, blank=True)
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.SET_NULL, related_name='samples')
+    image = models.ImageField(blank=True, upload_to=get_sample_path)
 
     objects = SampleManager()
 
