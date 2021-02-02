@@ -1217,10 +1217,8 @@ class ShipmentContainerForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ShipmentContainerForm, self).__init__(*args, **kwargs)
-        self.fields['kind'].initial = ContainerType.objects.get(pk=1)
-
-        self.fields['kind'].queryset = self.fields['kind'].queryset.filter(
-            locations__in=ContainerLocation.objects.filter(accepts__isnull=True)).distinct()
+        self.fields['kind'].initial = ContainerType.objects.filter(active=True).first()
+        self.fields['kind'].queryset = self.fields['kind'].queryset.filter(active=True)
 
         self.repeated_fields = ['name', 'kind', 'id']
         self.repeated_data = {}
@@ -1460,18 +1458,6 @@ class ShipmentGroupForm(forms.ModelForm):
                 if isinstance(v, list):
                     self.repeated_data[k] = [str(e) for e in v]
         return cleaned_data
-
-
-class ShipmentSamplesForm(forms.ModelForm):
-    id = forms.CharField(required=False, widget=forms.HiddenInput)
-
-    class Meta:
-        model = Shipment
-        fields = ['id']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['containers'].queryset = self.initial.get('containers')
 
 
 class SSHKeyForm(forms.ModelForm):

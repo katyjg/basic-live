@@ -378,10 +378,12 @@ $(document).ready(function () {
         $.each(refs, function(i, ref) {
             let sel = "svg[data-" + highlight + "='" + ref + "'] >:first-child";
             $(sel).addClass('active-envelope');
+            $(".list-group-item[data-" + highlight + "='" + ref + "']").addClass('list-group-item-warning');
         });
     });
     $(document).on('mouseleave', '[data-highlight]', function () {
         $('svg > .active-envelope').removeClass('active-envelope');
+        $('.list-group-item.list-group-item-warning').removeClass('list-group-item-warning');
     });
 });
 

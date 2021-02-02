@@ -22,11 +22,31 @@
                                data-pk="{{ container.pk }}"><strong>{{ container.name }}</strong>
                             </a>
                         </h4>
-                        <div id="seats-for-{{ container.pk }}"
-                             data-layout-url="{% url 'fetch-layout' pk=container.pk %}"
-                             data-pk="{{ container.pk }}"
-                             class="seat-container">
-                        </div>
+                        {% if container.kind.envelope == 'list' %}
+                            <div class="group-chooser row">
+                                {% for group in shipment.groups_by_priority %}
+                                    {% with container|container_samples:group as num_samples %}
+                                        <div class="input-group col-6">
+                                            <div class="input-group-prepend group-selector group-list-selector" id="group-{{ group.pk }}">
+                                                <span class="input-group-text w-100" data-group="{{ group.pk }}"
+                                                  data-name="{{ group.name }}"
+                                                  data-selector="{{ forloop.counter }}">
+                                                    <strong>&nbsp;</strong>
+                                                </span>
+                                            </div>
+                                            <input class="form-control free-container" value="{{ num_samples }}" min="0" type="number"
+                                                   data-group="{{ group.pk }}" data-container="{{ container.pk }}">
+                                        </div>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div id="seats-for-{{ container.pk }}"
+                                 data-layout-url="{% url 'fetch-layout' pk=container.pk %}"
+                                 data-pk="{{ container.pk }}"
+                                 class="seat-container">
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -36,16 +56,14 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
                 <div class="list-group list-group-flush">
                     {% for group in shipment.groups_by_priority %}
-                        {% with num_samples=group.samples.count %}
-                            <a href="#!" class="list-group-item group-selector py-1"
-                               data-group="{{ group.pk }}"
-                               data-name="{{ group.name }}"
-                               data-selector="{{ forloop.counter }}"
-                               {% if group.comments %}title="{{ group.comments }}"{% endif %}
-                            >
-                                <strong>{{ group.name }}</strong>
-                            </a>
-                        {% endwith %}
+                        <a href="#!" class="list-group-item group-selector py-1"
+                           data-group="{{ group.pk }}"
+                           data-name="{{ group.name }}"
+                           data-selector="{{ forloop.counter }}"
+                           {% if group.comments %}title="{{ group.comments }}"{% endif %}
+                        >
+                            <strong>{{ group.name }}</strong>
+                        </a>
                     {% endfor %}
                 </div>
             </div>
