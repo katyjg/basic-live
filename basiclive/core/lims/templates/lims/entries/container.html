@@ -88,7 +88,7 @@
             </div>
             <div class="col-2 pull-right text-right">
                 <small class="text-muted text-condensed">Number of {% if object.accepts_children %}Containers{% else %}Samples{% endif %}:</small><br>
-                <strong>{% if object.accepts_children %}{{ object.children.count }}{% else %}{{ object.num_samples }}{% endif %}</strong> / {{ object.kind.locations.count }}
+                <strong>{% if object.accepts_children %}{{ object.children.count }}{% else %}{{ object.num_samples }}{% endif %}</strong>{% if object.kind.locations.count %} / {{ object.kind.locations.count }}{% endif %}
             </div>
             {% if object.parent %}
                 <div class="col-3 pull-right text-right">
@@ -101,7 +101,7 @@
                 </div>
             {% endif %}
 
-            <div class="col-2 pull-left">
+            <div class="col-{% if object.parent %}2{% else %}5{% endif %} pull-right text-right">
                 <small class="text-muted text-condensed">Type:</small><br>
                 {{ object.kind }}
             </div>
@@ -122,13 +122,15 @@
         </div>
     {% else %}
     <div class="row">
-        <div class="col-md-7 col-12">
+        <div class="{% if object.kind.envelope != 'list' %}col-md-7 {% endif %}col-12">
         <h3>Samples in {{ object.name }}</h3>
             {% include "itemlist/list.html" with object_list=object.samples.all %}
         </div>
-        <div class="col-md-5 p-4 col-12">
-            {% include "lims/entries/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
-        </div>
+        {% if object.kind.envelope != 'list' %}
+            <div class="col-md-5 p-4 col-12">
+                {% include "lims/entries/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
+            </div>
+        {% endif %}
     </div>
     {% endif %}
     {% include "lims/comments.html" with object=automounter.automounter %}
