@@ -140,7 +140,10 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
         ).order_by('status', 'project__kind__name', 'project__username', '-date_shipped').prefetch_related('project')
 
         adaptors = models.Container.objects.filter(
-            kind__locations__accepts__isnull=False, beamlines__isnull=True, status__gt=models.Container.STATES.DRAFT
+            project__is_superuser=True,
+            kind__locations__accepts__isnull=False,
+            beamlines__isnull=True,
+            status__gt=models.Container.STATES.DRAFT
         ).distinct().order_by('name').select_related('parent')
 
         beamlines = models.Beamline.objects.all().order_by('name')
@@ -1315,7 +1318,7 @@ class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMix
                     'kind': models.ContainerType.objects.get(pk=form.cleaned_data['kind_set'][i]),
                     'name': name.upper(),
                     'shipment': data['shipment'],
-                    'project': self.request.user,
+                    'project': data['shipment'].project,
                     'status': data['shipment'].status
                 }
                 models.Container.objects.get_or_create(**info)
@@ -1352,7 +1355,7 @@ class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
                 for field in ['name', 'comments']}
             info.update({
                 'shipment': data['shipment'],
-                'project': self.request.user,
+                'project': data['shipment'].project,
                 'priority': i + 1
             })
             if data['id_set'][i]:

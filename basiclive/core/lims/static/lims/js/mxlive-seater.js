@@ -24,8 +24,10 @@
                 return colorScale($(this).data('selector'));
             }).on('click', function () {
                 let remove = (!$(this).hasClass('selected'));
+                let group = $(this).data('group');
                 $('.group-selector.selected').removeClass('selected');
                 $(this).toggleClass('selected', remove);
+                $('.input-group #group-' + group).toggleClass('selected', remove);
             });
 
         $(document).on('click', '#sample-seater svg.sample', function () {
@@ -85,6 +87,16 @@
                         location: $(this).data('loc'),
                     })
                 })
+            });
+            $('input.free-container').each(function() {
+                let input = $(this);
+                for(i=0; i<input.val(); i++) {
+                    info.push({
+                        group: input.data('group'),
+                        container: input.data('container'),
+                        location: null
+                    })
+                }
             });
 
             $.ajax({

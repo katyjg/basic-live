@@ -729,15 +729,20 @@ class ContainerType(models.Model):
         (0, 'PENDING', _('Pending')),
         (1, 'LOADED', _('Loaded')),
     )
+    ENVELOPES = Choices(
+        ('rect', 'RECT', _('Rectangle')),
+        ('circle', 'CIRCLE', _('Circle')),
+        ('list', 'LIST', _('List'))
+    )
     TRANSITIONS = {
         STATES.PENDING: [STATES.LOADED],
         STATES.LOADED: [STATES.PENDING],
     }
     name = models.CharField(max_length=20)
-    layout = models.JSONField(default=dict)
     height = models.FloatField(default=1.0)
     radius = models.FloatField(default=8.0)
-    envelope = models.CharField(max_length=200, blank=True)
+    envelope = models.CharField(max_length=200, blank=True, choices=ENVELOPES)
+    active = models.BooleanField("User option", default=False)
 
     def __str__(self):
         return self.name
@@ -767,9 +772,6 @@ class ContainerManager(models.Manager.from_queryset(ContainerQuerySet)):
 class Container(TransitStatusMixin):
     HELP = {
         'name': _("A visible label on the container. If there is a barcode on the container, scan it here"),
-        'capacity': _("The maximum number of samples this container can hold"),
-        'cascade': _('samples (along with groups, datasets and results)'),
-        'cascade_help': _('All associated samples will be left without a container')
     }
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='containers')
     kind = models.ForeignKey(ContainerType, blank=False, null=False, on_delete=models.CASCADE,
@@ -1171,7 +1173,7 @@ class Sample(ProjectObjectMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='samples')
     barcode = models.SlugField(null=True, blank=True)
     container = models.ForeignKey(Container, null=True, blank=True, on_delete=models.CASCADE, related_name='samples')
-    location = models.ForeignKey(ContainerLocation, on_delete=models.CASCADE, related_name='samples')
+    location = models.ForeignKey(ContainerLocation, on_delete=models.CASCADE, related_name='samples', null=True, blank=True)
     comments = models.TextField(blank=True, null=True)
     collect_status = models.BooleanField(default=False)
     priority = models.IntegerField(null=True, blank=True)
@@ -1184,7 +1186,7 @@ class Sample(ProjectObjectMixin):
         unique_together = (
             ("container", "location"),
         )
-        ordering = ['priority', 'container__name', 'location__pk', 'name']
+        ordering = ['group__priority', 'priority', 'container__name', 'location__pk', 'name']
 
     def get_absolute_url(self):
         return reverse('sample-detail', kwargs={'pk': self.id})

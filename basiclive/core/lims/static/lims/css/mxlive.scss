@@ -1458,6 +1458,14 @@ svg * {
       font-size: 1rem;
       float: right;
     }
+    &.group-list-selector {
+      &::after {
+        margin-left: -24px;
+        width: 24px;
+        padding-top: 5px;
+        z-index: 2;
+      }
+    }
   }
 }
 

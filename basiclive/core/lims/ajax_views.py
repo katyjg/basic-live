@@ -235,7 +235,7 @@ class CreateShipmentSamples(LoginRequiredMixin, View):
                     {
                         'project': shipment.project,
                         'container_id': sample['container'],
-                        'location_id': loc_info[sample['container']][str(sample['location'])]
+                        'location_id': sample.get('location') and loc_info[sample['container']][str(sample['location'])] or None
                     }
                 )
 
