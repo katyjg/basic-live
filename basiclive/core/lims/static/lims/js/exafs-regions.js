@@ -12,6 +12,22 @@ function uuid4() {
   );
 }
 
+function expand_data(regions) {
+    let lpad =  {...regions[0]};
+    let rpad =  {...regions[regions.length-1]};
+
+    lpad.end = lpad.start
+    lpad.start = -400;
+
+    rpad.start = rpad.end
+    rpad.end = -850;
+
+    regions.insert(0, lpad);
+    regions.insert(regions.length, rpad)
+    //regions.sort(function(a,b){ return d3.ascending(a.start, b.start)});
+    return regions;
+}
+
 (function ( $ ) {
     $.fn.selectRegions = function (selector) {
         let container = d3.select($(this)[0]);
@@ -24,6 +40,11 @@ function uuid4() {
             {start: -200, end: 700 , step: 1, time: 1.0, kspace: false, id: count++, index: 1},
             {start: 700, end: extent.end , step: 1, time: 1.0, kspace: false, id: count++, index: 2}
         ];
+
+        try {
+            regions = expand_data(JSON.parse(target.text()));
+        } catch(err) {
+        }
 
         function ev2k(energy) {
             const H = (4.135667516e-15)/(2 * Math.PI);  // eV.s

@@ -543,7 +543,7 @@ class RequestParameterForm(forms.ModelForm):
                     if field_type in ['string']:
                         self.fields[param] = forms.CharField(**info)
                     elif field_type == 'json':
-                        self.fields[param] = forms.CharField(widget=forms.Textarea(attrs={'class': 'd-none'}))
+                        self.fields[param] = forms.CharField(**info, widget=forms.Textarea(attrs={'class': 'd-none'}))
                     elif field_type == 'number':
                         self.fields[param] = forms.FloatField(**info)
                     elif field_type == 'boolean':
