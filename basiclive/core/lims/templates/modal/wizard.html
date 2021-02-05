@@ -18,7 +18,6 @@
 {% block pre_content%}<form action="{{ request.path }}" method="post">{% endblock %}
 
 {% block modal_body %}
-    {% csrf_token %}
     {{ wizard.management_form }}
     {% if wizard.form.forms %}
         {{ wizard.form.management_form }}
@@ -29,10 +28,14 @@
             {% crispy form form.body %}
         {% endfor %}
     {% else %}
+        {% if wizard.form.layout_template %}
+            {% include wizard.form.layout_template with form=wizard.form %}
+        {% else %}
             {% if wizard.form.errors %}
                 <div id="form-errors" class="alert alert-warning"><strong>It looks like there's a problem!</strong> Please correct the errors below.</div>
             {% endif %}
-        {% crispy wizard.form wizard.form.body %}
+            {% crispy wizard.form wizard.form.body %}
+        {% endif %}
     {% endif %}
 {% endblock %}
 

@@ -1028,9 +1028,10 @@ REQUEST_SPEC_SCHEMA = {
 class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    template = models.CharField(max_length=100, default="modal/form.html")
+    edit_template = models.CharField(max_length=100, default="")
+    view_template = models.CharField(max_length=100, default="")
     spec = models.JSONField(blank=True)
-    layout = models.JSONField(blank=True)
+    layout = models.JSONField(blank=True, default=list)
     active = models.BooleanField(default=True)
 
     def __str__(self):

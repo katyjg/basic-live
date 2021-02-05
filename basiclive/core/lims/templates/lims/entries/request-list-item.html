@@ -13,12 +13,9 @@
             {% endif %}
             <div class="text-left flex-fill pl-3 overflow-ellipsis">
                 <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
-                <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
+                <span class="text-condensed">{{ request.kind.name }}</span>
                 <div class="small">
-                    {% for label, val in request.parameter_labels.items %}
-                        <span title="{{ label }}">{{ val }}</span>
-                        {% if not forloop.last %} | {% endif %}
-                    {% endfor %}
+                    {{ request.comments | default:"" }}
                 </div>
             </div>
             {% if editable %}

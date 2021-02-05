@@ -178,7 +178,7 @@ class RequestTypeForm(forms.ModelForm):
 
     class Meta:
         model = RequestType
-        fields = ('name', 'description', 'spec', 'template')
+        fields = ('name', 'description', 'spec', 'edit_template', 'view_template')
         widgets = {
             'description': forms.Textarea(attrs={'rows': "1"}),
             'spec': disabled_widget
@@ -221,8 +221,9 @@ class RequestTypeForm(forms.ModelForm):
             self.help_text(),
             Div(
                 'spec',
-                Div('name', css_class='col-6'),
-                Div('template', css_class='col-6'),
+                Div('name', css_class='col-4'),
+                Div('edit_template', css_class='col-4'),
+                Div('view_template', css_class='col-4'),
                 Div('description', css_class='col-12'),
                 css_class="form-row"
             ),
@@ -519,9 +520,11 @@ class RequestParameterForm(forms.ModelForm):
             self.footer.layout = Layout(
                 StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
             )
+
         if kind:
             self.body.title = u"{} Request Parameters".format(kind.name)
             self.fields['kind'].widget = disabled_widget
+            self.layout_template = kind.edit_template
             for row in kind.layout:
                 param_row = Div(css_class='form-row')
                 for param, style in row:
@@ -537,8 +540,10 @@ class RequestParameterForm(forms.ModelForm):
                         info['initial'] = request.parameters.get(param)
                     elif template:
                         info['initial'] = template.parameters.get(param)
-                    if field_type in ['string', 'json']:
+                    if field_type in ['string']:
                         self.fields[param] = forms.CharField(**info)
+                    elif field_type == 'json':
+                        self.fields[param] = forms.CharField(widget=forms.Textarea(attrs={'class': 'd-none'}))
                     elif field_type == 'number':
                         self.fields[param] = forms.FloatField(**info)
                     elif field_type == 'boolean':
@@ -556,8 +561,9 @@ class RequestParameterForm(forms.ModelForm):
                     else:
                         param_row.append(Div(param, css_class='col-{}'.format(style)))
                 parameters.append(param_row)
+
         self.body.layout = Layout(
-            'kind', 'name', 'parameters', parameters, 'comments',
+            'kind', 'name', 'parameters', parameters,
             pk and Div(HTML("""<hr/>""")) or Div(),
             Div(
                 Div(Field('groups', css_class='select'), css_class='col-6'),
