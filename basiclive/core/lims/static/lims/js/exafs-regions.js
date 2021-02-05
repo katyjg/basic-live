@@ -14,8 +14,10 @@ function uuid4() {
 
 (function ( $ ) {
     $.fn.selectRegions = function (selector) {
+        let container = d3.select($(this)[0]);
         let target = d3.select(selector);
         let extent = {start: -400, end: 850};
+
         let count = 1;
         let regions = [
             {start: extent.start, end: -200 , step: 1, time: 1.0, kspace: false, id: count++, index: 0},
@@ -39,8 +41,7 @@ function uuid4() {
         const eaxis = d3.axisBottom().scale(escale).ticks(15);
         const kaxis = d3.axisBottom().scale(kscale).ticks(8).tickFormat(x => x < 0 ? "" : x);
 
-        const svg = d3.select('#selector')
-            .append("svg")
+        const svg = container.append("svg")
             .attr('viewBox', `-${margin.left} -${margin.top} ${width+margin.left + margin.right} ${height + margin.top + margin.bottom}`)
             .attr('id', 'sel-canvas');
 
@@ -250,7 +251,6 @@ function uuid4() {
                     }
                 })
                 .merge(cells).text(d => d.value);
-            console.log(selector, target)
             target.text(JSON.stringify(data));
 
         }
