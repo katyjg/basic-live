@@ -28,12 +28,13 @@
             {% crispy form form.body %}
         {% endfor %}
     {% else %}
+        {% if form.errors or wizard.form.errors %}
+            <div id="form-errors" class="alert alert-warning"><strong>It looks like there's a problem!</strong> Please correct the errors below.</div>
+        {% endif %}
         {% if wizard.form.layout_template %}
             {% include wizard.form.layout_template with form=wizard.form %}
         {% else %}
-            {% if wizard.form.errors %}
-                <div id="form-errors" class="alert alert-warning"><strong>It looks like there's a problem!</strong> Please correct the errors below.</div>
-            {% endif %}
+
             {% crispy wizard.form wizard.form.body %}
         {% endif %}
     {% endif %}

@@ -34,6 +34,10 @@ class FooterHelper(FormHelper):
 disabled_widget = forms.HiddenInput(attrs={'readonly': True})
 
 
+class HiddenArea(forms.HiddenInput):
+    template_name = 'django/forms/widgets/textarea.html'
+
+
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
@@ -543,7 +547,8 @@ class RequestParameterForm(forms.ModelForm):
                     if field_type in ['string']:
                         self.fields[param] = forms.CharField(**info)
                     elif field_type == 'json':
-                        self.fields[param] = forms.CharField(**info, widget=forms.Textarea(attrs={'class': 'd-none'}))
+                        self.fields[param] = forms.CharField(**info)
+                        style = 'hidden'
                     elif field_type == 'number':
                         self.fields[param] = forms.FloatField(**info)
                     elif field_type == 'boolean':
@@ -555,6 +560,8 @@ class RequestParameterForm(forms.ModelForm):
                     if style == 'hidden':
                         if choices:
                             self.fields[param].widget = forms.MultipleHiddenInput()
+                        elif field_type == 'json':
+                            self.fields[param].widget = HiddenArea(attrs={'class': 'd-none'})
                         else:
                             self.fields[param].widget = forms.HiddenInput()
                         param_row.append(param)

@@ -1,12 +1,6 @@
 {% load static %}
-{% load msgs %}
-{% load i18n %}
 {% load crispy_forms_tags %}
 
-
-{% if form.errors %}
-    <div id="form-errors" class="alert alert-warning"><strong>It looks like there's a problem!</strong> Please correct the errors below.</div>
-{% endif %}
 {% crispy form form.body %}
 <div class="form-row">
     <div id="selector" class="col"></div>
@@ -49,5 +43,5 @@
 </div>
 <script src="{% static 'lims/js/exafs-regions.js' %}"></script>
 <script>
-    $('#selector').selectRegions('[name="parameters-regions"]');
+    $('#selector').selectRegions('[name="parameters-regions"], [name="regions"]');
 </script>

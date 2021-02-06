@@ -12,20 +12,11 @@ function uuid4() {
   );
 }
 
-function expand_data(regions) {
-    let lpad =  {...regions[0]};
-    let rpad =  {...regions[regions.length-1]};
 
-    lpad.end = lpad.start
-    lpad.start = -400;
-
-    rpad.start = rpad.end
-    rpad.end = -850;
-
-    regions.insert(0, lpad);
-    regions.insert(regions.length, rpad)
-    //regions.sort(function(a,b){ return d3.ascending(a.start, b.start)});
-    return regions;
+function ev2k(energy) {
+    const H = (4.135667516e-15)/(2 * Math.PI);  // eV.s
+    const M = 5.685629904369271e-32;  // eV.A^-2
+    return Math.sign(energy) * Math.sqrt(2 * M * Math.abs(energy)) / H;
 }
 
 (function ( $ ) {
@@ -41,20 +32,32 @@ function expand_data(regions) {
             {start: 700, end: extent.end , step: 1, time: 1.0, kspace: false, id: count++, index: 2}
         ];
 
+        function expand_data(data) {
+
+            let lpad =  {...data[0]};
+            let rpad =  {...data[data.length-1]};
+
+            lpad.end = lpad.start
+            lpad.start = extent.start;
+
+            rpad.start = rpad.end
+            rpad.end = extent.end;
+
+            data.insert(0, lpad);
+            data.push(rpad)
+
+            return data;
+        }
+
         try {
             regions = expand_data(JSON.parse(target.text()));
         } catch(err) {
         }
 
-        function ev2k(energy) {
-            const H = (4.135667516e-15)/(2 * Math.PI);  // eV.s
-            const M = 5.685629904369271e-32;  // eV.A^-2
-            return Math.sign(energy) * Math.sqrt(2 * M * Math.abs(energy)) / H;
-        }
 
         const font = "10px Fira Code";
         const margin = { top: 10, right: 15, bottom: 50, left: 15};
-        const width = 500;
+        const width = 400; //container.node().getBoundingClientRect().width;
         const height = width * 0.33;
         const spectrum = make_spectrum();
         const escale = d3.scaleLinear().range([0, width]).domain([extent.start, extent.end]);

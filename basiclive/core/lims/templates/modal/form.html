@@ -24,7 +24,11 @@
             <small>{{ form.errors }}</small>
         </div>
     {% endif %}
-    {% crispy form form.body %}
+    {% if form.layout_template %}
+        {% include form.layout_template %}
+    {% else %}
+        {% crispy form form.body %}
+    {% endif %}
 {% endblock %}
 {% block modal_footer %}{% crispy form form.footer %}{% endblock %}
 {% block post_content %}</form>{% endblock %}
