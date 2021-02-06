@@ -23,7 +23,7 @@ function ev2k(energy) {
     $.fn.selectRegions = function (selector) {
         let container = d3.select($(this)[0]);
         let target = d3.select(selector);
-        let extent = {start: -400, end: 850};
+        let extent = {start: -450, end: 850};
 
         let count = 1;
         let regions = [
@@ -56,14 +56,14 @@ function ev2k(energy) {
 
 
         const font = "10px Fira Code";
-        const margin = { top: 10, right: 15, bottom: 50, left: 15};
+        const margin = { top: 0, right: 0, bottom: 50, left: 0};
         const width = 400; //container.node().getBoundingClientRect().width;
-        const height = width * 0.33;
+        const height = width * 0.2;
         const spectrum = make_spectrum();
         const escale = d3.scaleLinear().range([0, width]).domain([extent.start, extent.end]);
         const kscale = d3.scalePow().exponent(2).range([0, width]).domain([ev2k(extent.start), ev2k(extent.end)]);
-        const eaxis = d3.axisBottom().scale(escale).ticks(15);
-        const kaxis = d3.axisBottom().scale(kscale).ticks(8).tickFormat(x => x < 0 ? "" : x);
+        const eaxis = d3.axisBottom().scale(escale).ticks(15).tickFormat(x => x >= extent.end - 50 ? `${x} eV` : x);
+        const kaxis = d3.axisBottom().scale(kscale).ticks(10).tickFormat(x => x < 0 ? "" : (x >= 14 ? `${x} k`: x));
 
         const svg = container.append("svg")
             .attr('viewBox', `-${margin.left} -${margin.top} ${width+margin.left + margin.right} ${height + margin.top + margin.bottom}`)
@@ -74,20 +74,23 @@ function ev2k(energy) {
             .attr('transform', `translate(0, ${height+1})`)
             .style("font", font)
             .call(eaxis);
-        svg.append("text")
-            .attr('transform', `translate(${width+2}, ${height+1})`)
+        /*svg.append("text")
+            .attr('transform', `translate(${escale(extent.end)}, ${height+15})`)
             .style("font", font)
+            .style('text-anchor', 'middle')
             .text("eV");
+        */
 
         // K-axis
         svg.append("g")
             .attr('transform', `translate(0, ${height+margin.bottom/2})`)
             .style("font", font)
             .call(kaxis);
-        svg.append("text")
-            .attr('transform', `translate(${width+2}, ${height+margin.bottom/2})`)
+        /*svg.append("text")
+            .attr('transform', `translate(${escale(extent.end)}, ${height+margin.bottom/2})`)
             .style("font", font)
-            .text("k");
+            .style('text-anchor', 'middle')
+            .text("k");*/
 
         const tooltip = svg.append("g");
 
@@ -100,7 +103,7 @@ function ev2k(energy) {
             .datum(spectrum)
             .attr("fill", "none")
             .attr("stroke", "black")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 1.25)
             .attr("d", d3.line()
                 .x(d => escale(d.x))
                 .y(d => height - d.y)
@@ -209,11 +212,14 @@ function ev2k(energy) {
                     draw(regions);
                 })
                 .attr('stroke', "white")
+                .attr("stroke-width", 1)
                 .attr('height', height)
                 .attr('y', 0)
                 .merge(bars).transition()
                 .duration(100)
-                .attr('fill', function(d) { return ((d.index > 0) && (d.index < regions.length - 1)) ? 'rgba(195, 20, 165, 0.45)' : 'rgba(0, 0, 0, 0.45)'; })
+                .attr('fill', function(d) {
+                    return ((d.index > 0) && (d.index < regions.length - 1)) ? 'rgba(195, 20, 165, 0.45)' : 'rgba(0, 0, 0, 0.45)';
+                })
                 .attr('x', function(d) { return escale(d.start);})
                 .attr('width', function(d) {return escale(d.end) - escale(d.start); });
                 tabulate(regions.slice(1, regions.length -1));

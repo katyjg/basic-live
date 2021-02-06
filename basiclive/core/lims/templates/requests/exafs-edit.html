@@ -2,9 +2,6 @@
 {% load crispy_forms_tags %}
 
 {% crispy form form.body %}
-<div class="form-row">
-    <div id="selector" class="col"></div>
-</div>
 <style>
     table.regions {
       font-size: 12px;
@@ -24,22 +21,25 @@
 </style>
 
 <div class="form-row">
-    <small class="col px-4">
-    <table class="table regions table-sm">
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Start</th>
-          <th scope="col">End</th>
-          <th scope="col">Step</th>
-          <th scope="col">Time</th>
-          <th scope="col">K-space</th>
-        </tr>
-      </thead>
-      <tbody id="table">
-      </tbody>
-    </table>
-    </small>
+    <div class="col form-group">
+        <label>Regions<span class="asteriskField">*</span></label>
+        <div id="selector" class="w-100"></div>
+        <small>
+            <table class="table regions table-sm">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Start</th>
+                  <th scope="col">End</th>
+                  <th scope="col">Step</th>
+                  <th scope="col">Time</th>
+                  <th scope="col">K-space</th>
+                </tr>
+              </thead>
+              <tbody id="table"></tbody>
+            </table>
+        </small>
+    </div>
 </div>
 <script src="{% static 'lims/js/exafs-regions.js' %}"></script>
 <script>
