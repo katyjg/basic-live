@@ -1026,8 +1026,17 @@ REQUEST_SPEC_SCHEMA = {
 
 
 class RequestType(models.Model):
+    SCOPES = Choices(
+        ('ONE_SAMPLE', _('Single Sample')),
+        ('ONE_GROUP', _('Single Group')),
+        ('SAMPLES', _('Multiple samples')),
+        ('GROUPS', _('Multiple groups')),
+        ('UNLIMITED', _('Unlimited')),
+    )
+
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    scope = models.CharField(max_length=15, default=SCOPES.UNLIMITED)
     edit_template = models.CharField(max_length=100, default="")
     view_template = models.CharField(max_length=100, default="")
     spec = models.JSONField(blank=True)

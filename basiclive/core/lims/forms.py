@@ -427,9 +427,14 @@ class RequestForm(forms.ModelForm):
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
 
-        group_pk = self.initial['groups'] and self.initial['groups'][0] or self.initial['samples'] and Sample.objects.filter(pk=self.initial['samples'][0]).first().group.pk or None
-        shipment = Group.objects.filter(pk=group_pk).first() and Group.objects.filter(pk=group_pk).first().shipment
-        requests = self.initial['project'].requests.exclude(groups__pk=group_pk).filter(
+        group = self.initial['groups'].first()
+        self.sample = self.initial['samples'].first()
+        group = self.sample.group if self.sample and not group else None
+
+        print("RequestForm", self.initial)
+
+        shipment = None if not group else group.shipment
+        requests = self.initial['project'].requests.exclude(groups=group).filter(
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
         old_requests = Request.objects.filter(project=self.initial['project'])
 
@@ -504,8 +509,13 @@ class RequestParameterForm(forms.ModelForm):
         self.footer = FooterHelper(self)
 
         parameters = Div()
+
         request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
         template = self.initial.get('template') and Request.objects.filter(pk=self.initial.get('template')).first() or None
+
+        # set the sample, some templates will need it
+        self.sample = None if not self.initial.get('samples') else self.initial.get('samples')[0]
+
         if request:
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['comments'].widget.attrs['readonly'] = True

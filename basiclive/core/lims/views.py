@@ -1060,24 +1060,26 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
         return ctx
 
     def get_form_initial(self, step):
+        project = self.request.user
         if step == 'start':
-            project = self.request.user
-            groups = project.sample_groups.filter(pk__in=self.request.GET.getlist('groups')).values_list('pk', flat=True)
-            samples = project.samples.filter(pk__in=self.request.GET.getlist('samples')).values_list('pk', flat=True)
             return self.initial_dict.get(step, {
-                'project': self.request.user,
-                'groups': groups and list(groups) or None,
-                'samples': samples and list(samples) or None
+                'project': project,
+                'groups': project.sample_groups.filter(pk__in=self.request.GET.getlist('groups')),
+                'samples': project.samples.filter(pk__in=self.request.GET.getlist('samples'))
             })
         elif step == 'parameters':
             start_data = self.storage.get_step_data('start')
             if start_data:
                 kind = start_data.get('start-kind')
-                return self.initial_dict.get(step, {'kind': kind,
-                                                    'template': start_data.get('start-template'),
-                                                    'request': start_data.get('start-request'),
-                                                    'comments': start_data.get('start-comments'),
-                                                    'name': start_data.get('start-name')})
+                return self.initial_dict.get(step, {
+                    'kind': kind,
+                    'template': start_data.get('start-template'),
+                    'request': start_data.get('start-request'),
+                    'comments': start_data.get('start-comments'),
+                    'name': start_data.get('start-name'),
+                    'samples': project.samples.filter(pk__in=start_data.getlist('start-samples')),
+                    'groups': project.sample_groups.filter(pk__in=start_data.getlist('start-groups')),
+                })
         return self.initial_dict.get(step, {})
 
     @transaction.atomic
