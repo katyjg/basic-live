@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
+from django.forms.models import model_to_dict
 from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
@@ -17,6 +18,7 @@ from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
 from proxy.views import proxy_view
+
 
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, HTML2PdfMixin, PlotViewMixin
@@ -1054,11 +1056,6 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                  ('parameters', forms.RequestParameterForm)]
     template_name = "lims/forms/add-request.html"
 
-    def get_context_data(self, form, **kwargs):
-        ctx = super().get_context_data(form, **kwargs)
-        ctx['form_title'] = "Create a Request"
-        return ctx
-
     def get_form_initial(self, step):
         if step == 'start':
             project = self.request.user
@@ -1075,9 +1072,7 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 kind = start_data.get('start-kind')
                 return self.initial_dict.get(step, {'kind': kind,
                                                     'template': start_data.get('start-template'),
-                                                    'request': start_data.get('start-request'),
-                                                    'comments': start_data.get('start-comments'),
-                                                    'name': start_data.get('start-name')})
+                                                    'request': start_data.get('start-request')})
         return self.initial_dict.get(step, {})
 
     @transaction.atomic
@@ -1090,11 +1085,11 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 for field in ['groups', 'samples']:
                     related[field] = info.pop(field)
                 info.pop('template')
-                info.update({'project': models.Project.objects.get(username=self.request.user.username)})
+                info.update({'project': models.Project.objects.get(username=self.request.user.username),})
             elif label == 'parameters':
                 request = info.pop('request')
                 if not request:
-                    for field in ['comments', 'name', 'parameters']:
+                    for field in ['parameters']:
                         info[field] = form.cleaned_data.get(field)
                     request, created = models.Request.objects.get_or_create(**info)
                 request.groups.add(*[g for g in related['groups']])
@@ -1102,15 +1097,64 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
         return JsonResponse({})
 
 
-class RequestEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    form_class = forms.RequestParameterForm
+class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
+    form_list = [('start', forms.RequestForm),
+                 ('parameters', forms.RequestParameterForm)]
+    template_name = "lims/forms/add-request.html"
+
+    def test_func(self):
+        try:
+            return models.Request.objects.get(**self.kwargs).project.username == self.request.user.username
+        except models.Request.DoesNotExist:
+            return False
+
+    def get_form_instance(self, step):
+        return models.Request.objects.filter(**self.kwargs).first()
+
+    def get_form_initial(self, step):
+        if step == 'parameters':
+            start_data = self.storage.get_step_data('start')
+            if start_data:
+                kind = start_data.get('start-kind')
+                return self.initial_dict.get(step, {'kind': kind,
+                                                    'template': start_data.get('start-template'),
+                                                    'request': start_data.get('start-request'),
+                                                    'comments': start_data.get('start-comments'),
+                                                    'name': start_data.get('start-name')})
+        return self.initial_dict.get(step, {})
+
+    @transaction.atomic
+    def done(self, form_list, **kwargs):
+        info = {}
+        related = {}
+        for label, form in kwargs['form_dict'].items():
+            request = form.instance
+            if label == 'start':
+                info = form.cleaned_data
+                for field in ['groups', 'samples']:
+                    related[field] = info.pop(field)
+                info.pop('template')
+                info.pop('request')
+            elif label == 'parameters':
+                for field in ['parameters']:
+                    info[field] = form.cleaned_data.get(field)
+                models.Request.objects.filter(pk=request.pk).update(**info)
+                request.groups.remove(*[g for g in request.groups.all() if g not in related['groups']])
+                request.groups.add(*[g for g in related['groups']])
+                request.samples.remove(*[s for s in request.samples.all() if s not in related['groups']])
+                request.samples.add(*[s for s in related['samples']])
+        return JsonResponse({})
+
+
+class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+    form_class = forms.RequestAdminForm
     template_name = "modal/form.html"
     model = models.Request
     success_message = "Request has been updated."
     success_url = reverse_lazy('request-list')
 
     def get_success_url(self):
-        return reverse_lazy('shipment-detail', kwargs={'pk': self.object.shipment().pk})
+        return reverse_lazy('shipment-requests', kwargs={'pk': self.object.shipment().pk})
 
 
 class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):

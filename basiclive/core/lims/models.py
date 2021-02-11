@@ -1028,8 +1028,8 @@ REQUEST_SPEC_SCHEMA = {
 class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    edit_template = models.CharField(max_length=100, default="")
-    view_template = models.CharField(max_length=100, default="")
+    edit_template = models.CharField(max_length=100, default="requests/base-edit.html")
+    view_template = models.CharField(max_length=100, default="", blank=True)
     spec = models.JSONField(blank=True)
     layout = models.JSONField(blank=True, default=list)
     active = models.BooleanField(default=True)
@@ -1200,6 +1200,9 @@ class Sample(ProjectObjectMixin):
 
     def reports(self):
         return AnalysisReport.objects.filter(project=self.project, data__sample=self)
+
+    def all_requests(self):
+        return list(self.requests.all()) + list(self.group.requests.all())
 
     def port(self):
         if hasattr(self, 'port_name'):  # fetch from default annotation

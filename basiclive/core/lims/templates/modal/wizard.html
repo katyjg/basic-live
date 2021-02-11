@@ -11,11 +11,11 @@
 {% endblock %}
 
 {% block modal_title %}
-    <strong class="text-condensed">{{ form_title }}:&emsp;</strong>
+    <strong class="text-condensed">{{ form.body.title }}:&emsp;</strong>
     <span class="text-muted text-right">Step <strong style="color: dodgerblue;">{{ wizard.steps.step1 }}</strong> of {{ wizard.steps.count }}</span>
 {% endblock %}
 
-{% block pre_content%}<form action="{{ request.path }}" method="post">{% endblock %}
+{% block pre_content%}<form action="{{ form.body.form_action }}" method="post">{% endblock %}
 
 {% block modal_body %}
     {{ wizard.management_form }}
@@ -29,12 +29,12 @@
         {% endfor %}
     {% else %}
         {% if form.errors or wizard.form.errors %}
+            {{ form.errors }}
             <div id="form-errors" class="alert alert-warning"><strong>It looks like there's a problem!</strong> Please correct the errors below.</div>
         {% endif %}
         {% if wizard.form.layout_template %}
             {% include wizard.form.layout_template with form=wizard.form %}
         {% else %}
-
             {% crispy wizard.form wizard.form.body %}
         {% endif %}
     {% endif %}

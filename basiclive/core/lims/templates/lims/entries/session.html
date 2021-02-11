@@ -85,7 +85,7 @@
             <h4>
                 <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a>
             </h4>
-            {% include "lims/entries/group-progress.html" with samples=group.samples.all %}
+            {% include "lims/entries/group-samples.html" with samples=group.samples.all %}
             <hr />
         {% endfor %}
         {% with session.orphans as orphans %}
@@ -96,7 +96,7 @@
                     No associated sample
                 </span>
             </h4>
-            {% include "lims/entries/group-progress.html" with samples=orphans %}
+            {% include "lims/entries/group-samples.html" with samples=orphans %}
             {% endif %}
         {% endwith %}
     </div>
