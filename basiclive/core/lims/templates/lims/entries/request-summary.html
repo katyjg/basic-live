@@ -4,90 +4,57 @@
 {% load progress_extras %}
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
-            <ul class="list-group list-group-flush list-group-hover">
-                {% for request in requests %}
-                    <li class="list-group-item py-2">
-                        <div class="d-flex flex-row py-2">
-                            <div class="box-status text-center mr-3">
-                                {% if user.is_superuser%}
-                                    <a href="#!" data-form-link="{% url 'request-admin-edit' request.pk %}"
-                                       title="Update Status">
-                                        {% if request.staff_comments %}
-                                            {% show_icon label=request.get_status_display icon='ti ti-md ti-comment-alt' %}
-                                        {% else %}
-                                            {% show_icon label=request.get_status_display icon='ti ti-md ti-comment' %}
-                                        {% endif %}
-                                    </a>
+        <div class="card mb-5">
+            <div class="card-header py-1">
+                <div class="d-flex flex-row py-2">
+                    <div class="box-status text-center mr-3 align-middle">
+                        {% if user.is_superuser%}
+                            <a href="#!" data-form-link="{% url 'request-admin-edit' request.pk %}"
+                               title="Update Status">
+                                {% if request.staff_comments %}
+                                    {% show_icon label=request.get_status_display icon='ti ti-md ti-comment-alt' %}
                                 {% else %}
-                                    {% if request.status == request.STATUS_CHOICES.COMPLETE %}
-                                        {% show_icon label=request.get_status_display icon='ti ti-md ti-check-box' tooltip=request.get_status_display %}
-                                    {% else %}
-                                        {% show_icon label=request.get_status_display icon='ti ti-md ti-layout-width-full' tooltip=request.get_status_display %}
-                                    {% endif %}
+                                    {% show_icon label=request.get_status_display icon='ti ti-md ti-comment' %}
                                 {% endif %}
-                            </div>
-                            <div class="flex-fill">
-                                <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
-                                <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span>
-                                <div class="small">
-                                    {% for label, val in request.parameter_labels.items %}
-                                        <span title="{{ label }}"><strong>{{ label|title }}: </strong>{{ val }}</span>
-                                        {% if not forloop.last %} | {% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% if request.comments %}<div class="small"><strong>Comments: </strong>{{ request.comments }}</div>{% endif %}
-                                {% if request.staff_comments %}<div class="small"><strong>Staff Comments: </strong>{{ request.staff_comments }}</div>{% endif %}
-                            </div>
-                            <div class="tools-box">
-                                <span class="large pl-3">
-                                {% if group in request.groups.all %}
-                                    <h4 class="text-success text-bold" title="Samples in this group">All ({{ group.num_samples }})</h4>
-                                    sample{{ group.num_samples|pluralize }}
-                                {% else %}
-                                    {% with request|request_samples:group as sample_list %}
-                                        <span title="Samples from Group '{{ group.name }}'"
-                                              data-toggle="popover"
-                                              data-html="true"
-                                              data-content="{% for sample in sample_list %}{{ sample.name }}<br/>{% endfor %}"
-                                              data-placement="bottom"
-                                              data-trigger="hover">
-                                            <h4 class="text-warning text-bold">{{ sample_list.count }}</h4>
-                                            sample{{ sample_list.count|pluralize }}
-                                        </span>
-                                    {% endwith %}
-                                {% endif %}
-                                </span>
-                                <span class="large text-thin text-secondary" style="font-size: 3rem;">
-                                    /
-                                </span>
-                                <span class="large">
-                                    <h4 class="text-secondary text-bold" title="Requested samples">{{ request.num_samples }}</h4>
-                                    total
-                                </span>
-                            </div>
-                        </div>
-                        {% if show_samples %}
-                            {% include "lims/entries/group-progress.html" with samples=request.samples.all %}
+                            </a>
+                        {% else %}
+                            {% if request.status == request.STATUS_CHOICES.COMPLETE %}
+                                {% show_icon label=request.get_status_display icon='ti ti-md ti-check-box' tooltip=request.get_status_display %}
+                            {% else %}
+                                {% show_icon label=request.get_status_display icon='ti ti-md ti-layout-width-full' tooltip=request.get_status_display %}
+                            {% endif %}
                         {% endif %}
-                    </li>
-                {% empty %}
-                    <li class="list-group-item empty">
-                        No specific requests for these samples.
-                    </li>
-                {% endfor %}
-            </ul>
-
-
-            {% if group %}
-                <div class="card-header p-1 text-center text-wide text-muted"><small>SAMPLES</small></div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item pt-0">
-                        {% include "lims/entries/group-progress.html" with samples=group.samples.all %}
-                    </li>
-                </ul>
+                    </div>
+                    <div class="flex-fill">
+                        <h4><a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                        <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span></h4>
+                        {% if request.comments %}<div class="small"><strong>Comments: </strong>{{ request.comments }}</div>{% endif %}
+                        {% if request.staff_comments %}<div class="small"><strong>Staff Comments: </strong>{{ request.staff_comments }}</div>{% endif %}
+                    </div>
+                    <div class="tools-box">
+                        <span class="large">
+                            <h4 class="text-secondary text-bold" title="Requested samples">{{ request.num_samples }}</h4>
+                            samples
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-header p-1 text-center text-wide text-muted"><small>PARAMETERS</small></div>
+            <ul class="list-group list-group-flush">
+            {% if request.kind.view_template %}
+                <li class="list-group-item py-0">
+                {% include request.kind.view_template %}
+                </li>
+            {% else %}
+                {% include "requests/base-view.html" %}
             {% endif %}
+            </ul>
+            <div class="card-header p-1 text-center text-wide text-muted"><small>SAMPLES</small></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item p-0">
+                    {% include "lims/entries/group-samples.html" with samples=request.sample_list %}
+                </li>
+            </ul>
         </div>
     </div>
 </div>

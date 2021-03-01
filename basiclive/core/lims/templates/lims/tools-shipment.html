@@ -2,8 +2,13 @@
 
 {% if shipment.status >= shipment.STATES.SENT %}
     {% comment %}Shipment Details{% endcomment %}
-    <a href="{% url 'shipment-protocol' shipment.pk %}">
-        {% show_icon label='Progress' icon='ti ti-md ti-layout-media-overlay' %}
+    {% if shipment.requests.count %}
+        <a href="{% url 'shipment-requests' shipment.pk %}">
+            {% show_icon label='Requests' icon='ti ti-md ti-layout-accordion-list' %}
+        </a>
+    {% endif %}
+    <a href="{% url 'shipment-samples' shipment.pk %}">
+        {% show_icon label='Samples' icon='ti ti-md ti-view-list-alt' %}
     </a>
     <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
         {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=shipment.num_datasets color='info' %}

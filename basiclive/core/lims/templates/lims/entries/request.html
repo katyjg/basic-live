@@ -80,7 +80,7 @@
             </table>
             </div>
         {% else %}
-            {% include "lims/entries/group-progress.html" with samples=object.sample_list %}
+            {% include "lims/entries/group-samples.html" with samples=object.sample_list %}
         {% endif %}
     </div>
     <div class="col-sm-5">
@@ -92,24 +92,7 @@
                     {% include object.kind.view_template with request=object %}
                 </li>
                 {% else %}
-                    {% for row in object.kind.layout %}
-                        <li class="list-group-item py-0">
-                            <div class="row">
-                                {% for k, style in row  %}
-                                    {% with object.parameters|get_item:k as value %}
-                                    {% with object.kind.spec|get_item:k|get_item:"label" as label %}
-                                    {% if style != 'hidden'  %}
-                                        <div class="col-{{ style }} py-2">
-                                            {% if label %}<strong>{{ label }}</strong><br/>{% endif %}
-                                            <span title="{{ k }}">{{ object.parameters|get_item:k }}</span>
-                                        </div>
-                                    {% endif %}
-                                    {% endwith %}
-                                    {% endwith %}
-                                {% endfor %}
-                            </div>
-                        </li>
-                    {% endfor %}
+                    {% include "requests/base-view.html" with request=object %}
                 {% endif %}
             </ul>
         </div>

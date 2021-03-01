@@ -436,42 +436,41 @@ class RequestForm(forms.ModelForm):
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
         old_requests = Request.objects.filter(project=self.initial['project'])
 
-        is_requests = shipment and requests.exists()
-        is_template = old_requests.exists()
+            is_requests = shipment and requests.exists()
+            is_template = old_requests.exists()
+            if is_template:
+                self.fields['template'].queryset = old_requests
+            else:
+                self.fields['template'].widget = forms.HiddenInput()
+            if is_requests:
+                self.fields['request'].queryset = requests
+            else:
+                self.fields['request'].widget = forms.HiddenInput()
 
-        if is_template:
-            self.fields['template'].queryset = old_requests
-        else:
-            self.fields['template'].widget = forms.HiddenInput()
-        if is_requests:
-            self.fields['request'].queryset = requests
-        else:
-            self.fields['request'].widget = forms.HiddenInput()
+            autofill = Div(
+                is_requests and Div(
+                    Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                    css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
+                is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
+                is_template and Div(
+                    Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                    css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+                css_class='row'
+            )
 
-        autofill = Div(
-            is_requests and Div(
-                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
-            is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
-            is_template and Div(
-                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+        related = pk and Div(
+            Div(Field('groups', css_class='select'), css_class='col-6'),
+            Div(Field('samples', css_class='select'), css_class='col-6'),
             css_class='row'
-        )
-
-        if pk:
-            self.body.title = u"Edit {} Request".format(self.instance.kind.name)
-            self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
-        else:
-            self.body.title = u"Create New Request"
-            self.body.form_action = reverse_lazy('request-new')
+        ) or Div('groups', 'samples')
 
         self.body.layout = Layout(
-            'project', 'groups', 'samples',
+            'project',
             autofill,
             Field('name', css_id='name'),
             Field('kind', css_id='kind'),
-            Field('comments', css_id='comments')
+            Field('comments', css_id='comments'),
+            related
         )
         self.footer.layout = Layout(
             StrictButton("Continue", type="submit", value="Continue", css_class='btn btn-primary'),
@@ -484,15 +483,11 @@ class RequestParameterForm(forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ('name', 'comments', 'kind', 'parameters', 'groups', 'samples')
+        fields = ('kind', 'parameters')
         widgets = {'kind': disabled_widget,
                    'template': disabled_widget,
                    'request': disabled_widget,
-                   'parameters': forms.HiddenInput,
-                   'comments': forms.Textarea(attrs={'rows': "2"})}
-        help_texts = {
-            'name': "Choose a recognizable name to reuse these settings in future requests."
-        }
+                   'parameters': forms.HiddenInput}
 
     def __init__(self, *args, **kwargs):
         kind_pk = kwargs.pop('kind', None)
@@ -507,7 +502,6 @@ class RequestParameterForm(forms.ModelForm):
         self.footer = FooterHelper(self)
 
         parameters = Div()
-
         request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
         template = self.initial.get('template') and Request.objects.filter(pk=self.initial.get('template')).first() or None
 
@@ -518,23 +512,19 @@ class RequestParameterForm(forms.ModelForm):
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['comments'].widget.attrs['readonly'] = True
         if pk:
-            self.fields['groups'].queryset = self.instance.project.sample_groups.filter(shipment=self.instance.shipment())
-            self.fields['samples'].queryset = self.instance.project.samples.filter(container__shipment=self.instance.shipment())
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
             self.footer.layout = Layout(
                 StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
                 StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
             )
         else:
-            self.fields['groups'].widget = forms.MultipleHiddenInput()
-            self.fields['samples'].widget = forms.MultipleHiddenInput()
             self.body.form_action = reverse_lazy('request-new')
             self.footer.layout = Layout(
                 StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
             )
 
         if kind:
-            self.body.title = u"{} Request Parameters".format(kind.name)
+            self.body.title = u"Request Details".format(kind.name)
             self.fields['kind'].widget = disabled_widget
             self.layout_template = kind.edit_template
             for row in kind.layout:
@@ -592,9 +582,7 @@ class RequestParameterForm(forms.ModelForm):
     def clean_parameters(self):
         cleaned_data = self.cleaned_data
         parameters = {}
-        prefix = ""
-        if 'request_wizard_create-current_step' in self.data:
-            prefix = "{}-".format(self.data.get('request_wizard_create-current_step', [""]))
+        prefix = "{}-".format("".join([self.data.get(k) for k in self.data.keys() if k.endswith('current_step')]))
         for param in cleaned_data['kind'].spec.keys():
             parameters[param] = self.data.get("{}{}".format(prefix, param))
         return parameters
@@ -1202,6 +1190,8 @@ class AddShipmentForm(forms.ModelForm):
             )
 
         self.body = BodyHelper(self)
+        self.body.title = "Create a Shipment"
+        self.body.form_action = reverse_lazy("shipment-new")
         self.footer = FooterHelper(self)
         self.body.layout = Layout(
             Div(
@@ -1249,6 +1239,8 @@ class ShipmentContainerForm(forms.ModelForm):
             self.fields['{}_set'.format(f)] = forms.CharField(required=False)
 
         self.body = BodyHelper(self)
+        self.body.title = "Create a Shipment"
+        self.body.form_action = reverse_lazy("shipment-new")
         self.footer = FooterHelper(self)
         self.footer.layout = Layout()
 
@@ -1361,6 +1353,8 @@ class ShipmentGroupForm(forms.ModelForm):
         super(ShipmentGroupForm, self).__init__(*args, **kwargs)
         self.fields['name'].required = False
         self.body = BodyHelper(self)
+        self.body.title = "Create a Shipment"
+        self.body.form_action = reverse_lazy("shipment-new")
         self.footer = FooterHelper(self)
         self.footer.layout = Layout()
         if self.initial.get('shipment'):

@@ -1,0 +1,31 @@
+{% extends "lims/entries/shipment-base.html" %}
+{% load static %}
+{% load icons %}
+{% load progress_extras %}
+
+{% block title %}Samples{% endblock %}
+{% block sub_title %}Shipment Collection Protocol by Group/Sample{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="col-12">
+            {% for group in object.groups.all %}
+                <div class="card mb-5">
+                    <div class="card-header pb-1">
+                        <h4>
+                            <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a>
+                             | <span class="text-muted text-thin text-condensed">{{ group.num_samples }} sample{{ group.num_samples|pluralize }}</span>
+                            {% if group.comments %} | <span class="text-muted text-thin text-condensed">{{ group.comments }}</span>{% endif %}
+                        </h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item p-0">
+                            {% include "lims/entries/group-samples.html" with samples=group.samples.all request_detail=True %}
+                        </li>
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% include "lims/comments.html" with object=shipment %}
+{% endblock %}

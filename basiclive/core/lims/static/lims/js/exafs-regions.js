@@ -288,7 +288,6 @@ function ev2k(energy) {
                 })
                 .merge(cells).text(d => d.value);
             target.text(JSON.stringify(data));
-
         }
 
     };

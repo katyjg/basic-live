@@ -1,0 +1,18 @@
+{% extends "lims/entries/shipment-base.html" %}
+{% load static %}
+{% load icons %}
+{% load progress_extras %}
+
+{% block title %}Requests{% endblock %}
+{% block sub_title %}Shipment Collection Protocol by Request{% endblock %}
+
+{% block full %}
+    <div class="row">
+        <div class="col-12">
+            {% for request in shipment.requests %}
+                {% include "lims/entries/request-summary.html" with requests=group.all_requests %}
+            {% endfor %}
+        </div>
+    </div>
+    {% include "lims/comments.html" with object=shipment %}
+{% endblock %}

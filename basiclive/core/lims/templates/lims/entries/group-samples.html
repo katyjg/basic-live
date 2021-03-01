@@ -8,6 +8,7 @@
             <th></th>
             <th>Sample</th>
             <th>Location</th>
+            {% if request_detail %}<th>Requests</th>{% endif %}
             <th>Data&nbsp;Sets</th>
             <th>Analysis&nbsp;Reports</th>
         </tr>
@@ -62,6 +63,17 @@
                 {% endif %}
                 <span> |&nbsp;{{ sample.port }}</span>
             </td>
+            {% if request_detail %}
+                <td>
+                    {% for request in sample.all_requests %}
+                        <a href="{% url 'request-detail' request.pk %}">
+                        <span class="badge badge-{% if request.status == request.STATUS_CHOICES.PENDING %}info
+                                {% elif request.status == request.STATUS_CHOICES.DRAFT %}warning
+                                {% elif request.status == request.STATUS_CHOICES.COMPLETE %}success
+                                {% else %}primary{% endif %}" title="{{ request.get_status_display }}{% if request.comments %} | {{ request.comments }}{% endif %}">{{ request.kind.name }}</span>
+                        </a>
+                    {% endfor %}
+                </td>{% endif %}
             <td>
                 {% include "lims/entries/sample-data.html" %}
             </td>

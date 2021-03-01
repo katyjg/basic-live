@@ -1,52 +1,9 @@
-{% extends "lims/base.html" %}
+{% extends "lims/entries/shipment-base.html" %}
 
-{% load static %}
 {% load icons %}
 
-{% block page_heading %}
-    <h3>
-        <span class="text-thin">Datasets |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
-        </span>
-    </h3>
-    <span class="text-muted">
-        {% if not shipment.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
-        {{ shipment.identity }} | Data from Shipment
-    </span>
-{% endblock %}
-
-{% block object_tools %}
-    <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
-        {% show_icon label="Reports" icon="ti ti-md ti-bar-chart-alt" badge=shipment.num_reports %}
-    </a>
-    <a href="{% url 'shipment-protocol' shipment.pk %}">
-        {% show_icon label="Progress" icon="ti ti-md ti-layout-media-overlay" %}
-    </a>
-{% endblock %}
-
-{% block object_status %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col">
-                <small class="text-muted text-condensed">Shipment:</small><br>
-                <a href="{% url 'shipment-detail' shipment.pk %}">{{shipment.name}}</a>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Samples:</small><br>
-                {{ shipment.num_samples }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Groups:</small><br>
-                {{ shipment.groups.count }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Comments:</small><br>
-                {{ shipment.comments }}
-            </div>
-        </div>
-    </div>
-{% endblock %}
+{% block title %}Datasets{% endblock %}
+{% block sub_title %}Data from Shipment{% endblock %}
 
 {% block full %}
     <div class="row">
