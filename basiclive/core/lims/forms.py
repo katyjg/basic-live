@@ -436,27 +436,27 @@ class RequestForm(forms.ModelForm):
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
         old_requests = Request.objects.filter(project=self.initial['project'])
 
-            is_requests = shipment and requests.exists()
-            is_template = old_requests.exists()
-            if is_template:
-                self.fields['template'].queryset = old_requests
-            else:
-                self.fields['template'].widget = forms.HiddenInput()
-            if is_requests:
-                self.fields['request'].queryset = requests
-            else:
-                self.fields['request'].widget = forms.HiddenInput()
+        is_requests = shipment and requests.exists()
+        is_template = old_requests.exists()
+        if is_template:
+            self.fields['template'].queryset = old_requests
+        else:
+            self.fields['template'].widget = forms.HiddenInput()
+        if is_requests:
+            self.fields['request'].queryset = requests
+        else:
+            self.fields['request'].widget = forms.HiddenInput()
 
-            autofill = Div(
-                is_requests and Div(
-                    Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                    css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
-                is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
-                is_template and Div(
-                    Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                    css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
-                css_class='row'
-            )
+        autofill = Div(
+            is_requests and Div(
+                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
+            is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
+            is_template and Div(
+                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
+                css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+            css_class='row'
+        )
 
         related = pk and Div(
             Div(Field('groups', css_class='select'), css_class='col-6'),
