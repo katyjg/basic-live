@@ -431,8 +431,6 @@ class RequestForm(forms.ModelForm):
         self.sample = self.initial['samples'].first()
         group = self.sample.group if self.sample and not group else None
 
-        print("RequestForm", self.initial)
-
         shipment = None if not group else group.shipment
         requests = self.initial['project'].requests.exclude(groups=group).filter(
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
@@ -581,13 +579,15 @@ class RequestParameterForm(forms.ModelForm):
 
         self.body.layout = Layout(
             'kind', 'name', 'parameters', parameters,
-            pk and Div(HTML("""<hr/>""")) or Div(),
-            Div(
-                Div(Field('groups', css_class='select'), css_class='col-6'),
-                Div(Field('samples', css_class='select'), css_class='col-6'),
-                css_class='row'
-            )
         )
+        if self.instance.pk:
+            if self.instance.kind.scope not in [RequestType.SCOPES.ONE_SAMPLE, RequestType.SCOPES.ONE_GROUP]:
+                row = Div(css_class='row')
+                if self.instance.kind.scope in [RequestType.SCOPES.UNLIMITED, RequestType.SCOPES.GROUPS]:
+                    row.append(Div(Field('groups', css_class='select'), css_class='col'))
+                if self.instance.kind.scope in [RequestType.SCOPES.UNLIMITED, RequestType.SCOPES.SAMPLES]:
+                    row.append(Div(Field('samples', css_class='select'), css_class='col'))
+                self.body.layout.append(row)
 
     def clean_parameters(self):
         cleaned_data = self.cleaned_data
