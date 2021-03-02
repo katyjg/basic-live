@@ -23,7 +23,7 @@ function ev2k(energy) {
     $.fn.selectRegions = function (selector) {
         let container = d3.select($(this)[0]);
         let target = d3.select(selector);
-        let extent = {start: -450, end: 850};
+        let extent = {start: -450, end: 950};
 
         let count = 1;
         let regions = [
@@ -57,13 +57,13 @@ function ev2k(energy) {
 
         const font = "10px Fira Code";
         const margin = { top: 0, right: 0, bottom: 50, left: 0};
-        const width = 400; //container.node().getBoundingClientRect().width;
+        const width = 450; //container.node().getBoundingClientRect().width;
         const height = width * 0.2;
         const spectrum = make_spectrum();
         const escale = d3.scaleLinear().range([0, width]).domain([extent.start, extent.end]);
         const kscale = d3.scalePow().exponent(2).range([0, width]).domain([ev2k(extent.start), ev2k(extent.end)]);
         const eaxis = d3.axisBottom().scale(escale).ticks(15).tickFormat(x => x >= extent.end - 50 ? `${x} eV` : x);
-        const kaxis = d3.axisBottom().scale(kscale).ticks(10).tickFormat(x => x < 0 ? "" : (x >= 14 ? `${x} k`: x));
+        const kaxis = d3.axisBottom().scale(kscale).ticks(25).tickFormat(x => x <= 0 ? "" : (x > 14 ? `${x} k`: x));
 
         const svg = container.append("svg")
             .attr('viewBox', `-${margin.left} -${margin.top} ${width+margin.left + margin.right} ${height + margin.top + margin.bottom}`)
@@ -113,12 +113,13 @@ function ev2k(energy) {
 
         function make_spectrum() {
             let data = [];
-            let decay = 0.99999;
+            let decay = 0.005;
+            let freq = 0.25;
             let value = 0;
             let ripple = 0;
             for (let x = extent.start, i = 0; x < extent.end; x++, i++) {
-                ripple = x < 0 ? 0 : Math.exp(-i*0.005)*height*Math.sin(0.1*x);
-                value = (height/5 + 0.5*height/(1 + Math.exp(-0.25*x)) + ripple);
+                ripple = x < 0 ? 0 : Math.exp(-i*decay)*height*Math.sin(0.1*x);
+                value = (height/5 + 0.5*height/(1 + Math.exp(-freq*x)) + ripple);
                 data.push({"x": x, "y": parseFloat(value.toFixed(2))});
             }
             return data;
@@ -126,18 +127,23 @@ function ev2k(energy) {
 
         function callout(g, value) {
             if (!value) return g.style("display", "none");
-
-            value = `${value.toFixed(1)} eV`;
+            if (value > 0) {
+                value = `${value.toFixed(1)} eV, ${ev2k(value).toFixed(1)} k`
+            } else {
+                value = `${value.toFixed(1)} eV`;
+            }
 
             g.style("display", null)
                 .style("font", font)
-                .style("opacity", 0.75)
+                .style("opacity", 0.9)
+                .style("font-weight", "bold")
                 .style("pointer-events", "none");
 
             const path = g.selectAll("path")
                 .data([null])
                 .join("path")
-                .attr("fill", "yellow")
+                .attr("fill", "orange")
+                .attr("stroke-width", 1.45)
                 .attr("stroke", "black");
 
             const text = g.selectAll("text")
@@ -309,8 +315,7 @@ function ev2k(energy) {
         let rows = tbody.selectAll('tr')
             .data(data, d => d.id)
             .enter()
-            .append('tr')
-            .attr('id', d => `region-${d.id}`);
+            .append('tr');
 
         // create new cell for each cell in row
         rows.selectAll('td')
