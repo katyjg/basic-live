@@ -1,0 +1,21 @@
+{
+  "misc": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/",
+    "js": [
+      {
+        "path": "bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js",
+        "sri": "sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+      },
+      {
+        "path": "iframe-resizer/4.2.10/iframeResizer.contentWindow.min.js",
+        "sri": "sha512-JnMxXPFF5+qEXZkfeRO+1YLZV83LdnSiDu6TJl7x/8uZu8SfruaIQAelaFZS2XFIgBa8JYkKNLG0pvIVplydnQ=="
+      }
+    ],
+    "css": [
+      {
+        "path": "bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css",
+        "sri": "sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+      }
+    ]
+  }
+}

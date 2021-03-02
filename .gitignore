@@ -121,5 +121,6 @@ local/*
 !local/settings.py.example
 .idea/workspace.xml
 .idea/*
+*/vendor
 
 /docs/_build/

@@ -24,7 +24,7 @@
 <div id="request-{{request.pk}}" class="row"></div>
 
 
-<script type="text/javascript" src="{% static 'js/d3/d3.v5.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'lims/vendor/d3/js/d3.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'lims/js/exafs-regions.js' %}"></script>
 <script>
     $('#request-{{request.pk}}').showRegions({{ request.parameters.regions | safe }});
