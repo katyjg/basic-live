@@ -40,16 +40,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
-    package_data = {
-        'basiclive':
-            package_files('basiclive/core/lims/static') +
-            package_files('basiclive/core/lims/templates') +
-            package_files('basiclive/core/acl/templates') +
-            package_files('basiclive/core/crm/templates') +
-            package_files('basiclive/core/publicatons/templates') +
-            package_files('basiclive/core/schedule/templates') +
-            package_files('basiclive/core/schedule/static')
-    },
+    include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',

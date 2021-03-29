@@ -1,0 +1,4 @@
+include LICENSE
+include README.md
+recursive-include basiclive/core/*/static *
+recursive-include basiclive/core/*/templates *
