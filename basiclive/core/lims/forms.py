@@ -417,8 +417,6 @@ class RequestForm(forms.ModelForm):
         model = Request
         fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
         widgets = {'project': disabled_widget,
-                   'groups': forms.MultipleHiddenInput,
-                   'samples': forms.MultipleHiddenInput,
                    'comments': forms.Textarea(attrs={'rows': "2"})}
 
     def __init__(self, *args, **kwargs):
@@ -427,36 +425,48 @@ class RequestForm(forms.ModelForm):
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
 
-        group = self.initial['groups'].first()
-        self.sample = self.initial['samples'].first()
-        group = self.sample.group if self.sample and not group else None
-
-        shipment = None if not group else group.shipment
-        requests = self.initial['project'].requests.exclude(groups=group).filter(
-            Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
-        old_requests = Request.objects.filter(project=self.initial['project'])
-
-        is_requests = shipment and requests.exists()
-        is_template = old_requests.exists()
-        if is_template:
-            self.fields['template'].queryset = old_requests
+        if pk:
+            self.body.title = u"Edit Request"
+            self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
+            shipment = self.instance.shipment()
+            self.fields['groups'].queryset = self.instance.project.sample_groups.filter(shipment=shipment)
+            self.fields['samples'].queryset = self.instance.project.samples.filter(container__shipment=shipment)
+            autofill = Div()
         else:
-            self.fields['template'].widget = forms.HiddenInput()
-        if is_requests:
-            self.fields['request'].queryset = requests
-        else:
-            self.fields['request'].widget = forms.HiddenInput()
+            self.body.title = u"Create a Request"
+            self.body.form_action = reverse_lazy('request-new')
+            group_pk = self.initial['groups'] and self.initial['groups'][0] or self.initial[
+                'samples'] and self.initial['samples'][0].group.pk or None
+            shipment = Group.objects.filter(pk=group_pk).first() and Group.objects.filter(pk=group_pk).first().shipment
+            requests = self.initial['project'].requests.exclude(groups__pk=group_pk).filter(
+                Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
+            old_requests = Request.objects.filter(project=self.initial['project'])
+            self.fields['groups'].widget = forms.MultipleHiddenInput()
+            self.fields['samples'].widget = forms.MultipleHiddenInput()
 
-        autofill = Div(
-            is_requests and Div(
-                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
-            is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
-            is_template and Div(
-                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
-            css_class='row'
-        )
+            is_requests = shipment and requests.exists()
+            is_template = old_requests.exists()
+            if is_template:
+                self.fields['template'].queryset = old_requests
+            else:
+                self.fields['template'].widget = forms.HiddenInput()
+            if is_requests:
+                self.fields['request'].queryset = requests
+            else:
+                self.fields['request'].widget = forms.HiddenInput()
+
+            autofill = Div(
+                is_requests and Div(
+                    Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
+                          css_class='select'),
+                    css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
+                is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
+                is_template and Div(
+                    Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
+                          css_class='select'),
+                    css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+                css_class='row'
+            )
 
         related = pk and Div(
             Div(Field('groups', css_class='select'), css_class='col-6'),
@@ -568,7 +578,7 @@ class RequestParameterForm(forms.ModelForm):
                 parameters.append(param_row)
 
         self.body.layout = Layout(
-            'kind', 'name', 'parameters', parameters,
+            'kind', 'parameters', parameters,
         )
         if self.instance.pk:
             if self.instance.kind.scope not in [RequestType.SCOPES.ONE_SAMPLE, RequestType.SCOPES.ONE_GROUP]:
