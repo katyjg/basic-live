@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.template.loader import render_to_string
 from model_utils import Choices
@@ -21,6 +21,7 @@ tf = timezonefinder.TimezoneFinder()
 MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
 MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
 APP_NAME = getattr(settings, 'APP_NAME', 'basiclive')
+
 
 class AccessType(models.Model):
     name = models.CharField(blank=True, max_length=30)

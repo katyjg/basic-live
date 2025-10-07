@@ -1,6 +1,6 @@
 from django import forms
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.layout import Div, Field, Layout, HTML

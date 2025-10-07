@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import re
 from datetime import datetime, date
 
@@ -6,8 +8,7 @@ from django.db.models import FileField
 from django.core.files.storage import FileSystemStorage
 from django import forms
 from django.template.defaultfilters import filesizeformat
-from django.utils.translation import ugettext_lazy as _
-from collections import Sequence
+from django.utils.translation import gettext_lazy as _
 
 
 class LocalStorage(FileSystemStorage):

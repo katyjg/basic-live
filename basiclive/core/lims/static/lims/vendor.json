@@ -29,7 +29,7 @@
         "path": "https://d3js.org/d3-selection-multi.v1.min.js"
       },
       {
-        "path": "http://bl.ocks.org/denisemauldin/raw/e6da337734f855c2a89666afb11dc329/d3.layout.timeline.js"
+        "path": "https://cdn.jsdelivr.net/npm/d3-layout-timeline@1.0.3/d3.layout.timeline.min.js"
       }
     ]
   },

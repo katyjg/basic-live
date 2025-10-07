@@ -1,11 +1,11 @@
 # coding=utf-8
-from __future__ import print_function
 
-import collections
 import gzip
 import re
 import sys
 import textwrap
+from collections import namedtuple
+from collections.abc import Mapping
 from datetime import datetime, tzinfo, timedelta
 from io import StringIO
 
@@ -39,14 +39,14 @@ REQUIRED_FIELDS = [
 def defaulted_namedtuple(typename, fields, defaults=None):
     """
     Create a namedtuple class with default values
-    @param typename: Type name
-    @param field_names: field names
-    @param default_values: a dictionary of values to use as defaults otherwise None will be the default
-    @return:
+    :param typename: Type name
+    :param field_names: field names
+    :param default_values: a dictionary of values to use as defaults otherwise None will be the default
+    :return:
     """
-    Type = collections.namedtuple(typename, fields)
+    Type = namedtuple(typename, fields)
     Type.__new__.__defaults__ = (None,) * len(Type._fields)
-    if isinstance(defaults, collections.Mapping):
+    if isinstance(defaults, Mapping):
         prototype = Type(**defaults)
         Type.__new__.__defaults__ = tuple(prototype)
     return Type
@@ -62,8 +62,8 @@ class OffsetTZ(tzinfo):
     def __init__(self, name, **kwargs):
         """
         Create a Fixed offset timezone object
-        @param name: Name of timezone
-        @param kwargs: accepts the same keyworded arguments as datetime.timedelta
+        :param name: Name of timezone
+        :param kwargs: accepts the same keyworded arguments as datetime.timedelta
         """
         self.__offset = timedelta(**kwargs)
         self.__name = name
@@ -79,7 +79,7 @@ class OffsetTZ(tzinfo):
 
 
 def isotime(text):
-    patt = re.compile('(?P<date_text>[\d-]{8,10}T[\d:]{6,8}(?:\.\d+)?)Z?(?:(?P<sign>[+-])(?P<offset>\d{2}:\d{2}))?')
+    patt = re.compile(r'(?P<date_text>[\d-]{8,10}[T ][\d:]{6,8}(?:\.\d+)?)Z?(?:(?P<sign>[+-])(?P<offset>\d{2}:\d{2}))?')
     m = patt.match(text)
     if m:
         info = m.groupdict()
@@ -164,27 +164,27 @@ TAGS = {
 def memoize(f):
     """ Memoization decorator for functions taking one or more arguments. """
 
-    class memodict(dict):
+    class Memodict(object):
         def __init__(self, f):
+            self.store = {}
             self.f = f
 
         def __call__(self, *args):
-            return self[args]
+            if args in self.store:
+                return self.store[args]
+            else:
+                ret = self.store[args] = self.f(*args)
+                return ret
 
-        def __missing__(self, key):
-            ret = self[key] = self.f(*key)
-            return ret
-
-    return memodict(f)
+    return Memodict(f)
 
 
-@memoize
 def find_spec(namespace, tag):
     """
     Find the specifications for a given field
-    @param namespace: The namespace to search
-    @param tag: The tag to search within the namespace
-    @return: [field name (str) or <int type>, field value format type, units (a list of strings) or None)]
+    :param namespace: The namespace to search
+    :param tag: The tag to search within the namespace
+    :return: [field name (str) or <int type>, field value format type, units (a list of strings) or None)]
     """
     specs = TAGS.get(namespace.lower(), [])
     spec = None
@@ -197,44 +197,45 @@ def find_spec(namespace, tag):
                 spec = item
     return spec
 
+
 def format_field(field):
     suffix = '' if not field.units else ' {}'.format(field.units)
     if isinstance(field.value, datetime):
         return '{}{}'.format(field.value.isoformat(), suffix)
     else:
         return '{}{}'.format(field.value, suffix)
-    
+
 
 XDI_PATTERN = re.compile(
-    '#\s*XDI/1.0\s*(?P<version_text>[^\n]*)\n'
-    '(?P<header_text>(?:#\s*[^\n]*\n)+?)'
-    '#\s*/{3,}\n'
-    '(?P<comments_text>.*?)'
-    '#\s*-{3,}\n'
-    '#\s*(?P<columns_text>[^\n]*)\n'
-    '(?P<data_text>.+)',
+    r'#\s*(?P<version_text>XDI/[^\n]*)\n'
+    r'(?P<header_text>(?:#\s*[^\n]*\n)+?)'
+    r'(?:#\s*/{3,}\n(?P<comments_text>.*?))?'
+    r'#\s*-{3,}\n'
+    r'#\s*(?P<columns_text>[^\n]*)\n'
+    r'(?P<data_text>.+)',
     re.DOTALL
 )
 
-HEADER_PATTERN = re.compile('#\s*(?P<namespace>[a-zA-Z]\w+).(?P<tag>[\w-]+):\s*(?P<text>[^\n]+)\s*')
+HEADER_PATTERN = re.compile(r'#\s*(?P<namespace>[a-zA-Z]\w+).(?P<tag>[\w-]+):\s*(?P<text>[^\n]+)\s*')
 
 
 class XDIData(object):
     def __init__(self, header=None, data=None, comments='', version=''):
-        self.header = header or collections.OrderedDict()
+        self.header = header or {}
         self.data = data
         self.comments = comments
         self.version = version
 
     def get_names(self):
-        if self.data:
+        if self.data is not None:
             return self.data.dtype.names
+        return ()
 
     def __getitem__(self, key):
         if '.' in key:
             namespace, tag = key.lower().split('.')
-            if not namespace in TAGS.keys():
-                namespace, tag = key.split('.') # preserve case for non-standard namespaces
+            if not namespace in list(TAGS.keys()):
+                namespace, tag = key.split('.')  # preserve case for non-standard namespaces
             if namespace == 'column':
                 tag = int(tag)
             return self.header[namespace][tag]
@@ -243,7 +244,7 @@ class XDIData(object):
 
     def __setitem__(self, key, entry):
         if isinstance(entry, dict) and not '.' in key:
-            for k,v in entry.items():
+            for k, v in list(entry.items()):
                 self.__setitem__('{}.{}'.format(key, k), v)
         else:
             namespace, tag = key.lower().split('.')
@@ -263,12 +264,12 @@ class XDIData(object):
                 if fmt == isotime and isinstance(value, datetime):
                     value = value.isoformat()
                 field = Field(value=value, units=unit)
-            else :
+            else:
                 if namespace not in TAGS:
                     namespace = key.split('.')[0]  # preserve case for non-standard namespaces
                 field = Field(value=value, units=unit)
             if namespace not in self.header:
-                self.header[namespace] = collections.OrderedDict()
+                self.header[namespace] = {}
             self.header[namespace][tag] = field
 
     def save(self, filename):
@@ -277,24 +278,26 @@ class XDIData(object):
                 namespace.islower() and namespace.capitalize() or namespace, tag,
                 format_field(field),
             )
-            for namespace, fields in self.header.items() for tag, field in fields.items()
+            for namespace, fields in list(self.header.items()) for tag, field in list(fields.items())
         ] + ['///'] + textwrap.wrap(self.comments) + ['---'] + [' '.join(self.data.dtype.names)]
         data_format = ''.join(['  {}'] * len(self.data.dtype.names))
-        data_lines = [ data_format.format(*row) for row in self.data ]
+        data_lines = [data_format.format(*row) for row in self.data]
         saver = gzip.open if filename.endswith('.gz') else open
         with saver(filename, 'wb') as handle:
-            handle.write('\n# '.join(header_lines) + '\n' + '\n'.join(data_lines))
+            output = '\n# '.join(header_lines) + '\n' + '\n'.join(data_lines)
+            handle.write(output.encode('utf8'))
 
-    def parse(self, filename):
-        opener = gzip.open if filename.endswith('.gz') else open
-        with opener(filename, 'r') as handle:
-            return self.load(handle.read())
+    def load(self, data, permissive=False):
+        """
+        Load XDI data from a string or file-like object
+        :param data: bytes
+        :param permissive: If True, do not raise errors for missing required fields
+        """
 
-    def load(self, data):
-        raw = XDI_PATTERN.match(data.decode('utf-8')).groupdict()
+        raw = XDI_PATTERN.match(data.decode("utf-8")).groupdict()
         self.version = raw['version_text']
 
-        self.header = collections.OrderedDict()
+        self.header = {}
         header_rows = [m.groupdict() for m in HEADER_PATTERN.finditer(raw['header_text'])]
         for row in header_rows:
             namespace = row['namespace'].lower()
@@ -306,7 +309,7 @@ class XDIData(object):
                 if units is None:
                     field = Field(value=fmt(row['text'].strip()), units=None)
                 else:
-                    value_text, unit = re.match('([^\s]+)\s*(.+)?', row['text']).groups()
+                    value_text, unit = re.match(r'([^\s]+)\s*(.+)?', row['text']).groups()
                     try:
                         value = fmt(value_text)
                     except ValueError as e:
@@ -321,13 +324,13 @@ class XDIData(object):
                     namespace = row['namespace']  # preserve capitalization for non-standard namespaces
                 field = Field(value=row['text'].strip())
             if namespace not in self.header:
-                self.header[namespace] = collections.OrderedDict()
+                self.header[namespace] = {}
             self.header[namespace][tag] = field
 
-        columns = collections.OrderedDict(sorted(self.header['column'].items())).values()
+        columns = list(dict(sorted(self.header['column'].items())).values())
         header_columns = [col.value for col in columns]
 
-        self.comments = ' '.join(raw['comments_text'].replace('#', '').split())
+        self.comments = '' if not raw['comments_text'] else ' '.join(raw['comments_text'].replace('#', '').split())
         data_columns = raw['columns_text'].split()
 
         if data_columns != header_columns:
@@ -338,10 +341,21 @@ class XDIData(object):
             field: field.split('.')[1] not in self.header.get(field.split('.')[0], {})
             for field in REQUIRED_FIELDS
         }
-        if any(missing.values()):
-            sys.stderr.write('Required fields missing: {}\n'.format([key for key, value in missing.items() if value]))
+        if not permissive and any(missing.values()):
+            sys.stderr.write(
+                'Required fields missing: {}\n'.format([key for key, value in list(missing.items()) if value])
+            )
 
-        self.data = numpy.genfromtxt(StringIO(u'{}'.format(raw['data_text'])), dtype=None, names=data_columns)
+        self.data = numpy.genfromtxt(
+            StringIO('{}'.format(raw['data_text'])), dtype=None, names=data_columns,
+            deletechars=''
+        )
+
+    def parse(self, filename, permissive=False):
+        opener = gzip.open if filename.endswith('.gz') else open
+        with opener(filename, 'rb') as handle:
+            data = handle.read()
+        self.load(data, permissive=permissive)
 
 
 def read_xdi(filename):
@@ -354,3 +368,4 @@ def read_xdi_data(data):
     obj = XDIData()
     obj.load(data)
     return obj
+

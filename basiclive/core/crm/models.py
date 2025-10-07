@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
@@ -72,7 +72,7 @@ class SupportRecord(TimeStampedModel):
     staff_comments = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return "{} | {} | {}".format(self.staff, self.beamline, self.project)
+        return f"{self.staff} | {self.beamline} | {self.project}"
 
     @property
     def area_names(self):

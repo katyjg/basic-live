@@ -47,10 +47,10 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{% static 'lims/vendor/d3/js/d3.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'lims/vendor/d3/js/d3-legend.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'lims/vendor/misc/js/showdown.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'lims/vendor/misc/js/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/d3/js/d3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/d3/js/d3-legend.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/misc/js/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'vendor/misc/js/c3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.min.js' %}"></script>
     <script type="text/javascript">
         var report = {{ report | jsonify }};

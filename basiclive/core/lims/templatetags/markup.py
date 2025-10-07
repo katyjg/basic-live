@@ -13,7 +13,7 @@ markup syntaxes to HTML; currently there is support for:
 
 from django import template
 from django.conf import settings
-from django.utils.encoding import smart_bytes, force_text
+from django.utils.encoding import smart_bytes, force_str
 from django.utils.safestring import mark_safe
 from django.template.defaultfilters import stringfilter
 
@@ -27,9 +27,9 @@ def textile(value):
     except ImportError:
         if settings.DEBUG:
             raise template.TemplateSyntaxError("Error in {% textile %} filter: The Python textile library isn't installed.")
-        return force_text(value)
+        return force_str(value)
     else:
-        return mark_safe(force_text(textile.textile(smart_bytes(value), encoding='utf-8', output='utf-8')))
+        return mark_safe(force_str(textile.textile(smart_bytes(value), encoding='utf-8', output='utf-8')))
 
 
 @register.filter()
@@ -56,9 +56,9 @@ def markdown(value, arg=''):
     except ImportError:
         if settings.DEBUG:
             raise template.TemplateSyntaxError("Error in {% markdown %} filter: The Python markdown library isn't installed.")
-        return force_text(value)
+        return force_str(value)
     else:
-        return mark_safe(markdown.markdown(force_text(value), extensions=['markdown.extensions.fenced_code'], safe_mode=True))
+        return mark_safe(markdown.markdown(force_str(value), extensions=['markdown.extensions.fenced_code'], safe_mode=True))
 
 
 @register.filter()
@@ -69,8 +69,8 @@ def restructuredtext(value):
     except ImportError:
         if settings.DEBUG:
             raise template.TemplateSyntaxError("Error in {% restructuredtext %} filter: The Python docutils library isn't installed.")
-        return force_text(value)
+        return force_str(value)
     else:
         docutils_settings = getattr(settings, "RESTRUCTUREDTEXT_FILTER_SETTINGS", {})
         parts = publish_parts(source=smart_bytes(value), writer_name="html4css1", settings_overrides=docutils_settings)
-        return mark_safe(force_text(parts["fragment"]))
+        return mark_safe(force_str(parts["fragment"]))

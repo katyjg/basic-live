@@ -5,7 +5,7 @@ from collections import OrderedDict
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Field, Layout
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django import forms
 from django.conf import settings
 from django.db.models import Q
@@ -82,7 +82,7 @@ class ProjectForm(forms.ModelForm):
                 Div('contact_email', css_class='col-6'),
                 Div(
                     Field(
-                        'contact_phone', pattern="(\+\d{1,3}-)?\d{3}-\d{3}-\d{4}( x\d+)?$",
+                        'contact_phone', pattern=r"(\+\d{1,3}-)?\d{3}-\d{3}-\d{4}( x\d+)?$",
                         placeholder="[+9-]999-999-9999[ x9999]"
                     ),
                     css_class='col-6'

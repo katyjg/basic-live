@@ -1,6 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django.contrib import messages
@@ -91,7 +91,7 @@ def an(text):
     An attempt is made to guess whether "u" makes the same sound as "y" in
     "you".
     """
-    text = force_text(text)
+    text = force_str(text)
     if not CONSONANT_SOUND.match(text) and VOWEL_SOUND.match(text):
         return u'an {0}'.format(text)
     return u'a {0}'.format(text)

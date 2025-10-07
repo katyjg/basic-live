@@ -15,7 +15,7 @@ from django.db.models import Q, F, Count, CharField, BooleanField, Value, Sum
 from django.db.models.functions import Coalesce, Concat
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from memoize import memoize
 from model_utils import Choices

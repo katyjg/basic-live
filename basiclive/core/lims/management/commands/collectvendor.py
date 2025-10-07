@@ -6,7 +6,7 @@ import json
 import os
 
 import requests
-
+from urllib.parse import urljoin
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -27,10 +27,7 @@ class Command(BaseCommand):
                         for file in vendor_conf[kind]:
                             # get the directory and the file_name
                             filename = os.path.basename(file['path'])
-                            if settings.DEBUG:
-                                file_path = os.path.join(app.path, 'static', app.label, 'vendor', key, kind, filename)
-                            else:
-                                file_path = os.path.join(settings.STATIC_ROOT, app.label, 'vendor', key, kind, filename)
+                            file_path = os.path.join(settings.PROJECT_DIR, 'static', 'vendor', key, kind, filename)
                             directory = os.path.dirname(file_path)
 
                             # create the needed directories
@@ -40,7 +37,7 @@ class Command(BaseCommand):
                                 pass
 
                             # get the full url of the file
-                            url = requests.compat.urljoin(vendor_conf['url'], file['path'])
+                            url = urljoin(vendor_conf['url'], file['path'])
 
                             print('%s -> %s' % (url, file_path))
 
