@@ -119,8 +119,6 @@ venv.bak/
 local/*
 !local/__init__.py
 !local/settings.py.example
-.idea/workspace.xml
-.idea/*
 vendor/
-
+.idea/copilot.*
 /docs/_build/
