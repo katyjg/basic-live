@@ -22,8 +22,8 @@ from .multidict import MultiKeyDict
 from . import models
 
 PDB_FACILITY_ACRONYM = getattr(settings, 'PDB_FACILITY_ACRONYM', 'CLSI')
-CONTACT_EMAIL = getattr(settings, 'CONTACT_EMAIL', 'cmcf-support@lightsource.ca')
-CROSSREF_API_KEY =  getattr(settings, 'CROSSREF_API_KEY', None)
+CONTACT_EMAIL = getattr(settings, 'CONTACT_EMAIL', 'admin@example.com')
+CROSSREF_API_KEY = getattr(settings, 'CROSSREF_API_KEY', None)
 CROSSREF_THROTTLE = getattr(settings, 'CROSSREF_THROTTLE', 1)  # time delay between crossref calls
 CROSSREF_BATCH_SIZE = getattr(settings, 'CROSSREF_THROTTLE', 10)
 GOOGLE_API_KEY = getattr(settings, 'GOOGLE_API_KEY', None)
@@ -31,7 +31,7 @@ GOOGLE_API_KEY = getattr(settings, 'GOOGLE_API_KEY', None)
 
 CROSSREF_EVENTS_URL = "https://api.eventdata.crossref.org/v1/events/distinct"
 CROSSREF_CITATIONS_URL = "https://www.crossref.org/openurl/"
-PDB_SEARCH_URL = getattr(settings, 'PDB_SEARCH_URL', "https://search.rcsb.org/rcsbsearch/v1/query")
+PDB_SEARCH_URL = getattr(settings, 'PDB_SEARCH_URL', "https://search.rcsb.org/rcsbsearch/v2/query")
 PDB_REPORT_URL = getattr(settings, 'PDB_REPORT_URL', "https://data.rcsb.org/graphql")
 GOOGLE_BOOKS_API = getattr(settings, 'GOOGLE_BOOKS_API', "https://www.googleapis.com/books/v1/volumes")
 SCIMAGO_URL = getattr(settings, 'SCIMAGO_URL', "https://www.scimagojr.com/journalrank.php")
@@ -61,10 +61,13 @@ REPORT_QUERY = """{{
     }}
     rcsb_accession_info {{
       initial_release_date
+      deposit_date
     }}
-    pdbx_vrpt_summary {{
-      PDB_deposition_date
-      PDB_resolution
+    rcsb_entry_info {{
+      diffrn_resolution_high {{
+        provenance_source
+        value
+      }}
     }}
     diffrn_detector {{
       pdbx_collection_date
@@ -107,7 +110,7 @@ class CrossRef(Crossref):
         ids = [ids] if isinstance(ids, str) else ids
         results = {}
         for key in ids:
-            doi= key[4:] if key.lower().startswith('doi') else key
+            doi = key[4:] if key.lower().startswith('doi') else key
             params = {
                 'mailto': self.mailto,
                 'obj-id': doi,
@@ -192,7 +195,7 @@ class PDBParser(ObjectParser):
         'code': 'rcsb_id',
         'title': 'struct.title',
         'authors': 'rcsb_primary_citation.rcsb_authors',
-        'resolution': 'pdbx_vrpt_summary.PDB_resolution',
+        'resolution': 'rcsb_entry_info.diffrn_resolution_high.value',
         'collected': 'diffrn_detector.pdbx_collection_date'
     }
 
@@ -203,7 +206,7 @@ class PDBParser(ObjectParser):
         return parser.isoparse(self._entry['rcsb_accession_info.initial_release_date'])
 
     def get_deposited(self):
-        return parser.isoparse(self._entry['pdbx_vrpt_summary.PDB_deposition_date'])
+        return parser.isoparse(self._entry['rcsb_accession_info.deposit_date'])
 
     def get_collected(self):
         if self._entry.get('diffrn_detector.pdbx_collection_date'):
@@ -226,10 +229,11 @@ class BookParser(ObjectParser):
     from a Google books API report entry
 
     """
-    FIELDS = ['published', 'authors', 'code', 'abstract', 'kind', 'title', 'publisher']
+    FIELDS = ['published', 'author_names', 'code', 'abstract', 'kind', 'title', 'publisher']
     BOOK_KIND = models.Publication.TYPES.book
     KEY_MAPS = {
         'abstract': 'description',
+        'author_names': 'authors'
     }
 
     def get_code(self):
@@ -271,7 +275,7 @@ class ArticleParser(ObjectParser):
     }
 
     FIELDS = [
-        'published', 'authors', 'code', 'kind', 'title', 'publisher', 'volume', 'issue', 'pages'
+        'published', 'author_names', 'code', 'kind', 'title', 'publisher', 'volume', 'issue', 'pages'
     ]
 
     # map crossref work types to PublicationTypes
@@ -314,7 +318,7 @@ class ArticleParser(ObjectParser):
         parts = parts + [1]*(3-len(parts))  # sometimes partial dates are given, assume first of month
         return date(*parts)
 
-    def get_authors(self):
+    def get_author_names(self):
         return '; '.join([
             '{}, {}'.format(author['family'], author.get('given', ''))
             for author in self._entry['author']
@@ -365,10 +369,12 @@ class ArticleParser(ObjectParser):
                 'publisher': self._entry.get('publisher'),
                 'short_name': names[0]
             }
+        return None
 
     def get_main_title(self):
         if self._entry['type'] in ['book-part', 'book-section', 'book-chapter']:
             return '; '.join(self._entry['container-title'])
+        return None
 
     def get_isbn(self):
         return self._entry.get('ISBN', [])
@@ -429,6 +435,56 @@ class SCIMagoParser(ObjectParser):
             re.sub(r'(\w{4})(?!$)', r'\1-', code.strip())
             for code in self._entry['Issn'].split(',')
         })
+
+
+class AuthorParser(ObjectParser):
+    """
+    Used to extract author-specific data suitable for storing in the database
+    from a CrossRef report entry
+
+    """
+    FIELDS = ['last_name', 'other_names', 'orcid']
+    KEY_MAPS = {
+        'last_name': 'family',
+        'other_names': 'given',
+        'orcid': 'ORCID'
+    }
+
+
+class AffiliationParser(ObjectParser):
+    """
+    Used to extract affiliation-specific data suitable for storing in the database
+    from a CrossRef report entry
+
+    """
+    FIELDS = ['description', 'code']
+
+    def get_description(self):
+        description = []
+        if 'name' in self._entry:
+            description.append(self._entry['name'])
+        if 'department' in self._entry:
+            if isinstance(self._entry['department'], str):
+                description.append(self._entry['department'])
+            elif isinstance(self._entry['department'], list):
+                description.extend(self._entry['department'])
+        if 'address' in self._entry:
+            description.append(self._entry['address'])
+        if 'place' in self._entry:
+            if isinstance(self._entry['place'], str):
+                description.append(self._entry['place'])
+            elif isinstance(self._entry['place'], list):
+                description.extend(self._entry['place'])
+
+        return ', '.join(description)
+
+    def get_code(self):
+        if 'id' in self._entry:
+            if isinstance(self._entry['id'], str):
+                return self._entry['id']
+            elif isinstance(self._entry['id'], list) and 'id' in self._entry['id'][0]:
+                return self._entry['id'][0]['id']
+        return None
 
 
 def fetch_deposition_codes():
@@ -851,5 +907,4 @@ def update_funders():
         time.sleep(CROSSREF_THROTTLE)
         count += 1
         print('{:0.2%} {}/{}'.format(count/total, count, total))
-
 

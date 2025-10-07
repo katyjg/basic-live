@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import F, Value as V
+from django.db.models.functions import Coalesce, Concat
 from django.utils.translation import gettext as _
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
@@ -53,7 +55,7 @@ class JournalProfile(temporal.TemporalProfile):
     h_index = models.IntegerField("H-Index", default=1.0, null=True)
 
     def __str__(self):
-        return "{} > {}".format(self.owner, self.effective.isoformat())
+        return f"{self.owner} > {self.effective.isoformat()}"
 
 
 class Funder(TimeStampedModel):
@@ -62,6 +64,19 @@ class Funder(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class PublicationManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            cites=Coalesce('metrics__citations', 0),
+            mentions=Coalesce('metrics__mentions', 0),
+            citation=Concat(
+                'author_names', V(" ("), 'published__year', V(") "), 'title', V(". "), "code",
+                output_field=models.TextField()
+            ),
+            impact_factor=Coalesce('journal__metrics__impact_factor', 0.0),
+        )
 
 
 class Publication(TimeStampedModel):
@@ -76,8 +91,7 @@ class Publication(TimeStampedModel):
         ('patent', _('Patent')))
 
     published = models.DateField(_('Published'))
-    authors = models.TextField()
-    #projects = models.ManyToManyField(Project, related_name="publications", blank=True)
+    author_names = models.TextField()
     code = models.CharField(max_length=255, null=True, unique=True)
     keywords = fields.StringListField(blank=True)
     abstract = models.TextField(null=True, blank=True)
@@ -97,11 +111,10 @@ class Publication(TimeStampedModel):
     pages = models.CharField(max_length=20, blank=True, null=True)
     metrics = models.ForeignKey("Metric", null=True, on_delete=models.SET_NULL, related_name='publication')
 
+    objects = PublicationManager()
+
     def __str__(self):
         return self.code
-
-    def cite(self):
-        return f"{self.authors} ({self.published.year}) {self.title}. {self.journal and self.journal.short_name or ''}. {self.code}"
 
 
 class Metric(temporal.TemporalProfile):
@@ -110,14 +123,13 @@ class Metric(temporal.TemporalProfile):
     mentions = models.IntegerField(default=0)
 
     def __str__(self):
-        return '{}'.format(self.citations)
+        return f'{self.citations}'
 
 
 class Deposition(TimeStampedModel):
     code = models.CharField(max_length=20, unique=True)
     title = models.TextField()
     authors = models.TextField()
-    #projects = models.ManyToManyField(Project, related_name="publications", blank=True)
     doi = models.CharField(max_length=255, unique=True)
     resolution = models.FloatField(default=0.0)
     released = models.DateField()

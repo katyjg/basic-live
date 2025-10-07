@@ -54,6 +54,7 @@ class Minutes(models.Func):
 class Shifts(models.Func):
     function = 'HOUR'
     template = '%(function)s(%(expressions)s)'
+    output_field = FloatField()
 
     def as_postgresql(self, compiler, connection):
         self.arg_joiner = " - "
@@ -64,12 +65,6 @@ class Shifts(models.Func):
         self.arg_joiner = " , "
         return self.as_sql(compiler, connection, function="TIMESTAMPDIFF",
                            template="-%(function)s(HOUR,%(expressions)s)/8")
-
-    def as_sqlite(self, compiler, connection):
-        # the template string needs to escape '%Y' to make sure it ends up in the final SQL. Because two rounds of
-        # template parsing happen, it needs double-escaping ("%%%%").
-        return self.as_sql(compiler, connection, function="strftime",
-                           template="%(function)s(\"%%%%H\",%(expressions)s)")
 
 
 class ShiftStart(models.Func):

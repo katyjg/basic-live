@@ -1,4 +1,4 @@
-
+import pytz
 from django.db import models
 from django.utils import timezone
 from django.db.models import Q, F, Value, IntegerField, TextField, Subquery, OuterRef
@@ -42,10 +42,9 @@ class TimedModel(models.Model):
     A model that manages objects that can expire, use the entries manager to work only with active
     objects, that is, those with an expiry date in the future.
     """
-
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    expired = models.DateTimeField(default=timezone.datetime(9999, 12, 31, tzinfo=timezone.utc), db_index=True, editable=False)
+    expired = models.DateTimeField(default=timezone.now().replace(year=9999), db_index=True, editable=False)
 
     objects = TMObjectsManager()
     entries = TMEntriesManager()

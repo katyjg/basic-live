@@ -1,12 +1,11 @@
 import calendar
 from datetime import datetime
 
-from django.db.models import Count, Sum, F, Avg, FloatField, Q
+from django.db.models import Count, Sum, Avg, FloatField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-
-from .models import Publication, Journal, SubjectArea, Deposition, Metric
+from .models import Publication, Deposition
 
 
 class ColorScheme(object):
@@ -60,18 +59,17 @@ def publication_stats(period='year', year=None, tag=None):
     full_metrics = Publication.objects.filter(**filters).aggregate(
         total=Count('id'),
         num_cites=Coalesce(Sum('metrics__citations'), 0),
-        avg_cites=Coalesce(Avg('metrics__citations'), 0),
+        avg_cites=Coalesce(Avg('metrics__citations'), 0, output_field=FloatField()),
         num_mentions=Coalesce(Sum('metrics__mentions'), 0),
-        avg_mentions=Coalesce(Avg('metrics__mentions'), 0),
-        avg_impact=Coalesce(Avg('journal__metrics__impact_factor'), 0),
-        avg_hindex=Coalesce(Avg('journal__metrics__h_index'), 0),
-        avg_sjr=Coalesce(Avg('journal__metrics__sjr_rank'), 0),
-        avg_quartile=Coalesce(Avg('journal__metrics__sjr_quartile'), 0)
+        avg_mentions=Coalesce(Avg('metrics__mentions'), 0, output_field=FloatField()),
+        avg_impact=Coalesce(Avg('journal__metrics__impact_factor'), 0, output_field=FloatField()),
+        avg_hindex=Coalesce(Avg('journal__metrics__h_index'), 0, output_field=FloatField()),
+        avg_sjr=Coalesce(Avg('journal__metrics__sjr_rank'), 0, output_field=FloatField()),
+        avg_quartile=Coalesce(Avg('journal__metrics__sjr_quartile'), 0, output_field=FloatField())
     )
 
-    top_ten_cited = Publication.objects.filter(metrics__isnull=False, **filters).order_by('-metrics__citations')[:10]
-    top_ten_mentioned = Publication.objects.filter(metrics__isnull=False, **filters).order_by('-metrics__mentions')[:10]
-
+    top_ten_cited = Publication.objects.filter(metrics__isnull=False, **filters).order_by('-cites')[:10]
+    top_ten_mentioned = Publication.objects.filter(metrics__isnull=False, **filters).order_by('-mentions')[:10]
 
     metrics = {
         entry[field]: get_entry(field, entry)
@@ -79,13 +77,13 @@ def publication_stats(period='year', year=None, tag=None):
         Publication.objects.filter(**filters).values(field).order_by(field).annotate(
             total=Count('id'),
             num_cites=Coalesce(Sum('metrics__citations'), 0),
-            avg_cites=Coalesce(Avg('metrics__citations'), 0),
+            avg_cites=Coalesce(Avg('metrics__citations'), 0, output_field=FloatField()),
             num_mentions=Coalesce(Sum('metrics__mentions'), 0),
-            avg_mentions=Coalesce(Avg('metrics__mentions'), 0),
-            avg_impact=Coalesce(Avg('journal__metrics__impact_factor'), 0),
-            avg_hindex=Coalesce(Avg('journal__metrics__h_index'), 0),
-            avg_sjr=Coalesce(Avg('journal__metrics__sjr_rank'), 0),
-            avg_quartile=Coalesce(Avg('journal__metrics__sjr_quartile'), 0)
+            avg_mentions=Coalesce(Avg('metrics__mentions'), 0, output_field=FloatField()),
+            avg_impact=Coalesce(Avg('journal__metrics__impact_factor'), 0, output_field=FloatField()),
+            avg_hindex=Coalesce(Avg('journal__metrics__h_index'), 0, output_field=FloatField()),
+            avg_sjr=Coalesce(Avg('journal__metrics__sjr_rank'), 0, output_field=FloatField()),
+            avg_quartile=Coalesce(Avg('journal__metrics__sjr_quartile'), 0, output_field=FloatField())
         )
     }
 
@@ -186,7 +184,7 @@ def publication_stats(period='year', year=None, tag=None):
                     'data': [
                         ['Citations', 'Article']
                     ] + [
-                        [pub.metrics.citations, pub.cite()]
+                        [pub.cites, pub.citation]
                         for pub in top_ten_cited
                     ],
                     'style': 'col-12',
@@ -198,7 +196,7 @@ def publication_stats(period='year', year=None, tag=None):
                     'data': [
                         ['Mentions', 'Article']
                     ] + [
-                        [pub.metrics.mentions, pub.cite()]
+                        [pub.mentions, pub.citation]
                         for pub in top_ten_mentioned
                     ],
                     'style': 'col-12',
@@ -214,7 +212,7 @@ def publication_stats(period='year', year=None, tag=None):
 def h_indices(users):
     h_indices = {}
     for user in users:
-        publications = Publication.objects.filter(metrics__citations__isnull=False, authors__icontains=user.last_name)
+        publications = Publication.objects.filter(metrics__citations__isnull=False, author_names__icontains=user.last_name)
         citations = publications.order_by('-metrics__citations').values_list('metrics__citations', flat=True)
         h_indices[user.username] = len([c for i, c in enumerate(citations) if c >= (i + 1)])
     return h_indices

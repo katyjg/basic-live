@@ -5,11 +5,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-
-try:
-    from django.utils import baseconv
-except ImportError:
-    import baseconv
+from django.core.signing import b62_encode, b62_decode
 
 
 class Signer(object):
@@ -22,13 +18,10 @@ class Signer(object):
         self.max_delta = max_delta
 
     def timestamp(self):
-        return baseconv.base62.encode(int(time.time()))
+        return b62_encode(int(time.time()))
 
     def signature(self, value):
-        signature = self.private_key.sign(
-            '{salt}{sep}{value}'.format(salt=self.salt, value=value, sep=self.sep),
-            hashes.SHA256()
-        )
+        signature = self.private_key.sign(f'{self.salt}{self.sep}{value}'.encode('utf-8'), hashes.SHA256())
         return base64.urlsafe_b64encode(signature)
 
     def sign(self, value):
@@ -42,7 +35,7 @@ class Signer(object):
         timed_value, b64_sig = str(signed_value).rsplit(self.sep, 1)
         value, b62_time = timed_value.rsplit(self.sep, 1)
         signature = base64.urlsafe_b64decode(b64_sig)
-        signature_time = baseconv.base62.decode(b62_time)
+        signature_time = b62_decode(b62_time)
         now = time.time()
         verify_value = '{salt}{sep}{value}'.format(salt=self.salt, value=timed_value, sep=self.sep)
         self.public_key.verify(signature, verify_value.encode('utf-8'), hashes.SHA256())

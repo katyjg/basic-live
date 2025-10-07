@@ -100,3 +100,46 @@ def generic_stats(objlist, fields, date_field=None):
             ]
         }
     return stats
+
+
+def make_table(data, columns: list, rows: list, total_col=True, total_row=True, strings=False):
+    """
+    Converts a list of dictionaries into a list of lists ready for displaying as a table
+    :param data: list of dictionaries (one dictionary per column header)
+    :param columns: list of column headers to display in table, ordered the same as data
+    :param rows: list of row headers to display in table
+    :param total_col: include a total column
+    :param total_row: include a total row
+    :param strings: convert all cells to strings
+    :return: list of lists
+    """
+
+    import pprint
+    pprint.pprint(data)
+
+    headers = [''] + columns
+    table_data = [headers] + [
+        [key] + [item.get(key, 0) for item in data]
+        for key in rows
+    ]
+
+    if total_row:
+        table_data.append(
+            ['Total'] + [
+                sum([row[i] for row in table_data[1:]])
+                for i in range(1, len(headers))
+            ]
+        )
+
+    if total_col:
+        table_data[0].append('All')
+        for row in table_data[1:]:
+            row.append(sum(row[1:]))
+
+    if strings:
+        table_data = [
+            [f'{item}' for item in row]
+            for row in table_data
+        ]
+
+    return table_data

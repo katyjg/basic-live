@@ -10,6 +10,7 @@ from basiclive.core.schedule.models import Beamtime, Downtime, AccessType
 from basiclive.core.lims.models import Project, ProjectType
 from basiclive.core.lims.stats import ColorScheme
 from basiclive.utils.functions import Median
+from basiclive.utils.stats import make_table
 
 HOUR_SECONDS = 3600
 SHIFT = getattr(settings, "HOURS_PER_SHIFT", 8)
@@ -29,27 +30,6 @@ def get_beamtime_periods(field, objlist):
     return sorted(list(set(objlist.values_list(field, flat=True).distinct())))
 
 
-def make_table(data, columns, rows, total_col=True, total_row=True):
-    ''' Converts a list of dictionaries into a list of lists ready for displaying as a table
-        data: list of dictionaries (one dictionary per column header)
-        columns: list of column headers to display in table, ordered the same as data
-        rows: list of row headers to display in table
-    '''
-    header_row = [''] + columns
-    if total_col: header_row += ['All']
-    table_data = [[str(r)] + [0] * (len(header_row) - 1) for r in rows]
-    for row in table_data:
-        for i, val in enumerate(data):
-            row[i+1] = val.get(row[0], 0)
-        if total_col:
-            row[-1] = sum(row[1:-1])
-    if total_row:
-        footer_row = ['Total'] + [0] * (len(header_row) - 1)
-        for i in range(len(footer_row)-1):
-            footer_row[i+1] = sum([d[i+1] for d in table_data])
-    return [header_row] + table_data + [footer_row]
-
-
 def beamtime_stats(objlist, filters):
     period = filters.get('time_scale', 'year')
     annotations = {}
@@ -67,7 +47,9 @@ def beamtime_stats(objlist, filters):
         field = 'start_cycle'
         periods = [1, 2]
         period_names = ['Jan-June', 'July-Dec']
-        annotations['start_cycle'] = Case(When(start__quarter__lte=2, then=Value(1)), default=Value(2), output_field=IntegerField())
+        annotations['start_cycle'] = Case(
+            When(start__quarter__lte=2, then=Value(1)), default=Value(2), output_field=IntegerField()
+        )
     else:
         periods = get_beamtime_periods('start__year', objlist)
         period_names = periods
@@ -129,14 +111,14 @@ def beamtime_access_stats(objlist, field, period, periods, period_names):
         'style': 'row',
         'content': [
             {
-                'title': 'Delivered shifts by {}'.format(period),
+                'title': f'Delivered shifts by {period}',
                 'kind': 'table',
                 'data': access_shift_table,
                 'header': 'column row',
                 'style': 'col-12'
             },
             {
-                'title': 'Delivered shifts by {}'.format(period),
+                'title': f'Delivered shifts by {period}',
                 'kind': 'columnchart',
                 'data': {
                     'x-label': period.title(),
@@ -156,14 +138,14 @@ def beamtime_access_stats(objlist, field, period, periods, period_names):
                 'style': 'col-12 col-sm-6'
             },
             {
-                'title': 'Delivered visits by {}'.format(period),
+                'title': f'Delivered visits by {period}',
                 'kind': 'table',
                 'data': access_visit_table,
                 'header': 'column row',
                 'style': 'col-12'
             },
             {
-                'title': 'Delivered visits by {}'.format(period),
+                'title': f'Delivered visits by {period}',
                 'kind': 'columnchart',
                 'data': {
                     'x-label': period.title(),
@@ -188,7 +170,8 @@ def beamtime_access_stats(objlist, field, period, periods, period_names):
 
 def beamtime_project_stats(objlist, field, period, periods, period_names):
     # Delivered beamtime by project type
-    project_colors = {p.name: ColorScheme.Live8[i+1] for i, p in enumerate(list(ProjectType.objects.order_by('name')))}
+    project_colors = {p.name: ColorScheme.Live8[i + 1] for i, p in
+                      enumerate(list(ProjectType.objects.order_by('name')))}
     project_colors['None'] = ColorScheme.Live8[0]
     project_names = list(project_colors.keys())
 
@@ -210,14 +193,14 @@ def beamtime_project_stats(objlist, field, period, periods, period_names):
         'title': 'Beamtime by Project Type',
         'style': 'row',
         'content': [{
-                'title': 'Delivered shifts by {}'.format(period),
-                'kind': 'table',
-                'data': project_shift_table,
-                'header': 'column row',
-                'style': 'col-12'
-            },
+            'title': f'Delivered shifts by {period}',
+            'kind': 'table',
+            'data': project_shift_table,
+            'header': 'column row',
+            'style': 'col-12'
+        },
             {
-                'title': 'Delivered shifts by {}'.format(period),
+                'title': f'Delivered shifts by {period}',
                 'kind': 'columnchart',
                 'data': {
                     'x-label': period.title(),
@@ -255,17 +238,27 @@ def downtime_stats(objlist, filters, annotations, field, period, periods, period
     downtime_summary = ""
     for scope in Downtime.SCOPE_CHOICES:
         downtime_summary += ' <strong>{}</strong>'.format(scope[1]) + '\n\n'
-        downtime_summary += ' Unspecified ({}) '.format(sum([s['shifts'] for s in downtime_info.filter(
-            scope=scope[0]).filter(comments='').values(field).annotate(shifts=Sum('shifts'))]))
-        downtime_summary += ' \t'.join(['{} ({})'.format(s['comments'], s['shifts']) for s in downtime_info.filter(
-            scope=scope[0]).exclude(comments='').values(field, 'comments').annotate(shifts=Sum('shifts'))]) + '\n\n'
+        downtime_summary += ' Unspecified ({}) '.format(
+            sum(
+                [s['shifts'] for s in downtime_info.filter(
+                    scope=scope[0]
+                ).filter(comments='').values(field).annotate(shifts=Sum('shifts'))]
+            )
+        )
+        downtime_summary += ' \t'.join(
+            ['{} ({})'.format(s['comments'], s['shifts']) for s in downtime_info.filter(
+                scope=scope[0]
+            ).exclude(comments='').values(field, 'comments').annotate(shifts=Sum('shifts'))]
+        ) + '\n\n'
 
     downtime_table_data = []
     for i, per in enumerate(periods):
-        downtime_table_data.append({
-            **{period.title(): period_names[i], 'Cancelled Shifts': cancelled_info.get(per, 0)},
-            **downtime_data[per]
-         })
+        downtime_table_data.append(
+            {
+                **{period.title(): period_names[i], 'Cancelled Shifts': cancelled_info.get(per, 0)},
+                **downtime_data[per]
+            }
+        )
 
     for row in downtime_table_data:
         for k in downtime_scopes:
@@ -304,19 +297,22 @@ def downtime_stats(objlist, filters, annotations, field, period, periods, period
 
 
 def beamtime_community_stats(objlist, field, period, periods, period_names):
-    project_colors = {p.name: ColorScheme.Live8[i + 1] for i, p in enumerate(list(ProjectType.objects.order_by('name')))}
+    project_colors = {p.name: ColorScheme.Live8[i + 1] for i, p in
+                      enumerate(list(ProjectType.objects.order_by('name')))}
     project_colors['None'] = ColorScheme.Live8[0]
     project_names = list(project_colors.keys())
 
     # Distinct Users
-    distinct_users_info = objlist.order_by().exclude(project__isnull=True).values(field, 'project__kind__name').annotate(Count('project', distinct=True))
+    distinct_users_info = objlist.order_by().exclude(project__isnull=True).values(
+        field, 'project__kind__name'
+    ).annotate(Count('project', distinct=True))
     distinct_users = []
     for i, per in enumerate(periods):
         series = {
-            **{ period.title(): period_names[i] },
-            **{ str(d['project__kind__name']): d['project__count']
-                for d in distinct_users_info if d[field] == per
-            }
+            **{period.title(): period_names[i]},
+            **{str(d['project__kind__name']): d['project__count']
+               for d in distinct_users_info if d[field] == per
+               }
         }
         for project_type in project_names - series.keys():
             series[str(project_type)] = 0
@@ -327,7 +323,8 @@ def beamtime_community_stats(objlist, field, period, periods, period_names):
     beamtime_usage_median = objlist.values('project').annotate(beamtime=Sum('shifts')).aggregate(Median('beamtime'))
     beamtime_usage_data = {
         period_names[i]: objlist.filter(**{field: per}).values('project').annotate(beamtime=Sum('shifts')).aggregate(
-                   Median('beamtime'))['beamtime__median']
+            Median('beamtime')
+        )['beamtime__median']
         for i, per in enumerate(periods)
     }
     beamtime_usage_data = {k: v for k, v in beamtime_usage_data.items() if v}
@@ -342,10 +339,14 @@ def beamtime_community_stats(objlist, field, period, periods, period_names):
         hindex = h_indices(Project.objects.filter(pk__in=objlist.values_list('project', flat=True).distinct()))
         hindex_data = []
         for i, per in enumerate(periods):
-            hindex_data.append({
-                period.title(): period_names[i],
-                'H-Index': active_users.get(per) and sum([hindex[u] for u in active_users[per]])/len(active_users[per]) or 0
-            })
+            hindex_data.append(
+                {
+                    period.title(): period_names[i],
+                    'H-Index': active_users.get(per) and sum([hindex[u] for u in active_users[per]]) / len(
+                        active_users[per]
+                    ) or 0
+                }
+            )
 
     return {
         'title': 'User Community',
@@ -365,13 +366,17 @@ def beamtime_community_stats(objlist, field, period, periods, period_names):
                     'x-label': period.title(),
                     'stack': [project_names],
                     'data': [
-                        {**data,
-                         **{"Median of Beamtime Usage": beamtime_usage_data.get(data[period.title()], 0)}} for data in distinct_users
+                        {
+                            **data,
+                            **{"Median of Beamtime Usage": beamtime_usage_data.get(data[period.title()], 0)}
+                        } for data in distinct_users
                     ],
                     'colors': project_colors,
                     'line': "Median of Beamtime Usage",
                 },
-                'notes': 'Overall Median of Beamtime Usage: {} shifts'.format(beamtime_usage_median['beamtime__median']),
+                'notes': 'Overall Median of Beamtime Usage: {} shifts'.format(
+                    beamtime_usage_median['beamtime__median']
+                ),
                 'style': 'col-12 col-md-6'
             },
             PUBLICATIONS and {

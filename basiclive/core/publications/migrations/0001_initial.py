@@ -4,8 +4,9 @@ import datetime
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-from django.utils.timezone import utc
 import model_utils.fields
+from django.utils import timezone
+
 import basiclive.utils.fields
 
 
@@ -134,7 +135,7 @@ class Migration(migrations.Migration):
             name='Metrics',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('expired', models.DateTimeField(db_index=True, default=datetime.datetime(9999, 12, 31, 0, 0, tzinfo=utc), editable=False)),
+                ('expired', models.DateTimeField(db_index=True, default=timezone.now().replace(year=9999), editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('effective', models.DateTimeField()),
@@ -152,7 +153,7 @@ class Migration(migrations.Migration):
             name='JournalProfile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('expired', models.DateTimeField(db_index=True, default=datetime.datetime(9999, 12, 31, 0, 0, tzinfo=utc), editable=False)),
+                ('expired', models.DateTimeField(db_index=True, default=timezone.now().replace(year=9999), editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('effective', models.DateTimeField()),
@@ -191,7 +192,7 @@ class Migration(migrations.Migration):
             name='Affiliation',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('expired', models.DateTimeField(db_index=True, default=datetime.datetime(9999, 12, 31, 0, 0, tzinfo=utc), editable=False)),
+                ('expired', models.DateTimeField(db_index=True, default=timezone.now().replace(year=9999), editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('effective', models.DateTimeField()),

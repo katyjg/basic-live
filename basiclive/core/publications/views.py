@@ -1,3 +1,4 @@
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView, list
 
 from itemlist.views import ItemListView
@@ -16,15 +17,20 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
         filters.QuarterFilterFactory('published'),
         'tags'
     ]
-    list_columns = ['id', 'published', 'cite', 'metrics__citations', 'metrics__mentions', 'journal__metrics__impact_factor']
-    list_search = ['title', 'main_title', 'authors', 'code', 'comments', 'journal__title', 'funders__name']
+    list_columns = ['published', 'citation', 'cites', 'mentions', 'impact_factor']
+    list_search = ['title', 'main_title', 'author_names', 'code', 'comments', 'journal__title', 'funders__name']
     list_headers = {
-        'journal__metrics__impact_factor': "Journal Impact Factor",
+        'impact_factor': mark_safe("<span class='no-wrap'>Impact Factor</span>"),
         'metrics__mentions': "Mentions",
         'metrics__citations': "Citations",
     }
+    list_transforms = {
+        'citation': lambda x, y: mark_safe(x),
+        'published': lambda x, y: x.strftime('%Y/%b')
+    }
     list_styles = {
-        'cite': 'w-75',
+        'citation': 'w-70',
+
     }
     ordering = ['-published']
     paginate_by = 25
@@ -71,7 +77,7 @@ class PDBEntryText(list.ListView):
 
 
 class SubjectAreasList(AdminRequiredMixin, ItemListView):
-    template_name = 'publications/templates/publications/list.html'
+    template_name = 'publications/list.html'
     model = models.SubjectArea
     list_filters = ['created', 'modified']
     list_columns = ['id', 'name', 'code', 'parent__name', ]
@@ -82,7 +88,7 @@ class SubjectAreasList(AdminRequiredMixin, ItemListView):
 
 
 class JournalList(AdminRequiredMixin, ItemListView):
-    template_name = 'publications/templates/publications/list.html'
+    template_name = 'publications/list.html'
     model = models.Journal
     list_filters = ['created', 'modified']
     list_columns = ['id', 'title', 'short_name', 'publisher', 'codes', 'metrics__impact_factor']
@@ -92,7 +98,7 @@ class JournalList(AdminRequiredMixin, ItemListView):
 
 
 class Statistics(AdminRequiredMixin, TemplateView):
-    template_name = "publications/templates/publications/statistics.html"
+    template_name = "publications/statistics.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,6 +115,6 @@ class Statistics(AdminRequiredMixin, TemplateView):
 
     def page_title(self):
         if self.kwargs.get('year'):
-            return '{} Publication Metrics'.format(self.kwargs['year'])
+            return f'{self.kwargs["year"]} Publication Metrics'
         else:
             return 'Publication Metrics'
