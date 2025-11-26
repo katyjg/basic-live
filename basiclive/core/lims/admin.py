@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from basiclive.core.lims import models
 
 
@@ -11,8 +12,10 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('name', 'contact_person', 'email')
     search_fields = ('name', 'contact_person')
 
+
 class LocationAdmin(admin.ModelAdmin):
     list_filter = ('kind',)
+
 
 admin.site.register(models.Guide)
 admin.site.register(models.Beamline)

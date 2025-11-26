@@ -1,18 +1,18 @@
 import re
-import fastjsonschema
-from collections import OrderedDict
 
+import fastjsonschema
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Field, Layout
-from django.utils.translation import gettext as _
 from django import forms
 from django.conf import settings
 from django.db.models import Q
 from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
 
-from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, ContainerType
 from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
+from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, \
+    ContainerType
 
 
 class BodyHelper(FormHelper):
@@ -69,7 +69,9 @@ class ProjectForm(forms.ModelForm):
                 Div('first_name', css_class='col-6'),
                 Div('last_name', css_class='col-6'),
                 Div('email', css_class='col-{}'.format(self.user.is_superuser and '6' or '12')),
-                self.user.is_superuser and Div(Field('designation', css_class='select'), css_class='col-6') or Div('designation'),
+                self.user.is_superuser and Div(Field('designation', css_class='select'), css_class='col-6') or Div(
+                    'designation'
+                ),
                 css_class='form-row'
             ),
             Div(
@@ -208,7 +210,9 @@ class RequestTypeForm(forms.ModelForm):
             self.repeated_data['parameter_set'] = [param for param in parameters]
             self.repeated_data['kind_set'] = [spec[param]['type'] for param in parameters]
             self.repeated_data['label_set'] = [spec[param]['label'] for param in parameters]
-            self.repeated_data['choices_set'] = [spec[param].get('choices') and ', '.join(c[0] for c in spec[param]['choices']) or '' for param in parameters]
+            self.repeated_data['choices_set'] = [
+                spec[param].get('choices') and ', '.join(c[0] for c in spec[param]['choices']) or '' for param in
+                parameters]
             self.repeated_data['required_set'] = [str(spec[param]['required']) for param in parameters]
 
         self.body = BodyHelper(self)
@@ -239,7 +243,9 @@ class RequestTypeForm(forms.ModelForm):
                             Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-2"),
                             Div(Field('label'), css_class="col-3"),
                             Div(Field('choices'), css_class="col-3"),
-                            Div(Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-1"),
+                            Div(
+                                Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-1"
+                            ),
                             Div(
                                 Div(
                                     HTML('<label>&nbsp;</label>'),
@@ -325,7 +331,6 @@ WIDTH_CHOICES = (
 
 
 class RequestTypeLayoutForm(forms.ModelForm):
-
     class Meta:
         model = RequestType
         fields = ('layout',)
@@ -408,18 +413,24 @@ class RequestTypeLayoutForm(forms.ModelForm):
 
 
 class RequestForm(forms.ModelForm):
-    template = forms.ModelChoiceField(label=_("Copy settings from past request"), queryset=Request.objects.all(),
-                                      required=False)
-    request = forms.ModelChoiceField(label=_("Use existing request"), queryset=Request.objects.all(),
-                                     required=False)
+    template = forms.ModelChoiceField(
+        label=_("Copy settings from past request"), queryset=Request.objects.all(),
+        required=False
+    )
+    request = forms.ModelChoiceField(
+        label=_("Use existing request"), queryset=Request.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Request
         fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
-        widgets = {'project': disabled_widget,
-                   'groups': forms.MultipleHiddenInput,
-                   'samples': forms.MultipleHiddenInput,
-                   'comments': forms.Textarea(attrs={'rows': "2"})}
+        widgets = {
+            'project': disabled_widget,
+            'groups': forms.MultipleHiddenInput,
+            'samples': forms.MultipleHiddenInput,
+            'comments': forms.Textarea(attrs={'rows': "2"})
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -433,7 +444,8 @@ class RequestForm(forms.ModelForm):
 
         shipment = None if not group else group.shipment
         requests = self.initial['project'].requests.exclude(groups=group).filter(
-            Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment))
+            Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment)
+        )
         old_requests = Request.objects.filter(project=self.initial['project'])
 
         is_requests = shipment and requests.exists()
@@ -449,12 +461,20 @@ class RequestForm(forms.ModelForm):
 
         autofill = Div(
             is_requests and Div(
-                Field('request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_template and "col-5" or "col-12")) or Div(),
+                Field(
+                    'request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
+                    css_class='select'
+                ),
+                css_class="{}".format(is_template and "col-5" or "col-12")
+            ) or Div(),
             is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
             is_template and Div(
-                Field('template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'), css_class='select'),
-                css_class="{}".format(is_requests and "col-5" or "col-12")) or Div(),
+                Field(
+                    'template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
+                    css_class='select'
+                ),
+                css_class="{}".format(is_requests and "col-5" or "col-12")
+            ) or Div(),
             css_class='row'
         )
 
@@ -484,10 +504,12 @@ class RequestParameterForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = ('kind', 'parameters')
-        widgets = {'kind': disabled_widget,
-                   'template': disabled_widget,
-                   'request': disabled_widget,
-                   'parameters': forms.HiddenInput}
+        widgets = {
+            'kind': disabled_widget,
+            'template': disabled_widget,
+            'request': disabled_widget,
+            'parameters': forms.HiddenInput
+        }
 
     def __init__(self, *args, **kwargs):
         kind_pk = kwargs.pop('kind', None)
@@ -503,7 +525,9 @@ class RequestParameterForm(forms.ModelForm):
 
         parameters = Div()
         request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
-        template = self.initial.get('template') and Request.objects.filter(pk=self.initial.get('template')).first() or None
+        template = self.initial.get('template') and Request.objects.filter(
+            pk=self.initial.get('template')
+        ).first() or None
 
         # set the sample, some templates will need it
         self.sample = None if not self.initial.get('samples') else self.initial.get('samples')[0]
@@ -552,7 +576,7 @@ class RequestParameterForm(forms.ModelForm):
                     elif field_type == 'boolean':
                         self.fields[param] = forms.BooleanField(**info)
                     if choices:
-                        self.fields[param].widget=forms.Select(choices=choices)
+                        self.fields[param].widget = forms.Select(choices=choices)
                     if request:
                         self.fields[param].widget.attrs['readonly'] = True
                     if style == 'hidden':
@@ -589,10 +613,9 @@ class RequestParameterForm(forms.ModelForm):
 
 
 class RequestAdminForm(forms.ModelForm):
-
     class Meta:
         model = Request
-        fields = ('staff_comments','status')
+        fields = ('staff_comments', 'status')
         widgets = {
             'staff_comments': forms.Textarea(attrs={'rows': "4"}),
             'status': forms.HiddenInput,
@@ -607,9 +630,13 @@ class RequestAdminForm(forms.ModelForm):
         self.body.title = u"Update Request"
         self.body.form_action = reverse_lazy('request-admin-edit', kwargs={'pk': pk})
         if self.instance.status != self.instance.STATUS_CHOICES.COMPLETE:
-            mark_btn = StrictButton("Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success')
+            mark_btn = StrictButton(
+                "Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success'
+            )
         else:
-            mark_btn = StrictButton("Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning')
+            mark_btn = StrictButton(
+                "Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning'
+            )
 
         self.body.layout = Layout(
             Div(
@@ -666,8 +693,10 @@ class ShipmentForm(forms.ModelForm):
     class Meta:
         model = Shipment
         fields = ('project', 'name', 'comments',)
-        widgets = {'project': disabled_widget,
-                   'comments': forms.Textarea(attrs={'rows': "2"})}
+        widgets = {
+            'project': disabled_widget,
+            'comments': forms.Textarea(attrs={'rows': "2"})
+        }
 
 
 class ShipmentCommentsForm(forms.ModelForm):
@@ -714,7 +743,6 @@ class AutomounterForm(forms.ModelForm):
 
 
 class SampleForm(forms.ModelForm):
-
     class Meta:
         model = Sample
         fields = ('name', 'barcode', 'comments', 'image')
@@ -759,10 +787,9 @@ class SampleForm(forms.ModelForm):
 
 
 class SampleAdminForm(forms.ModelForm):
-
     class Meta:
         model = Sample
-        fields = ('staff_comments','collect_status')
+        fields = ('staff_comments', 'collect_status')
         widgets = {
             'staff_comments': forms.Textarea(attrs={'rows': "4"}),
             'collect_status': forms.HiddenInput,
@@ -777,9 +804,13 @@ class SampleAdminForm(forms.ModelForm):
         self.body.title = u"Update Sample"
         self.body.form_action = reverse_lazy('sample-admin-edit', kwargs={'pk': pk})
         if not self.instance.collect_status:
-            mark_btn = StrictButton("Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success')
+            mark_btn = StrictButton(
+                "Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success'
+            )
         else:
-            mark_btn = StrictButton("Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning')
+            mark_btn = StrictButton(
+                "Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning'
+            )
 
         self.body.layout = Layout(
             Div(
@@ -804,9 +835,11 @@ class SampleAdminForm(forms.ModelForm):
 
 
 class ShipmentSendForm(forms.ModelForm):
-    components = forms.ModelMultipleChoiceField(label='Items included in shipment',
-                                                queryset=ComponentType.objects.all(),
-                                                required=False)
+    components = forms.ModelMultipleChoiceField(
+        label='Items included in shipment',
+        queryset=ComponentType.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Shipment
@@ -856,7 +889,8 @@ class ShipmentReturnForm(forms.ModelForm):
         super(ShipmentReturnForm, self).__init__(*args, **kwargs)
         if self.instance.containers.filter(parent__isnull=False):
             self.fields['loaded'].label += ": {}".format(
-                ','.join(self.instance.containers.filter(parent__isnull=False).values_list('name', flat=True)))
+                ','.join(self.instance.containers.filter(parent__isnull=False).values_list('name', flat=True))
+            )
         else:
             self.fields['loaded'].initial = True
             self.fields['loaded'].widget = forms.HiddenInput()
@@ -882,9 +916,11 @@ class ShipmentReturnForm(forms.ModelForm):
 
 
 class ShipmentRecallSendForm(forms.ModelForm):
-    components = forms.ModelMultipleChoiceField(label='Items included in shipment',
-                                                queryset=ComponentType.objects.all(),
-                                                required=False)
+    components = forms.ModelMultipleChoiceField(
+        label='Items included in shipment',
+        queryset=ComponentType.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Shipment
@@ -1095,7 +1131,8 @@ class ContainerLoadForm(forms.ModelForm):
         else:
             if self.cleaned_data['location']:
                 loc_filled = self.cleaned_data['parent'].children.exclude(pk=self.instance.pk).filter(
-                    location=self.cleaned_data['location']).exists()
+                    location=self.cleaned_data['location']
+                ).exists()
                 if loc_filled:
                     self.add_error(None, forms.ValidationError("Container is already loaded in that location"))
 
@@ -1118,9 +1155,13 @@ class EmptyContainers(forms.ModelForm):
         self.body.title = u"Remove containers"
         self.body.form_action = form_action
         self.body.layout = Layout(
-            Div(HTML(
-                """Any containers owned by <strong>{}</strong> will be removed from the automounter.""".format(
-                    self.instance.username.upper()))),
+            Div(
+                HTML(
+                    """Any containers owned by <strong>{}</strong> will be removed from the automounter.""".format(
+                        self.instance.username.upper()
+                    )
+                )
+            ),
             'parent',
         )
         self.footer.layout = Layout(
@@ -1131,7 +1172,8 @@ class EmptyContainers(forms.ModelForm):
 class LocationLoadForm(forms.ModelForm):
     child = forms.ModelChoiceField(
         label="Container",
-        queryset=Container.objects.filter(status=Container.STATES.ON_SITE))
+        queryset=Container.objects.filter(status=Container.STATES.ON_SITE)
+    )
     location = forms.ModelChoiceField(queryset=ContainerLocation.objects.all())
 
     class Meta:
@@ -1159,7 +1201,8 @@ class LocationLoadForm(forms.ModelForm):
                     css_class="col-12"
                 ),
                 css_class="form-row"
-            ))
+            )
+        )
         self.footer.layout = Layout(
             StrictButton('Load', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
         )
@@ -1249,8 +1292,10 @@ class ShipmentContainerForm(forms.ModelForm):
             self.repeated_data['id_set'] = [c.pk for c in self.initial['shipment'].containers.all()]
             self.repeated_data['kind_set'] = [c.kind.pk for c in self.initial['shipment'].containers.all()]
             self.fields['kind'].widget.attrs['readonly'] = True
-            self.body.form_action = reverse_lazy('shipment-add-containers',
-                                                 kwargs={'pk': self.initial['shipment'].pk})
+            self.body.form_action = reverse_lazy(
+                'shipment-add-containers',
+                kwargs={'pk': self.initial['shipment'].pk}
+            )
             self.body.title = 'Add Containers to Shipment'
             self.footer.layout.append(
                 StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
@@ -1267,7 +1312,7 @@ class ShipmentContainerForm(forms.ModelForm):
                     Div(
                         Div(
                             Div(Field('name'), css_class="col-5"),
-                            Div(Field('kind', css_class="select-alt",  data_repeat_enable="true"), css_class="col-5"),
+                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-5"),
                             Div(
                                 Div(
                                     HTML("<label>&nbsp;</label>"),
@@ -1374,13 +1419,15 @@ class ShipmentGroupForm(forms.ModelForm):
             self.body.form_action = reverse_lazy('shipment-add-groups', kwargs={'pk': self.initial['shipment'].pk})
         else:
             self.footer.layout.append(
-                StrictButton('Fill Containers', title='Auto-create one group per container (filled with samples) ignoring the groups defined above',
-                             type='submit', name="submit", value='Fill', css_class='mr-auto btn btn-warning'),
+                StrictButton(
+                    'Fill Containers',
+                    title='Auto-create one group per container (filled with samples) ignoring the groups defined above',
+                    type='submit', name="submit", value='Fill', css_class='mr-auto btn btn-warning'
+                ),
             )
             self.footer.layout.append(
                 StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
             )
-
 
         self.body.layout = Layout(
             self.help_text(),
@@ -1478,7 +1525,6 @@ class ShipmentGroupForm(forms.ModelForm):
 
 
 class SSHKeyForm(forms.ModelForm):
-
     class Meta:
         model = SSHKey
         fields = ['name', 'key', 'project']
@@ -1516,7 +1562,6 @@ class SSHKeyForm(forms.ModelForm):
 
 
 class GuideForm(forms.ModelForm):
-
     class Meta:
         model = Guide
         fields = ['title', 'description', 'kind', 'staff_only', 'modal', 'attachment', 'url', 'priority']
@@ -1547,7 +1592,9 @@ class GuideForm(forms.ModelForm):
             ),
             Div(
                 Div('kind', css_class="col-6"),
-                Div('url', css_class="col-6", title="Resource examples:\n'youtube:<vid>' or \n'flickr:<album>:<photo>'"),
+                Div(
+                    'url', css_class="col-6", title="Resource examples:\n'youtube:<vid>' or \n'flickr:<album>:<photo>'"
+                ),
                 css_class="row"
             ),
             Div(

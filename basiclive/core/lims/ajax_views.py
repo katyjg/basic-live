@@ -1,19 +1,19 @@
-import re
 import json
-
-from operator import itemgetter
+import re
 from collections import defaultdict
+from operator import itemgetter
 
 from django import http
 from django.db import transaction
 from django.http import JsonResponse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
 from django.views.generic import View
 
 from basiclive.utils.mixins import LoginRequiredMixin, AdminRequiredMixin
 from . import models
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class FetchReport(LoginRequiredMixin, View):
@@ -162,7 +162,8 @@ class BulkSampleEdit(LoginRequiredMixin, View):
                 errors.append('{}: Names cannot contain any spaces or special characters'.format(name.encode('utf-8')))
 
         names = list(
-            models.Sample.objects.filter(group__pk=group).exclude(pk__in=data.keys()).values_list('name', flat=True))
+            models.Sample.objects.filter(group__pk=group).exclude(pk__in=data.keys()).values_list('name', flat=True)
+        )
         names.extend([v['name'] for v in data.values()])
 
         duplicates = set([name for name in names if names.count(name) > 1])
@@ -235,7 +236,8 @@ class CreateShipmentSamples(LoginRequiredMixin, View):
                     {
                         'project': shipment.project,
                         'container_id': sample['container'],
-                        'location_id': sample.get('location') and loc_info[sample['container']][str(sample['location'])] or None
+                        'location_id': sample.get('location') and loc_info[sample['container']][
+                            str(sample['location'])] or None
                     }
                 )
 
@@ -289,7 +291,7 @@ class SaveContainerSamples(LoginRequiredMixin, View):
                     models.Sample.objects.filter(project=container.project, pk=sample.get('sample')).update(**info)
                 elif sample.get('name'):  # create new entry
                     models.Sample.objects.create(project=container.project, **info)
-                else:   # delete existing entry
+                else:  # delete existing entry
                     models.Sample.objects.filter(
                         project=container.project, location_id=sample['location'], container=container
                     ).delete()
