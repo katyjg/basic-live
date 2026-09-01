@@ -575,7 +575,6 @@ class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
     list_search = ['name', 'spec', 'description']
     link_field = 'name'
     link_url = 'requesttype-detail'
-    ordering = ['name']
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
