@@ -155,21 +155,30 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
             report_count=Count('datasets__reports', distinct=True)).with_duration()
 
         access_info = []
-        connections = []
-        sessions = []
-        active_access = LIMS_USE_ACL and Access.objects.filter(status__iexact=Access.STATES.CONNECTED) or []
+        connections = Access.objects.none()
+        sessions = models.Session.objects.none()
+        active_access = Access.objects.none() if not LIMS_USE_ACL else Access.objects.filter(status__iexact=Access.STATES.CONNECTED)
         if LIMS_USE_SCHEDULE:
-            context.update(access_types=AccessType.objects.all(),
-                           support=BeamlineSupport.objects.filter(date=timezone.localtime().date()).first())
+            context.update(
+                access_types=AccessType.objects.all(),
+                support=BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+            )
             # Find out who is scheduled to use the beamline
             for bt in Beamtime.objects.filter(start__lte=now, end__gte=now).with_duration():
-                bt_sessions = models.Session.objects.filter(project=bt.project, beamline=bt.beamline).filter(
-                    Q(stretches__end__isnull=True) | Q(stretches__end__gte=bt.start)).distinct()
-                sessions += bt_sessions
+                bt_sessions = models.Session.objects.filter(
+                    project=bt.project, beamline=bt.beamline
+                ).filter(
+                    Q(stretches__end__isnull=True) | Q(stretches__end__gte=bt.start), distinct=True
+                )
+                sessions |= bt_sessions
                 # Check if the scheduled project is currently connected
-                bt_conns = LIMS_USE_ACL and active_access.filter(
-                    user=bt.project, userlist__pk__in=bt.beamline.access_lists.values_list('pk', flat=True)) or []
-                connections += bt_conns
+                if LIMS_USE_SCHEDULE and LIMS_USE_ACL:
+                    bt_conns = LIMS_USE_ACL and active_access.filter(
+                        user=bt.project, userlist__pk__in=bt.beamline.access_lists.values_list('pk', flat=True)
+                    )
+                    connections |= bt_conns
+                else:
+                    bt_conns = access_access.none()
 
                 access_info.append({
                     'user': bt.project,
@@ -181,15 +190,21 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
 
         # Check who has an active session
         for session in active_sessions.exclude(pk__in=[s.pk for s in sessions]):
-            ss_conns = LIMS_USE_ACL and active_access.filter(
-                user=session.project, userlist__pk__in=session.beamline.access_lists.values_list('pk', flat=True)) or []
-            connections += ss_conns
+            if LIMS_USE_ACL:
+                ss_conns = active_access.filter(
+                    user=session.project, userlist__pk__in=session.beamline.access_lists.values_list('pk', flat=True)
+                )
+            else:
+                ss_conns = active_access.none()
+
+            connections |= ss_conns
             access_info.append({
                 'user': session.project,
                 'beamline': session.beamline.acronym,
                 'sessions': [session],
                 'connections': ss_conns
             })
+
         # Users remotely connected, but not scheduled and without an active session
         if LIMS_USE_ACL:
             for user in active_access.exclude(pk__in=[c.pk for c in connections]).values_list('user', flat=True).distinct():
@@ -204,10 +219,14 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
 
         for i, conn in enumerate(access_info):
             access_info[i]['shipments'] = shipments.filter(project=conn['user']).count()
-            access_info[i]['connections'] = LIMS_USE_ACL and {
-                access.name: access_info[i]['connections'].filter(userlist=access)
-                for access in AccessList.objects.filter(pk__in=access_info[i]['connections'].values_list('userlist__pk', flat=True)).distinct()
-            } or {}
+            if LIMS_USE_ACL:
+                connections = Access.objects.filter(pk__in=access_info[i]['connections'])
+                access_info[i]['connections'] = ({
+                    access.name: access_info[i]['connections'].filter(userlist=access)
+                    for access in AccessList.objects.filter(
+                        pk__in=access_info[i]['connections'].values_list('userlist__pk', flat=True)
+                    ).distinct()
+                })
 
         context.update(connections=access_info, adaptors=adaptors, shipments=shipments, beamlines=beamlines)
         return context

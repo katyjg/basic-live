@@ -184,9 +184,10 @@ class RequestTypeForm(forms.ModelForm):
 
     class Meta:
         model = RequestType
-        fields = ('name', 'description', 'spec', 'edit_template', 'view_template')
+        fields = ('name', 'description', 'spec', 'scope', 'edit_template', 'view_template')
         widgets = {
             'description': forms.Textarea(attrs={'rows': "1"}),
+            'scope': forms.Select(attrs={'class': 'select'}, choices=RequestType.SCOPES),
             'spec': disabled_widget
         }
 
@@ -230,9 +231,10 @@ class RequestTypeForm(forms.ModelForm):
             Div(
                 'spec',
                 Div('name', css_class='col-4'),
+                Div('scope', css_class='col-4'),
                 Div('edit_template', css_class='col-4'),
+                Div('description', css_class='col-8'),
                 Div('view_template', css_class='col-4'),
-                Div('description', css_class='col-12'),
                 css_class="form-row"
             ),
             Div(
@@ -431,8 +433,8 @@ class RequestForm(forms.ModelForm):
         fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
         widgets = {
             'project': disabled_widget,
-            'groups': forms.MultipleHiddenInput,
-            'samples': forms.MultipleHiddenInput,
+            'groups': forms.HiddenInput,
+            'samples': forms.HiddenInput,
             'comments': forms.Textarea(attrs={'rows': "2"})
         }
 
@@ -447,12 +449,20 @@ class RequestForm(forms.ModelForm):
         else:
             self.body.title = "Create Request"
             self.body.form_action = reverse_lazy('request-new')
-        group = self.initial['groups'].first()
-        self.sample = self.initial['samples'].first()
-        group = self.sample.group if self.sample and not group else None
+
+        group = sample = None
+        if self.initial['groups']:
+            group = self.initial['groups'][0]
+        if self.initial['samples']:
+            sample = self.initial['samples'][0]
+        self.sample = sample
+        if self.sample and not group:
+            group = self.sample.group
 
         shipment = None if not group else group.shipment
-        requests = self.initial['project'].requests.exclude(groups=group).filter(
+        requests = Request.objects.filter(
+            project=self.initial['project']
+        ).exclude(groups=group).filter(
             Q(groups__shipment=shipment) | Q(samples__group__shipment=shipment)
         )
         old_requests = Request.objects.filter(project=self.initial['project'])
@@ -487,11 +497,14 @@ class RequestForm(forms.ModelForm):
             css_class='row'
         )
 
-        related = pk and Div(
-            Div(Field('groups', css_class='select'), css_class='col-6'),
-            Div(Field('samples', css_class='select'), css_class='col-6'),
-            css_class='row'
-        ) or Div('groups', 'samples')
+        if pk:
+            related =  Div(
+                Div(Field('groups', css_class='select'), css_class='col-6'),
+                Div(Field('samples', css_class='select'), css_class='col-6'),
+                css_class='row'
+            )
+        else:
+            related = Div('groups', 'samples')
 
         self.body.layout = Layout(
             'project',
@@ -512,9 +525,11 @@ class RequestParameterForm(forms.ModelForm):
 
     class Meta:
         model = Request
-        fields = ('kind', 'parameters')
+        fields = ('kind', 'name', 'comments', 'parameters')
         widgets = {
             'kind': disabled_widget,
+            'name': disabled_widget,
+            'comments': disabled_widget,
             'template': disabled_widget,
             'request': disabled_widget,
             'parameters': forms.HiddenInput

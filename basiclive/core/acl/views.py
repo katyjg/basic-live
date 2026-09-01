@@ -33,7 +33,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     link_attr = 'data-form-link'
     ordering = ['name']
     template_name = "lims/list.html"
-    page_title = 'Remote Access'
+    page_title = 'Access Endpoints'
 
     def get_list_columns(self):
         if settings.LIMS_USE_SCHEDULE and 'current_users' in self.list_columns:
@@ -46,7 +46,7 @@ class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
     template_name = "modal/form.html"
     model = models.AccessList
     success_url = reverse_lazy('access-list')
-    success_message = "Remote access list has been updated."
+    success_message = "Access Control List has been updated."
     allowed_roles = ['owner', 'admin']
     admin_roles = ['admin']
 
@@ -63,7 +63,7 @@ class RemoteConnectionList(AdminRequiredMixin, ItemListView):
     template_name = "lims/list.html"
     link_url = 'access-connection-detail'
     link_attr = 'data-link'
-    page_title = 'Remote Connections'
+    page_title = 'Access Connections'
     plot_url = reverse_lazy("connection-stats")
     paginate_by = 100
 
