@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         apps = django_apps.get_app_configs()
-        assets_root = Path(settings.STATIC_ROOT) / 'assets'
+        assets_root = settings.ASSETS_ROOT
         for app in apps:
             asset_path = None
             # read spec file. Prefer 'assets.json' and fallback to 'vendor.json'
