@@ -322,11 +322,15 @@ class RequestTypeForm(forms.ModelForm):
 
 WIDTH_CHOICES = (
     (12, 'Full'),
+    (10, 'Five Sixths'),
+    (9, 'Three Quarters'),
+    (8, 'Two Thirds'),
     (6, 'Half'),
     (4, 'Third'),
     (3, 'Quarter'),
     (2, 'Sixth'),
-    (0, 'Hidden')
+    (0, 'Hidden'),
+
 )
 
 
@@ -347,12 +351,12 @@ class RequestTypeLayoutForm(forms.ModelForm):
         for f, style in field_styles.items():
             self.fields[f] = forms.CharField(initial=f)
             self.fields[f].widget.attrs['readonly'] = True
-            self.fields["{}_width".format(f)] = forms.CharField(initial=style, label=_('Display Width'))
-            self.fields["{}_width".format(f)].widget = forms.Select(choices=WIDTH_CHOICES)
+            self.fields[f"{f}_width"] = forms.CharField(initial=style, label=_('Display Width'))
+            self.fields[f"{f}_width"].widget = forms.Select(choices=WIDTH_CHOICES)
             parameter_list.append(
                 Div(
                     Div(Field(f), css_class="col-5"),
-                    Div(Field("{}_width".format(f), css_class="select"), css_class="col-5"),
+                    Div(Field(f"{f}_width", css_class="select"), css_class="col-5"),
                     Div(
                         Div(
                             HTML('<label>&nbsp;</label>'),
@@ -403,7 +407,7 @@ class RequestTypeLayoutForm(forms.ModelForm):
         layout = []
         row = []
         for f in ordered_fields:
-            width = int(self.data.get("{}_width".format(f)))
+            width = int(self.data.get(f"{f}_width"))
             if (sum([r[1] for r in row]) + width) > 12:
                 layout.append(row)
                 row = []
@@ -437,7 +441,12 @@ class RequestForm(forms.ModelForm):
         pk = self.instance.pk
         self.body = BodyHelper(self)
         self.footer = FooterHelper(self)
-
+        if pk is not None:
+            self.body.title = "Edit Request"
+            self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
+        else:
+            self.body.title = "Create Request"
+            self.body.form_action = reverse_lazy('request-new')
         group = self.initial['groups'].first()
         self.sample = self.initial['samples'].first()
         group = self.sample.group if self.sample and not group else None

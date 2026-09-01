@@ -25,6 +25,7 @@ urlpatterns = [
     path('requesttype/<int:pk>/', views.RequestTypeDetail.as_view(), name='requesttype-detail'),
     path('requesttype/new/', views.RequestTypeCreate.as_view(), name='new-requesttype'),
     path('requesttype/<int:pk>/edit/', views.RequestTypeEdit.as_view(), name='requesttype-edit'),
+    path('requesttype/<int:pk>/delete/', views.RequestTypeEdit.as_view(), name='requesttype-delete'),
     path('requesttype/<int:pk>/layout/', views.RequestTypeLayout.as_view(), name='requesttype-layout'),
 
     path('requests/', views.RequestList.as_view(), name='request-list'),

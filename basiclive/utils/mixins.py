@@ -19,6 +19,15 @@ CACHE_PREFIX = getattr(settings, 'PDF_CACHE_PREFIX', 'render-pdf')
 CACHE_TIMEOUT = getattr(settings, 'PDF_CACHE_TIMEOUT', 30), # 86400)  # 1 day
 
 
+def is_ajax(request: HttpRequest) -> bool:
+    """
+    https://stackoverflow.com/questions/63629935
+    """
+    return (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or request.accepts("application/json")
+    )
+
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
     Mixin to allow access through a view only if the user is a superuser.
@@ -40,7 +49,7 @@ class AsyncFormMixin(object):
         # it might do some processing (in the case of CreateView, it will
         # call form.save() for example).
         response = super().form_valid(form)
-        if self.request.is_ajax():
+        if is_ajax(self.request):
             data = {
                 'modal': self.modal_response,
                 'url': self.get_success_url(),
