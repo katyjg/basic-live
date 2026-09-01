@@ -120,5 +120,6 @@ local/*
 !local/__init__.py
 !local/settings.py.example
 vendor/
+assets/
 .idea/copilot.*
 /docs/_build/
