@@ -61,7 +61,7 @@ class RemoteConnectionList(AdminRequiredMixin, ItemListView):
     list_search = ['user__username', 'name', 'status', 'userlist__name', 'created']
     ordering = ['-created']
     template_name = "lims/list.html"
-    link_url = 'connection-detail'
+    link_url = 'access-connection-detail'
     link_attr = 'data-link'
     page_title = 'Remote Connections'
     plot_url = reverse_lazy("connection-stats")
@@ -71,7 +71,7 @@ class RemoteConnectionList(AdminRequiredMixin, ItemListView):
 class RemoteConnectionStats(PlotViewMixin, RemoteConnectionList):
     plot_fields = {'user__kind__name': {}, 'userlist__name': {}, 'status': {}}
     date_field = 'created'
-    list_url = reverse_lazy("connection-list")
+    list_url = reverse_lazy("access-connections")
 
 
 class RemoteConnectionDetail(AdminRequiredMixin, detail.DetailView):

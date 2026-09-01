@@ -1,6 +1,7 @@
 <div class="mini-profile">
+    <strong>{{ user.contact_person|upper }}</strong><br/>
     {{ user.organisation|upper }}<br/>
-    ATTN: <strong>{{ user.contact_person|upper }}</strong>{% if user.department %} / {{ user.department|upper }}{% endif %}<br/>
+    {% if user.department %}{{ user.department }} <br/>{% endif %}
     {{ user.address|upper }}<br/>
     {{ user.city|upper }} {{ user.province|upper }}&nbsp;&nbsp;&nbsp;{{ user.postal_code|upper }}<br/>
     {{ user.country|upper }}

@@ -49,9 +49,18 @@
                     </div>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#!" data-form-link="{% url 'edit-profile' user.username %}">Edit Profile</a>
-                    <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
+                    <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>
                 </div>
             </li>
         </ul>
     </nav>
 </header>
+<form class="d-none" id="logout-form" action="{% url 'logout' %}" method="post">{% csrf_token %}</form>
+<script>
+document.addEventListener('click', function (event) {
+    if (event.target.closest('#logout-action')) {
+        event.preventDefault();
+        document.getElementById('logout-form').submit();
+    }
+});
+</script>
