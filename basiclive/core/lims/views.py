@@ -894,7 +894,12 @@ class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
 
 class DataList(ListViewMixin, ItemListView):
     model = models.Data
-    list_filters = ['modified', filters.YearFilterFactory('modified'), 'kind', 'beamline']
+    list_filters = [
+        'modified',
+        filters.YearFilter('modified'),
+        'kind',
+        'beamline'
+    ]
     list_columns = ['id', 'name', 'sample', 'frame_sets', 'session__name', 'energy', 'beamline', 'kind', 'modified']
     list_search = ['id', 'name', 'beamline__name', 'sample__name', 'frames', 'project__name', 'modified']
     link_url = 'data-detail'
@@ -927,8 +932,14 @@ class DataStats(PlotViewMixin, DataList):
 class UsageSummary(PlotViewMixin, DataList):
     date_field = 'modified'
     list_url = reverse_lazy("data-list")
-    list_filters = ['beamline', 'kind', filters.YearFilterFactory('modified'), filters.MonthFilterFactory('modified'),
-                    filters.QuarterFilterFactory('modified'), filters.TimeScaleFilterFactory()]
+    list_filters = [
+        'beamline',
+        'kind',
+        filters.YearFilter('modified'),
+        filters.MonthFilter('modified'),
+        filters.QuarterFilter('modified'),
+        filters.TimeScaleFilter()
+    ]
 
     def get_metrics(self):
         return stats.usage_summary(period='year', **self.get_active_filters())
@@ -1025,9 +1036,9 @@ class RequestList(ListViewMixin, ItemListView):
     list_filters = [
         'kind',
         'status',
-        filters.YearFilterFactory('created', reverse=True),
-        filters.MonthFilterFactory('created'),
-        filters.QuarterFilterFactory('created'),
+        filters.YearFilter('created', reverse=True),
+        filters.MonthFilter('created'),
+        filters.QuarterFilter('created'),
         'project__designation',
         'project__kind',
     ]
@@ -1231,12 +1242,12 @@ class SessionList(ListViewMixin, ItemListView):
     model = models.Session
     list_filters = [
         'beamline',
-        filters.YearFilterFactory('created', reverse=True),
-        filters.MonthFilterFactory('created'),
-        filters.QuarterFilterFactory('created'),
+        filters.YearFilter('created', reverse=True),
+        filters.MonthFilter('created'),
+        filters.QuarterFilter('created'),
         'project__designation',
         'project__kind',
-        filters.NewEntryFilterFactory(field_label="First Session")
+        filters.NewEntryFilter(field_label="First Session")
     ]
     list_columns = ['name', 'created', 'beamline', 'total_time', 'num_datasets', 'num_reports']
     list_search = ['beamline__acronym', 'project__username', 'name']

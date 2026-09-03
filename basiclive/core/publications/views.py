@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView, list
 
@@ -7,14 +8,18 @@ from basiclive.utils.mixins import AdminRequiredMixin
 from . import models, stats
 
 
+PDB_URL_TEMPLATE = getattr(settings, 'PDB_URL_TEMPLATE', 'https://www.rcsb.org/structure/{}')
+YEAR_FILTER_START = getattr(settings, 'YEAR_FILTER_START', 2005)
+
 class PubEntryList(AdminRequiredMixin, ItemListView):
     template_name = 'publications/list.html'
     model = models.Publication
     list_filters = [
         'created', 'modified',
-        filters.YearFilterFactory('published', start=2004, reverse=True),
-        filters.MonthFilterFactory('published'),
-        filters.QuarterFilterFactory('published'),
+        filters.StartYearFilter(model, 'published'),
+        filters.EndYearFilter(model, 'published'),
+        filters.MonthFilter('published'),
+        filters.QuarterFilter('published'),
         'tags'
     ]
     list_columns = ['published', 'citation', 'cites', 'mentions', 'impact_factor']
@@ -42,8 +47,8 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     model = models.Deposition
     list_filters = [
         'created', 'modified',
-        filters.YearFilterFactory('released'),
-        filters.MonthFilterFactory('released'),
+        filters.YearFilter('released'),
+        filters.MonthFilter('released'),
         'tags'
     ]
     list_columns = ['id', 'code', 'released', 'title', 'resolution', 'deposited', ]
@@ -54,6 +59,11 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     ordering = ['-released']
     paginate_by = 25
     page_title = 'PDB Depositions'
+    link_field = 'code'
+
+    def get_link_url(self, obj):
+        return PDB_URL_TEMPLATE.format(obj.code)
+
 
 
 class PDBEntryText(list.ListView):
@@ -93,8 +103,12 @@ class JournalList(AdminRequiredMixin, ItemListView):
     list_filters = ['created', 'modified']
     list_columns = ['id', 'title', 'short_name', 'publisher', 'codes', 'metrics__impact_factor']
     list_search = ['short_name', 'title', 'codes', 'publisher']
+    list_transforms = {
+        'codes': lambda codes, obj: mark_safe(f"<span class='no-wrap'>{" / ".join(codes)}</span>")
+    }
     paginate_by = 25
     page_title = 'Journals'
+
 
 
 class Statistics(AdminRequiredMixin, TemplateView):

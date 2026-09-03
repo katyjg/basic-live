@@ -57,7 +57,7 @@ class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
 class RemoteConnectionList(AdminRequiredMixin, ItemListView):
     model = models.Access
     list_columns = ['user', 'name', 'userlist', 'status', 'created', 'end']
-    list_filters = ['created', filters.YearFilterFactory('created', reverse=True), 'userlist', 'status']
+    list_filters = ['created', filters.YearFilter('created', reverse=True), 'userlist', 'status']
     list_search = ['user__username', 'name', 'status', 'userlist__name', 'created']
     ordering = ['-created']
     template_name = "lims/list.html"

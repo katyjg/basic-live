@@ -85,12 +85,12 @@ class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
     model = models.Beamtime
     list_filters = [
         'beamline',
-        filters.YearFilterFactory('start'),
-        filters.MonthFilterFactory('start'),
-        filters.QuarterFilterFactory('start'),
+        filters.YearFilter('start'),
+        filters.MonthFilter('start'),
+        filters.QuarterFilter('start'),
         'access',
         'project__kind',
-        filters.TimeScaleFilterFactory()
+        filters.TimeScaleFilter()
     ]
     list_search = ['id', 'project__username', 'project__first_name', 'project__last_name']
     date_field = 'start'

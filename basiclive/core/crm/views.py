@@ -70,9 +70,9 @@ class FeedbackList(ListViewMixin, ItemListView):
     list_filters = [
         'session__beamline',
         'created',
-        filters.YearFilterFactory('created', reverse=True),
-        filters.MonthFilterFactory('created'),
-        filters.QuarterFilterFactory('created'),
+        filters.YearFilter('created', reverse=True),
+        filters.MonthFilter('created'),
+        filters.QuarterFilter('created'),
         'session__project__designation',
         'session__project__kind',
     ]
@@ -128,8 +128,8 @@ class SupportEntryList(ListViewMixin, ItemListView):
     list_filters = [
         'beamline',
         'created',
-        filters.YearFilterFactory('created', reverse=True),
-        filters.MonthFilterFactory('created'),
+        filters.YearFilter('created', reverse=True),
+        filters.MonthFilter('created'),
         'project__designation',
         'project__kind',
         'kind',
