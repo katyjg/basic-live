@@ -2,22 +2,22 @@
 {% load icons %}
 {% load misc_tags %}
 {% if samples %}
-<table class="table table-sm text-condensed">
+<table class="table table-sm">
     <thead>
         <tr>
-            <th></th>
-            <th>Sample</th>
-            <th>Location</th>
-            {% if request_detail %}<th>Requests</th>{% endif %}
-            <th>Data&nbsp;Sets</th>
-            <th>Analysis&nbsp;Reports</th>
+            <th class="w-icon"></th>
+            <th class="w-5">Sample</th>
+            <th class="w-5">Container</th>
+            <th class="w-5">Location</th>
+            {% if request_detail %}<th class="w-auto">Requests</th>{% endif %}
+            <th class="w-40">Data&nbsp;Sets</th>
+            <th class="w-40">Reports</th>
         </tr>
     </thead>
     <tbody>
         {% for sample in samples %}
         <tr>
-
-            <td class="text-center">
+            <td>
                 {% if user.is_superuser %}
                     {% if sample.pk %}
                         <a href="#!" data-form-link="{% url 'sample-admin-edit' sample.pk %}" title="Edit Notes">
@@ -61,7 +61,9 @@
                 {% if sample.pk %}
                     <a href="{% url 'container-detail' sample.container.pk %}">{{ sample.container.name }}</a>
                 {% endif %}
-                <span> |&nbsp;{{ sample.port }}</span>
+            </td>
+            <td class="overflow-ellipsis">
+                <div>{{ sample.port }}</div>
             </td>
             {% if request_detail %}
                 <td>
@@ -70,10 +72,12 @@
                         <span class="badge badge-{% if request.status == request.STATUS_CHOICES.PENDING %}info
                                 {% elif request.status == request.STATUS_CHOICES.DRAFT %}warning
                                 {% elif request.status == request.STATUS_CHOICES.COMPLETE %}success
-                                {% else %}primary{% endif %}" title="{{ request.get_status_display }}{% if request.comments %} | {{ request.comments }}{% endif %}">{{ request.kind.name }}</span>
+                                {% else %}primary{% endif %}" title="{{ request.get_status_display }}{% if request.comments %} | {{ request.comments }}{% endif %}">{{ request.kind.name }}
+                        </span>
                         </a>
                     {% endfor %}
-                </td>{% endif %}
+                </td>
+            {% endif %}
             <td>
                 {% include "lims/entries/sample-data.html" %}
             </td>

@@ -1,3 +1,4 @@
+import logging
 from django.views.generic import TemplateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
@@ -9,7 +10,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 
-from ...utils import filters
+from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
 
 from . import models, forms, stats
@@ -21,6 +22,9 @@ from datetime import datetime, timedelta
 
 MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
 MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
+
+
+logger = logging.getLogger(__name__)
 
 
 class CalendarView(TemplateView):
@@ -44,7 +48,7 @@ class CalendarView(TemplateView):
         context['today'] = datetime.strftime(timezone.localtime(), '%Y-%m-%d')
         context['year'] = year
         context['week'] = week
-        context['support'] = "{:02d}:00 - {:02d}:00".format(MIN_SUPPORT_HOUR, MAX_SUPPORT_HOUR)
+        context['support'] = f"{MIN_SUPPORT_HOUR:02d}:00 - {MAX_SUPPORT_HOUR:02d}:00"
         context['beamlines'] = Beamline.objects.filter(active=True)
         context['access_types'] = models.AccessType.objects.all()
         context['facility_modes'] = models.FacilityMode.objects.all()
@@ -52,7 +56,6 @@ class CalendarView(TemplateView):
         context['next_week'] = (now + timedelta(days=7)).isocalendar()[:2]
         context['last_week'] = (now - timedelta(days=7)).isocalendar()[:2]
         context['editable'] = detailed
-
         return context
 
 
@@ -80,8 +83,15 @@ class BeamtimeInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
 
 class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
     model = models.Beamtime
-    list_filters = ['beamline', filters.YearFilterFactory('start'), filters.MonthFilterFactory('start'),
-                    filters.QuarterFilterFactory('start'), 'access', 'project__kind', filters.TimeScaleFilterFactory()]
+    list_filters = [
+        'beamline',
+        filters.YearFilterFactory('start'),
+        filters.MonthFilterFactory('start'),
+        filters.QuarterFilterFactory('start'),
+        'access',
+        'project__kind',
+        filters.TimeScaleFilterFactory()
+    ]
     list_search = ['id', 'project__username', 'project__first_name', 'project__last_name']
     date_field = 'start'
 
@@ -100,19 +110,25 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
         initial = super().get_initial()
         try:
             start = timezone.make_aware(datetime.strptime(self.request.GET.get('start'), "%Y-%m-%dT%H"))
-            end = timezone.make_aware(datetime.strptime(self.request.GET.get('end'), "%Y-%m-%dT%H") + timedelta(hours=settings.HOURS_PER_SHIFT))
+            end = timezone.make_aware(
+                datetime.strptime(self.request.GET.get('end'), "%Y-%m-%dT%H")
+                + timedelta(hours=settings.HOURS_PER_SHIFT)
+            )
             beamline = Beamline.objects.filter(acronym=self.request.GET.get('beamline')).first()
             info = {'start': start, 'end': end, 'beamline': beamline}
-            if models.Beamtime.objects.filter(beamline=beamline).filter((
-                Q(start__gte=start) & Q(start__lt=end)) | (
-                Q(end__lte=end) & Q(end__gt=start)) | (
-                Q(start__gte=start) & Q(end__lte=end))).exists():
-                    info['warning'] = """Another project is scheduled in this time. Proceeding to schedule this beamtime 
-                                         will remove the existing beamtime."""
-
+            scheduled_filter = (
+                (Q(start__gte=start) & Q(start__lt=end)) |
+                (Q(end__lte=end) & Q(end__gt=start)) |
+                (Q(start__gte=start) & Q(end__lte=end))
+            )
+            if models.Beamtime.objects.filter(beamline=beamline).filter(scheduled_filter).exists():
+                info['warning'] = (
+                    "Another project is scheduled in this time. "
+                    "Proceeding to schedule this beamtime will remove the existing beamtime."
+                )
             initial.update(**info)
-        except:
-            pass
+        except Exception as err:
+            logger.exception(err)
 
         return initial
 
@@ -196,7 +212,7 @@ class BeamtimeDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
 
 class SupportDetail(LoginRequiredMixin, detail.DetailView):
     model = models.BeamlineSupport
-    template_name = "schedule/templates/schedule/support-info.html"
+    template_name = "schedule/support-info.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

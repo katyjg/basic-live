@@ -1,32 +1,31 @@
+import calendar
+import isodate
+import logging
+import warnings
+from datetime import datetime, timedelta
+
+import pytz
+import requests
+from basiclive.core.schedule.models import BeamlineSupport
 from django import template
 from django.conf import settings
 from django.utils import timezone
 
-from basiclive.core.schedule.models import BeamlineSupport
-
-from datetime import datetime, date, timedelta, time
-import pytz
-import calendar
-import requests
-
-import warnings
-
-import logging
 logger = logging.getLogger(__name__)
 
 register = template.Library()
 
 
-def format_localtime(dt):
-    return datetime.strftime(timezone.localtime(pytz.utc.localize(dt)), '%Y-%m-%dT%H')
+def format_local_time(dt):
+    return timezone.localtime(dt).strftime('%Y-%m-%dT%H')
 
 
-def format_localdate(dt):
-    return datetime.strftime(timezone.localtime(pytz.utc.localize(dt)), '%Y-%m-%d')
+def format_local_date(dt):
+    return timezone.localtime(dt).strftime('%Y-%m-%d')
 
 
-def format_localhour(dt):
-    return datetime.strftime(timezone.localtime(pytz.utc.localize(dt)), '%H')
+def format_local_hour(dt):
+    return timezone.localtime(dt).strftime('%H')
 
 
 @register.simple_tag
@@ -46,37 +45,38 @@ def calendar_view(year, week):
     end = dates[-1] + timedelta(days=1)
     info = {
         'week': {
-            datetime.strftime(d, '%Y-%m-%d'): {
+            d.strftime('%Y-%m-%d'): {
                 'name': nm,
                 'date': d,
                 'modes': shifts.copy(),
-                'support': BeamlineSupport.objects.filter(date=d).first() }
+                'support': BeamlineSupport.objects.filter(date=d).first()
+            }
             for nm, d in zip(names, dates)
         },
         'shifts': shift_count,
-        'start': datetime.strftime(start, '%Y-%m-%d'),
-        'end': datetime.strftime(end, '%Y-%m-%d'),
+        'start': start.strftime('%Y-%m-%d'),
+        'end': end.strftime('%Y-%m-%d'),
     }
 
-    """Could be moved to AJAX request if Access-Control-Allow-Origin header added to api resource"""
-
+    # Could be moved to AJAX request if Access-Control-Allow-Origin header added to api resource
     if getattr(settings, "FACILITY_MODES", False):
         try:
-            url = "{}?start={}&end={}".format(settings.FACILITY_MODES, start, end)
+            url = f"{settings.FACILITY_MODES}?start={start}&end={end}"
             r = requests.get(url)
             if r.status_code == 200:
                 for mode in r.json():
-                    st = datetime.strptime(mode['start'], '%Y-%m-%dT%H:%M:%SZ')
-                    while st < datetime.strptime(mode['end'], '%Y-%m-%dT%H:%M:%SZ'):
-                        dt = format_localdate(st)
-                        hr = format_localhour(st)
+                    st = isodate.parse_datetime(mode['start'])
+                    en = isodate.parse_datetime(mode['end'])
+                    while st < en:
+                        dt = format_local_date(st)
+                        hr = format_local_hour(st)
                         st += timedelta(hours=slot)
                         if dt in info['week'].keys():
                             info['week'][dt]['modes'][hr] = {
                                 'kind': str(mode['kind'])
                             }
         except requests.exceptions.ConnectionError:
-            warnings.warn("Couldn't fetch beam modes from {}.".format(settings.FACILITY_MODES))
+            warnings.warn(f"Couldn't fetch beam modes from {settings.FACILITY_MODES}.")
         except requests.exceptions.MissingSchema:
             warnings.warn("FACILITY_MODE must start with 'http://' or 'https://'.")
 

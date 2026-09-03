@@ -107,7 +107,7 @@ class Beamtime(models.Model):
         return BeamlineSupport.objects.filter(date=dt).first()
 
     def display(self, detailed=False):
-        return render_to_string('schedule/templates/schedule/beamtime.html', {'bt': self, 'detailed': detailed})
+        return render_to_string('schedule/beamtime.html', {'bt': self, 'detailed': detailed})
 
     def notification(self):
         return self.notifications.first()
