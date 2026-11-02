@@ -64,6 +64,9 @@ class ShiftStart(models.Func):
             ).format(shift=shift_duration, offset=OFFSET)
         )
 
+    def as_sqlite(self, compiler, connection):
+        return self.as_sql(compiler, connection, template="%(expressions)s")
+
 
 class ShiftEnd(models.Func):
     function = 'to_timestamp'
@@ -81,6 +84,9 @@ class ShiftEnd(models.Func):
                 ")"
             ).format(shift=shift_duration, offset=OFFSET)
         )
+
+    def as_sqlite(self, compiler, connection):
+        return self.as_sql(compiler, connection, template="%(expressions)s")
 
 
 class ListLength(models.Func):
@@ -166,6 +172,14 @@ class Shifts(models.Func):
         self.arg_joiner = " , "
         return self.as_sql(
             compiler, connection, function="TIMESTAMPDIFF", template="-%(function)s(HOUR,%(expressions)s)/8"
+        )
+
+    def as_sqlite(self, compiler, connection):
+        shift_microseconds = get_hours_per_shift() * 3600 * 1_000_000
+        return self.as_sql(
+            compiler,
+            connection,
+            template=f"(CAST((%(expressions)s) AS REAL) / {shift_microseconds})",
         )
 
 

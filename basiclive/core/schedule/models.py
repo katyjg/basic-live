@@ -38,20 +38,61 @@ class AccessType(models.Model):
         return self.name
 
 
-class FacilityMode(models.Model):
-    kind = models.CharField(max_length=30)
+class BeamtimeQuerySet(models.QuerySet):
+    def with_duration(self):
+        return self.annotate(
+            duration=Sum(F('end') - F('start')),
+            shift_duration=ShiftEnd('end') - ShiftStart('start'),
+            shifts=Shifts(F('end') - F('start'))
+        )
+
+
+class BeamtimeManager(models.Manager.from_queryset(BeamtimeQuerySet)):
+    use_for_related_fields = True
+
+
+class FacilityModeType(models.Model):
+    code = models.SlugField(max_length=30, unique=True)
     description = models.CharField(blank=True, max_length=60)
     color = ColorField(default="#000000")
 
     class Meta:
-        verbose_name = _("Facility Mode")
-        verbose_name_plural = _("Facility Modes")
+        verbose_name = _("Facility Mode Type")
+        verbose_name_plural = _("Facility Mode Types")
+        ordering = ["code"]
 
     def __str__(self):
-        return self.kind
+        return self.description or self.code
 
-    def css_classes(self):
-        return [k.strip() for k in self.kind.split(',')]
+    @property
+    def css_class(self) -> str:
+        return f"mode-{self.code}"
+
+
+class FacilityMode(TimeFramedModel):
+    mode = models.ForeignKey(
+        FacilityModeType,
+        related_name="intervals",
+        on_delete=models.CASCADE,
+    )
+    comments = models.TextField(blank=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+
+    objects = BeamtimeManager()
+
+    class Meta:
+        verbose_name = _("Facility Mode")
+        verbose_name_plural = _("Facility Modes")
+        ordering = ["start"]
+
+    def __str__(self):
+        return f"{self.mode} ({self.start} - {self.end})"
 
 
 class BeamlineSupport(models.Model):
@@ -70,19 +111,6 @@ class BeamlineSupport(models.Model):
     def active(self):
         now = timezone.localtime()
         return now.date() == self.date and MIN_SUPPORT_HOUR <= now.hour < MAX_SUPPORT_HOUR
-
-
-class BeamtimeQuerySet(models.QuerySet):
-    def with_duration(self):
-        return self.annotate(
-            duration=Sum(F('end') - F('start')),
-            shift_duration=ShiftEnd('end') - ShiftStart('start'),
-            shifts=Shifts(F('end') - F('start'))
-        )
-
-
-class BeamtimeManager(models.Manager.from_queryset(BeamtimeQuerySet)):
-    use_for_related_fields = True
 
 
 class Beamtime(models.Model):

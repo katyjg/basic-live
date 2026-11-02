@@ -91,15 +91,34 @@ class Httpx2MigrationTests(TestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_calendar_view_connection_error_warning(self):
-        with override_settings(BASICLIVE_SCHEDULE={'FACILITY_MODES': 'http://facility.example/modes'}):
-            with patch('basiclive.core.schedule.templatetags.calendar.httpx2.get', side_effect=httpx2.ConnectError('offline')):
+        with override_settings(
+            BASICLIVE_SCHEDULE={
+                'SCHEDULE_PROVIDER': {
+                    'BACKEND': 'basiclive.core.schedule.providers.HttpScheduleProvider',
+                    'OPTIONS': {
+                        'base_url': 'http://facility.example',
+                        'endpoints': {'modes': '/modes?start={start}&end={end}'},
+                    },
+                }
+            }
+        ):
+            with patch('basiclive.core.schedule.providers.httpx2.get', side_effect=httpx2.ConnectError('offline')):
                 with self.assertWarns(UserWarning) as cm:
                     calendar_view(2026, 1)
-                self.assertIn("Couldn't fetch beam modes", str(cm.warning))
+                self.assertIn("Couldn't fetch", str(cm.warning))
 
     def test_calendar_view_unsupported_protocol_warning(self):
-        with override_settings(BASICLIVE_SCHEDULE={'FACILITY_MODES': 'invalid-scheme://facility/modes'}):
-            with patch('basiclive.core.schedule.templatetags.calendar.httpx2.get', side_effect=httpx2.UnsupportedProtocol('unsupported')):
+        with override_settings(
+            BASICLIVE_SCHEDULE={
+                'SCHEDULE_PROVIDER': {
+                    'BACKEND': 'basiclive.core.schedule.providers.HttpScheduleProvider',
+                    'OPTIONS': {
+                        'endpoints': {'modes': 'invalid-scheme://facility/modes?start={start}&end={end}'},
+                    },
+                }
+            }
+        ):
+            with patch('basiclive.core.schedule.providers.httpx2.get', side_effect=httpx2.UnsupportedProtocol('unsupported')):
                 with self.assertWarns(UserWarning) as cm:
                     calendar_view(2026, 1)
-                self.assertIn("FACILITY_MODE must start with", str(cm.warning))
+                self.assertIn("must start with", str(cm.warning))
