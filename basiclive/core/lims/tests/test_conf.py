@@ -18,6 +18,7 @@ class LimsConfTests(SimpleTestCase):
         self.assertIs(lims_settings.RESTRICT_DOWNLOADS, False)
         self.assertEqual(lims_settings.LOADER_SELECT_DURATION, 300)
         self.assertEqual(lims_settings.SIMULATED_SESSION_LIFETIME_DAYS, 30)
+        self.assertIsNone(lims_settings.PROJECT_PROVIDER)
 
     def test_override_via_basiclive_lims(self):
         with override_settings(

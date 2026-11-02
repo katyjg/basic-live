@@ -350,11 +350,38 @@ class ProjectEditorMixin:
         return self.can_edit(user) or user.is_staff
 
 
+class ProjectQuerySet(models.QuerySet):
+    def operational(self, today=None):
+        today = today or timezone.localdate()
+        return self.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+
+    def currently_active(self, today=None):
+        today = today or timezone.localdate()
+        return self.filter(
+            (Q(start_date__isnull=True) | Q(start_date__lte=today))
+            & (Q(end_date__isnull=True) | Q(end_date__gte=today))
+        )
+
+
+ProjectManager = models.Manager.from_queryset(ProjectQuerySet)
+
+
 class Project(ProjectEditorMixin, TimeStampedModel):
     HELP = {
         'contact_person': _("Full name of contact person"),
     }
     name = models.SlugField(max_length=100, unique=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        unique=True,
+        db_index=True,
+    )
+    start_date = models.DateField(_("Start Date"), null=True, blank=True)
+    end_date = models.DateField(_("End Date"), null=True, blank=True)
+    external_roster = models.JSONField(_("External Roster"), default=list, blank=True)
     pi = models.ForeignKey(
         'lims.User',
         related_name='led_projects',
@@ -404,12 +431,26 @@ class Project(ProjectEditorMixin, TimeStampedModel):
     designation = models.ManyToManyField(ProjectDesignation, verbose_name=_("Project Designation"), blank=True)
     updated = models.BooleanField(default=False)
 
+    objects = ProjectManager()
+
     class Meta:
         verbose_name = _("Project")
         verbose_name_plural = _("Projects")
 
     def __str__(self):
         return self.name.upper() if self.name else ""
+
+    @property
+    def is_expired(self) -> bool:
+        return bool(self.end_date and timezone.localdate() > self.end_date)
+
+    @property
+    def is_pending(self) -> bool:
+        return bool(self.start_date and timezone.localdate() < self.start_date and not self.is_expired)
+
+    @property
+    def is_operational(self) -> bool:
+        return not self.is_expired
 
     @property
     def contact_name(self):
@@ -438,6 +479,10 @@ class Project(ProjectEditorMixin, TimeStampedModel):
         return self.name
 
     def active_status(self):
+        if self.is_expired:
+            return 'Expired'
+        if self.is_pending:
+            return 'Pending'
         try:
             if not self.sessions.count():
                 return 'New'
@@ -461,6 +506,10 @@ class Project(ProjectEditorMixin, TimeStampedModel):
 
     def clean(self):
         super().clean()
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': _("The end date cannot be earlier than the start date.")
+            })
         if self.region:
             if not self.country:
                 self.country = self.region.country

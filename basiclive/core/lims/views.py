@@ -1018,6 +1018,13 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
     ]
     template_name = "lims/modal/wizard.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_superuser:
+            project = getattr(request, 'project', None)
+            if not project or project.is_expired:
+                raise PermissionDenied("Cannot create a shipment for an expired project.")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, form, **kwargs):
         ctx = super().get_context_data(form, **kwargs)
         ctx['form_title'] = "Create a Shipment"
@@ -1516,6 +1523,15 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Project
     success_url = reverse_lazy('user-list')
     success_message = "Project has been deleted"
+
+    def test_func(self):
+        if not super().test_func():
+            return False
+        try:
+            obj = self.get_object()
+        except models.Project.DoesNotExist:
+            return True
+        return not bool(obj.source_id)
 
     def get_object(self, *kwargs):
         name = self.kwargs.get('name') or self.kwargs.get('username')

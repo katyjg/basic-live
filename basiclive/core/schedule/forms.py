@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -32,6 +33,13 @@ class BeamtimeForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.project_id:
+            self.fields['project'].queryset = Project.objects.filter(
+                Q(pk__in=Project.objects.operational().values('pk'))
+                | Q(pk=self.instance.project_id)
+            )
+        else:
+            self.fields['project'].queryset = Project.objects.operational()
 
         errors = Div()
         if self.initial.get('warning'):
@@ -71,6 +79,15 @@ class BeamtimeForm(ModalModelForm):
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get('project')
+        if project and project.is_expired and (
+            not self.instance.pk or self.instance.project_id != project.pk
+        ):
+            self.add_error('project', forms.ValidationError(_("Cannot schedule beamtime for an expired project.")))
+        return cleaned_data
 
 
 class BeamlineSupportForm(ModalModelForm):
