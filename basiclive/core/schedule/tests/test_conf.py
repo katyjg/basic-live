@@ -8,7 +8,7 @@ from basiclive.core.schedule.conf import settings as schedule_settings
 class ScheduleConfTests(SimpleTestCase):
     def test_default_settings(self):
         self.assertEqual(schedule_settings.HOURS_PER_SHIFT, 8)
-        self.assertIsNone(schedule_settings.FACILITY_MODES)
+        self.assertIsNone(schedule_settings.SCHEDULE_PROVIDER)
         self.assertEqual(schedule_settings.MIN_SUPPORT_HOUR, 0)
         self.assertEqual(schedule_settings.MAX_SUPPORT_HOUR, 24)
         self.assertEqual(schedule_settings.APP_NAME, "basiclive")
@@ -19,13 +19,16 @@ class ScheduleConfTests(SimpleTestCase):
         with override_settings(
             BASICLIVE_SCHEDULE={
                 "HOURS_PER_SHIFT": 12,
-                "FACILITY_MODES": "https://facility.example.com/api/modes",
+                "SCHEDULE_PROVIDER": "basiclive.core.schedule.providers.HttpScheduleProvider",
                 "APP_NAME": "CustomSynchrotron",
                 "FROM_EMAIL": "beamline@facility.ca",
             }
         ):
             self.assertEqual(schedule_settings.HOURS_PER_SHIFT, 12)
-            self.assertEqual(schedule_settings.FACILITY_MODES, "https://facility.example.com/api/modes")
+            self.assertEqual(
+                schedule_settings.SCHEDULE_PROVIDER,
+                "basiclive.core.schedule.providers.HttpScheduleProvider",
+            )
             self.assertEqual(schedule_settings.APP_NAME, "CustomSynchrotron")
             self.assertEqual(schedule_settings.FROM_EMAIL, "beamline@facility.ca")
             # Non-overridden settings keep defaults

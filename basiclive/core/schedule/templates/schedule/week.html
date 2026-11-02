@@ -18,7 +18,7 @@
         }
     {% endfor %}
     {% for kind in facility_modes %}
-        {% for css in kind.css_classes %}.{{ css }} {% if not forloop.last %}, {% endif %}{% endfor %} {
+        .{{ kind.css_class }} {
             background-color: {{ kind.color }};
         }
     {% endfor %}
@@ -76,7 +76,7 @@
                 <tbody>
                     {% for day, details in info.week.items %}
                         {% for shift, mode in details.modes.items %}
-                            <tr data-shift-id="{{ day }}T{{ shift }}" class="mode {{ mode.kind }} {% if today == day %}today{% endif %}">
+                            <tr data-shift-id="{{ day }}T{{ shift }}" class="mode {{ mode.css_class }} {% if today == day %}today{% endif %}">
                                 {% if forloop.first %}
                                     <td rowspan="{{ info.shifts }}" class="bg-white bcal-day">
                                         <text class="text-uppercase text-condensed">

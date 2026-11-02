@@ -1,14 +1,13 @@
 import calendar
 import logging
-import warnings
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
-import httpx2
 from django import template
 from django.utils import timezone
 
 from basiclive.core.schedule.conf import settings
-from basiclive.core.schedule.models import BeamlineSupport
+from basiclive.core.schedule.models import BeamlineSupport, FacilityMode
+from basiclive.core.schedule.providers import get_schedule_provider
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def calendar_view(year, week):
     shifts = {'{:02d}'.format(i * slot): {} for i in range(shift_count)}
 
     names = [calendar.day_abbr[x] for x in cal.iterweekdays()]
-    dates = month[i*7:i*7+7]
+    dates = month[i * 7:i * 7 + 7]
     start = dates[0]
     end = dates[-1] + timedelta(days=1)
     info = {
@@ -57,28 +56,31 @@ def calendar_view(year, week):
         'end': end.strftime('%Y-%m-%d'),
     }
 
-    # Could be moved to AJAX request if Access-Control-Allow-Origin header added to api resource
-    if settings.FACILITY_MODES:
-        try:
-            url = f"{settings.FACILITY_MODES}?start={start}&end={end}"
-            r = httpx2.get(url, follow_redirects=True)
-            if r.status_code == 200:
-                for mode in r.json():
-                    st = datetime.fromisoformat(mode['start'])
-                    en = datetime.fromisoformat(mode['end'])
-                    while st < en:
-                        dt = format_local_date(st)
-                        hr = format_local_hour(st)
-                        st += timedelta(hours=slot)
-                        if dt in info['week'].keys():
-                            info['week'][dt]['modes'][hr] = {
-                                'kind': str(mode['kind'])
-                            }
-        except (httpx2.ConnectError, httpx2.NetworkError):
-            warnings.warn(f"Couldn't fetch beam modes from {settings.FACILITY_MODES}.")
-        except (httpx2.UnsupportedProtocol, httpx2.InvalidURL):
-            warnings.warn("FACILITY_MODE must start with 'http://' or 'https://'.")
+    provider = get_schedule_provider()
+    if provider is not None:
+        provider.sync(start, end)
+
+    start_dt = timezone.make_aware(datetime.combine(start, time.min))
+    end_dt = timezone.make_aware(datetime.combine(end, time.min))
+    intervals = (
+        FacilityMode.objects.filter(end__gt=start_dt, start__lt=end_dt)
+        .select_related("mode")
+        .order_by("start")
+    )
+    for interval in intervals:
+        if not interval.start or not interval.end:
+            continue
+        st = max(timezone.localtime(interval.start), start_dt)
+        en = min(timezone.localtime(interval.end), end_dt)
+        while st < en:
+            dt = format_local_date(st)
+            hr = format_local_hour(st)
+            st += timedelta(hours=slot)
+            if dt in info['week'] and hr in info['week'][dt]['modes']:
+                info['week'][dt]['modes'][hr] = {
+                    'kind': interval.mode.code,
+                    'css_class': interval.mode.css_class,
+                    'description': interval.mode.description,
+                }
 
     return info
-
-
