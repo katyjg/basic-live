@@ -18,7 +18,7 @@ dependencies = [
     "django-formtools",
     "django-itemlist >= 2026.1.15",
     "django-model-utils",
-    "djangorestframework >= 3.18.1",
+    "djangorestframework >= 3.18.2",
     "djangorestframework-simplejwt",
     "crispy-bootstrap5",
     "geopy",
