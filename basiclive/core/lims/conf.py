@@ -18,6 +18,7 @@ DEFAULTS = {
     "RESTRUCTUREDTEXT_FILTER_SETTINGS": {},
     "SEND_EMAILS": False,
     "BASE_DIR": "/tmp",
+    "PROJECT_PROVIDER": None,
 }
 
 settings = AppSettings("LIMS", DEFAULTS)

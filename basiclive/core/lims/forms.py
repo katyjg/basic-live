@@ -842,9 +842,14 @@ class ShipmentForm(ModalModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data['project'].shipments.filter(name__iexact=cleaned_data.get('name', '')) \
-                .exclude(pk=self.instance.pk).exists():
-            self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
+        project = cleaned_data.get('project')
+        if project:
+            if not self.instance.pk and project.is_expired:
+                self.add_error('project', forms.ValidationError("Cannot create a shipment for an expired project"))
+            if project.shipments.filter(name__iexact=cleaned_data.get('name', '')) \
+                    .exclude(pk=self.instance.pk).exists():
+                self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
+        return cleaned_data
 
     class Meta:
         model = Shipment
@@ -1336,6 +1341,7 @@ class AddShipmentForm(ModalModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['project'].queryset = Project.objects.operational()
 
         if user and user.is_superuser:
             name_row = Row(
@@ -1375,8 +1381,13 @@ class AddShipmentForm(ModalModelForm):
 
     def clean(self):
         cleaned_data = super(AddShipmentForm, self).clean()
-        if cleaned_data['project'].shipments.filter(name__iexact=cleaned_data.get('name', '')).exists():
-            self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
+        project = cleaned_data.get('project')
+        if project:
+            if project.is_expired:
+                self.add_error('project', forms.ValidationError("Cannot create a shipment for an expired project"))
+            if project.shipments.filter(name__iexact=cleaned_data.get('name', '')).exists():
+                self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
+        return cleaned_data
 
 
 class ShipmentContainerForm(ModalModelForm):
