@@ -122,3 +122,8 @@ class Httpx2MigrationTests(TestCase):
                 with self.assertWarns(UserWarning) as cm:
                     calendar_view(2026, 1)
                 self.assertIn("must start with", str(cm.warning))
+
+    def test_httpx2_uses_truststore_ssl_context(self):
+        import truststore
+        client = httpx2.Client()
+        self.assertIsInstance(client._transport._pool._ssl_context, truststore.SSLContext)
