@@ -13,8 +13,18 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.module_loading import import_string
 
+from basiclive.core.lims.models import Beamline, Project
+from basiclive.core.lims.providers import _find_existing_user, _parse_date_value
 from basiclive.core.schedule.conf import settings as schedule_settings
-from basiclive.core.schedule.models import FacilityMode, FacilityModeType
+from basiclive.core.schedule.models import (
+    AccessType,
+    BeamlineSupport,
+    Beamtime,
+    Downtime,
+    EmailNotification,
+    FacilityMode,
+    FacilityModeType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +36,37 @@ class ExternalModeData:
     end: datetime
     source_id: str | None = None
     comments: str = ""
+
+
+@dataclass
+class ExternalBeamtimeData:
+    beamline_acronym: str
+    start: datetime
+    end: datetime
+    project_name: str | None = None
+    project_source_id: str | None = None
+    access_type: str | None = None
+    cancelled: bool | None = None
+    comments: str = ""
+    source_id: str | None = None
+
+
+@dataclass
+class ExternalDowntimeData:
+    start: datetime
+    end: datetime
+    scope: int = Downtime.SCOPE_CHOICES.FACILITY
+    beamline_acronym: str | None = None
+    comments: str = ""
+    source_id: str | None = None
+
+
+@dataclass
+class ExternalSupportData:
+    date: date
+    staff_username: str = ""
+    staff_email: str = ""
+    source_id: str | None = None
 
 
 def _ensure_aware(dt: datetime) -> datetime:
@@ -54,6 +95,8 @@ def _parse_datetime_value(val: Any) -> datetime | None:
 
 class BaseScheduleProvider:
     ENTITY_TYPES = ("modes", "beamtime", "downtime", "support")
+    _SYNC_PRIORITY = {"modes": 0, "downtime": 1, "beamtime": 2, "support": 3}
+    _explicit_cancelled: dict[str, bool] = {}
     CANONICAL_MODES = ("normal", "development", "maintenance", "shutdown", "special")
     DEFAULT_MODE_MAP = {
         "N": "normal",
@@ -168,6 +211,261 @@ class BaseScheduleProvider:
 
         return synced_count
 
+    def _reconcile_beamtime(
+        self,
+        start: date,
+        end: date,
+        items: Iterable[ExternalBeamtimeData],
+        explicit_cancelled_source_ids: set[str] | None = None,
+    ) -> int:
+        start_dt = timezone.make_aware(datetime.combine(start, time.min))
+        end_dt = timezone.make_aware(datetime.combine(end, time.min))
+        now = timezone.now()
+
+        beamlines_by_acronym = {
+            bl.acronym.lower(): bl for bl in Beamline.objects.all()
+        }
+        access_by_name = {
+            at.name.lower(): at for at in AccessType.objects.all() if at.name
+        }
+        default_access = AccessType.objects.first()
+
+        seen_source_ids: set[str] = set()
+        synced_count = 0
+
+        with transaction.atomic():
+            for item in items:
+                bl_key = str(item.beamline_acronym or "").strip().lower()
+                beamline = beamlines_by_acronym.get(bl_key)
+                if not beamline:
+                    continue
+
+                st = _ensure_aware(item.start)
+                en = _ensure_aware(item.end)
+
+                project: Project | None = None
+                if item.project_source_id:
+                    project = Project.objects.filter(
+                        source_id=str(item.project_source_id).strip()
+                    ).first()
+                if not project and item.project_name:
+                    project = Project.objects.filter(
+                        name__iexact=str(item.project_name).strip()
+                    ).first()
+
+                access = default_access
+                if item.access_type:
+                    matched_access = access_by_name.get(
+                        str(item.access_type).strip().lower()
+                    )
+                    if matched_access:
+                        access = matched_access
+
+                source_id = (
+                    str(item.source_id).strip()
+                    if item.source_id
+                    else f"beamtime:{beamline.acronym}:{st.isoformat()}:{en.isoformat()}"
+                )
+                seen_source_ids.add(source_id)
+
+                if item.cancelled is not None:
+                    cancelled = bool(item.cancelled)
+                    self._explicit_cancelled[source_id] = cancelled
+                    if explicit_cancelled_source_ids is not None:
+                        explicit_cancelled_source_ids.add(source_id)
+                else:
+                    self._explicit_cancelled.pop(source_id, None)
+                    cancelled = Downtime.objects.filter(
+                        beamline=beamline,
+                        end__gt=st,
+                        start__lt=en,
+                    ).exists()
+
+                bt, created = Beamtime.objects.update_or_create(
+                    source_id=source_id,
+                    defaults={
+                        "project": project,
+                        "beamline": beamline,
+                        "access": access,
+                        "start": st,
+                        "end": en,
+                        "cancelled": cancelled,
+                        "comments": item.comments or "",
+                    },
+                )
+                if created and st > now:
+                    EmailNotification.objects.create(beamtime=bt)
+
+                synced_count += 1
+
+            stale_qs = Beamtime.objects.filter(
+                source_id__isnull=False,
+                end__gt=start_dt,
+                start__lt=end_dt,
+            ).exclude(source_id__in=seen_source_ids)
+            for sid in stale_qs.values_list("source_id", flat=True):
+                if sid:
+                    self._explicit_cancelled.pop(sid, None)
+            stale_qs.delete()
+
+        return synced_count
+
+    def _reconcile_downtime(
+        self,
+        start: date,
+        end: date,
+        items: Iterable[ExternalDowntimeData],
+        explicit_cancelled_source_ids: set[str] | None = None,
+    ) -> int:
+        start_dt = timezone.make_aware(datetime.combine(start, time.min))
+        end_dt = timezone.make_aware(datetime.combine(end, time.min))
+
+        beamlines_by_acronym = {
+            bl.acronym.lower(): bl for bl in Beamline.objects.all()
+        }
+        active_production_beamlines = list(
+            Beamline.objects.filter(active=True, simulated=False)
+        )
+
+        seen_source_ids: set[str] = set()
+        synced_count = 0
+
+        explicit_false_ids = {
+            sid for sid, val in self._explicit_cancelled.items() if val is False
+        }
+        if explicit_cancelled_source_ids:
+            explicit_false_ids |= explicit_cancelled_source_ids
+
+        with transaction.atomic():
+            for item in items:
+                st = _ensure_aware(item.start)
+                en = _ensure_aware(item.end)
+
+                bl_key = str(item.beamline_acronym or "").strip().lower()
+                if bl_key:
+                    target_bl = beamlines_by_acronym.get(bl_key)
+                    if not target_bl:
+                        continue
+                    target_beamlines = [target_bl]
+                    is_expanded = False
+                else:
+                    target_beamlines = active_production_beamlines
+                    is_expanded = True
+
+                for beamline in target_beamlines:
+                    if item.source_id:
+                        base_sid = str(item.source_id).strip()
+                        source_id = (
+                            f"{base_sid}:{beamline.acronym}"
+                            if is_expanded
+                            else base_sid
+                        )
+                    else:
+                        source_id = (
+                            f"downtime:{beamline.acronym}:{st.isoformat()}:{en.isoformat()}"
+                        )
+                    seen_source_ids.add(source_id)
+
+                    Downtime.objects.update_or_create(
+                        source_id=source_id,
+                        defaults={
+                            "beamline": beamline,
+                            "scope": item.scope,
+                            "start": st,
+                            "end": en,
+                            "comments": item.comments or "",
+                        },
+                    )
+
+                    overlap_bt = Beamtime.objects.filter(
+                        beamline=beamline,
+                        end__gt=st,
+                        start__lt=en,
+                    )
+                    if explicit_false_ids:
+                        overlap_bt = overlap_bt.exclude(
+                            source_id__in=explicit_false_ids
+                        )
+                    overlap_bt.update(cancelled=True)
+
+                    synced_count += 1
+
+            stale_qs = Downtime.objects.filter(
+                source_id__isnull=False,
+                end__gt=start_dt,
+                start__lt=end_dt,
+            ).exclude(source_id__in=seen_source_ids)
+            stale_deleted, _ = stale_qs.delete()
+
+            if stale_deleted:
+                explicit_true_ids = {
+                    sid for sid, val in self._explicit_cancelled.items() if val is True
+                }
+                candidates = Beamtime.objects.filter(
+                    source_id__isnull=False,
+                    cancelled=True,
+                    end__gt=start_dt,
+                    start__lt=end_dt,
+                ).exclude(source_id__in=explicit_true_ids)
+                for bt in candidates:
+                    has_downtime = Downtime.objects.filter(
+                        beamline=bt.beamline,
+                        end__gt=bt.start,
+                        start__lt=bt.end,
+                    ).exists()
+                    if not has_downtime:
+                        bt.cancelled = False
+                        bt.save(update_fields=["cancelled"])
+
+        return synced_count
+
+    def _reconcile_support(
+        self,
+        start: date,
+        end: date,
+        items: Iterable[ExternalSupportData],
+    ) -> int:
+        seen_source_ids: set[str] = set()
+        synced_count = 0
+
+        with transaction.atomic():
+            for item in items:
+                uname = str(item.staff_username or "").strip()
+                email = str(item.staff_email or "").strip()
+                staff_user = _find_existing_user(username=uname, email=email)
+
+                if not staff_user:
+                    ident = uname or email or "unknown"
+                    msg = f"BeamlineSupport sync skipped unknown staff user '{ident}' on {item.date.isoformat()}."
+                    logger.warning(msg)
+                    warnings.warn(msg)
+                    continue
+
+                source_id = (
+                    str(item.source_id).strip()
+                    if item.source_id
+                    else f"support:{item.date.isoformat()}:{staff_user.username}"
+                )
+                seen_source_ids.add(source_id)
+
+                BeamlineSupport.objects.update_or_create(
+                    source_id=source_id,
+                    defaults={
+                        "staff": staff_user,
+                        "date": item.date,
+                    },
+                )
+                synced_count += 1
+
+            stale_qs = BeamlineSupport.objects.filter(
+                source_id__isnull=False,
+                date__gte=start,
+                date__lt=end,
+            ).exclude(source_id__in=seen_source_ids)
+            stale_qs.delete()
+
+        return synced_count
+
     def sync(
         self,
         start: date,
@@ -185,7 +483,12 @@ class BaseScheduleProvider:
             logger.warning(msg)
             warnings.warn(msg)
 
-        for entity_type in requested:
+        explicit_cancelled_source_ids: set[str] = set()
+        ordered_types = sorted(
+            requested, key=lambda t: self._SYNC_PRIORITY.get(t, 99)
+        )
+
+        for entity_type in ordered_types:
             if not self.supports(entity_type):
                 continue
             cache_key = f"schedule:sync:{entity_type}:{start.isoformat()}:{end.isoformat()}"
@@ -197,6 +500,28 @@ class BaseScheduleProvider:
                 if entity_type == "modes":
                     items = list(self.fetch_modes(start, end))
                     results["modes"] = self._reconcile_modes(start, end, items)
+                    handled = True
+                elif entity_type == "beamtime":
+                    bt_items = list(self.fetch_beamtime(start, end))
+                    results["beamtime"] = self._reconcile_beamtime(
+                        start,
+                        end,
+                        bt_items,
+                        explicit_cancelled_source_ids=explicit_cancelled_source_ids,
+                    )
+                    handled = True
+                elif entity_type == "downtime":
+                    dt_items = list(self.fetch_downtime(start, end))
+                    results["downtime"] = self._reconcile_downtime(
+                        start,
+                        end,
+                        dt_items,
+                        explicit_cancelled_source_ids=explicit_cancelled_source_ids,
+                    )
+                    handled = True
+                elif entity_type == "support":
+                    sup_items = list(self.fetch_support(start, end))
+                    results["support"] = self._reconcile_support(start, end, sup_items)
                     handled = True
                 if handled and self.cache_ttl and self.cache_ttl > 0:
                     cache.set(cache_key, True, timeout=int(self.cache_ttl))
@@ -284,6 +609,160 @@ class HttpScheduleProvider(BaseScheduleProvider):
                     end=en,
                     source_id=str(source_id_val).strip() if source_id_val is not None else None,
                     comments=comments,
+                )
+            )
+        return results
+
+    def fetch_beamtime(self, start: date, end: date) -> list[ExternalBeamtimeData]:
+        endpoint_template = self.endpoints.get("beamtime")
+        if not endpoint_template:
+            return []
+        payload = self._fetch_json(endpoint_template, start, end)
+        records = self._extract_list(payload, key="beamtime")
+
+        results: list[ExternalBeamtimeData] = []
+        for raw in records:
+            if not isinstance(raw, dict):
+                continue
+            beamline_acronym = (
+                raw.get("beamline")
+                or raw.get("beamline_acronym")
+                or raw.get("acronym")
+            )
+            if not beamline_acronym:
+                continue
+            st = _parse_datetime_value(raw.get("start"))
+            en = _parse_datetime_value(raw.get("end"))
+            if not st or not en:
+                continue
+            project_name = (
+                raw.get("project")
+                or raw.get("project_name")
+                or raw.get("proposal")
+            )
+            project_source_id = (
+                raw.get("project_source_id") or raw.get("project_id")
+            )
+            access_type = (
+                raw.get("access_type") or raw.get("access") or raw.get("kind")
+            )
+            cancelled = (
+                bool(raw["cancelled"])
+                if "cancelled" in raw and raw["cancelled"] is not None
+                else None
+            )
+            source_id_val = raw.get("id") or raw.get("source_id")
+            comments = str(raw.get("comments") or raw.get("description") or "").strip()
+            results.append(
+                ExternalBeamtimeData(
+                    beamline_acronym=str(beamline_acronym).strip(),
+                    start=st,
+                    end=en,
+                    project_name=str(project_name).strip() if project_name else None,
+                    project_source_id=(
+                        str(project_source_id).strip() if project_source_id else None
+                    ),
+                    access_type=str(access_type).strip() if access_type else None,
+                    cancelled=cancelled,
+                    comments=comments,
+                    source_id=(
+                        str(source_id_val).strip() if source_id_val is not None else None
+                    ),
+                )
+            )
+        return results
+
+    def fetch_downtime(self, start: date, end: date) -> list[ExternalDowntimeData]:
+        endpoint_template = self.endpoints.get("downtime")
+        if not endpoint_template:
+            return []
+        payload = self._fetch_json(endpoint_template, start, end)
+        records = self._extract_list(payload, key="downtime")
+
+        results: list[ExternalDowntimeData] = []
+        for raw in records:
+            if not isinstance(raw, dict):
+                continue
+            st = _parse_datetime_value(raw.get("start"))
+            en = _parse_datetime_value(raw.get("end"))
+            if not st or not en:
+                continue
+            beamline_acronym = (
+                raw.get("beamline")
+                or raw.get("beamline_acronym")
+                or raw.get("acronym")
+            )
+            bl_clean = str(beamline_acronym).strip() if beamline_acronym else None
+
+            raw_scope = raw.get("scope")
+            if isinstance(raw_scope, int) and raw_scope in (
+                Downtime.SCOPE_CHOICES.FACILITY,
+                Downtime.SCOPE_CHOICES.BEAMLINE,
+            ):
+                scope = raw_scope
+            elif isinstance(raw_scope, str):
+                scope_upper = raw_scope.strip().upper()
+                if "BEAMLINE" in scope_upper:
+                    scope = Downtime.SCOPE_CHOICES.BEAMLINE
+                else:
+                    scope = Downtime.SCOPE_CHOICES.FACILITY
+            else:
+                scope = (
+                    Downtime.SCOPE_CHOICES.BEAMLINE
+                    if bl_clean
+                    else Downtime.SCOPE_CHOICES.FACILITY
+                )
+
+            source_id_val = raw.get("id") or raw.get("source_id")
+            comments = str(raw.get("comments") or raw.get("description") or "").strip()
+            results.append(
+                ExternalDowntimeData(
+                    start=st,
+                    end=en,
+                    scope=scope,
+                    beamline_acronym=bl_clean,
+                    comments=comments,
+                    source_id=(
+                        str(source_id_val).strip() if source_id_val is not None else None
+                    ),
+                )
+            )
+        return results
+
+    def fetch_support(self, start: date, end: date) -> list[ExternalSupportData]:
+        endpoint_template = self.endpoints.get("support")
+        if not endpoint_template:
+            return []
+        payload = self._fetch_json(endpoint_template, start, end)
+        records = self._extract_list(payload, key="support")
+
+        results: list[ExternalSupportData] = []
+        for raw in records:
+            if not isinstance(raw, dict):
+                continue
+            dt_val = _parse_date_value(raw.get("date") or raw.get("start"))
+            if not dt_val:
+                continue
+            staff_username = str(
+                raw.get("staff_username")
+                or raw.get("username")
+                or raw.get("staff")
+                or ""
+            ).strip()
+            staff_email = str(
+                raw.get("staff_email") or raw.get("email") or ""
+            ).strip()
+            if not staff_username and not staff_email:
+                continue
+            source_id_val = raw.get("id") or raw.get("source_id")
+            results.append(
+                ExternalSupportData(
+                    date=dt_val,
+                    staff_username=staff_username,
+                    staff_email=staff_email,
+                    source_id=(
+                        str(source_id_val).strip() if source_id_val is not None else None
+                    ),
                 )
             )
         return results

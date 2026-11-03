@@ -1,0 +1,21 @@
+# Pluggable External Data Providers (`ProjectProvider` and `ScheduleProvider`)
+
+Light-source facilities deploy BasicLIVE across heterogeneous environments ranging from standalone laboratories that manage projects and schedules locally to facilities with centralized User Office proposal portals and accelerator scheduling APIs. Previously, `Project` records had no temporal validity boundaries or external provenance tracking, and `basiclive.core.schedule` coupled `FacilityMode` calendar rendering directly to a hardcoded `FACILITY_MODES` JSON URL without persisting mode intervals or supporting external synchronization of `Beamtime`, `Downtime`, and `BeamlineSupport`.
+
+We decided to introduce two domain-scoped pluggable provider subsystems—`ProjectProvider` (`basiclive.core.lims.providers`) and `ScheduleProvider` (`basiclive.core.schedule.providers`)—backed by a shared hybrid provenance convention (`source_id`):
+
+1. **Hybrid Coexistence via `source_id`**:
+   - Added a nullable `source_id` field to `lims.Project`, `schedule.FacilityMode`, `schedule.Beamtime`, `schedule.Downtime`, and `schedule.BeamlineSupport`.
+   - Records with `source_id is not None` are owned by the upstream provider, reconciled during sync runs, and guarded against destructive local edits or deletion in BasicLIVE UI modals (`ProjectDelete`, `BeamtimeEdit`, `BeamtimeDelete`, `DowntimeEdit`).
+   - Records with `source_id is None` (such as `Facility Account` projects, `simulated` beamline shifts, or manual schedule entries) remain locally managed and are never overwritten or pruned by external sync runs.
+
+2. **`Project` Temporal Validity and Deferred User Provisioning (`ProjectProvider`)**:
+   - Added `start_date`, `end_date`, and `external_roster` to `lims.Project`, along with `Project.objects.operational()` and `Project.objects.currently_active()` queryset filters.
+   - `Pending` (`today < start_date`), `Active` (`start_date <= today <= end_date`), and `Unbounded` projects remain eligible for advance `Shipment` preparation and `Beamtime` booking, whereas `Expired` (`today > end_date`) projects are restricted to read-only access for historical data, reports, notebooks, and returned shipments.
+   - Bulk project synchronization (`BaseProjectProvider.sync_projects()` and `manage.py sync_projects`) upserts `Project` records and reconciles `ProjectMembership` links only for already existing `lims.User` accounts while staging the full upstream team roster in `Project.external_roster`.
+   - On user login (`user_logged_in` signal) or targeted sync (`manage.py sync_projects --user <username>`), `BaseProjectProvider.sync_user()` matches the authenticated user against staged `external_roster` entries and optional per-user upstream lookups (`fetch_user()`), preventing unused `lims.User` accounts from accumulating for external collaborators who never log in.
+
+3. **`FacilityModeType` / `FacilityMode` Separation and Windowed Schedule Sync (`ScheduleProvider`)**:
+   - Replaced the legacy `FACILITY_MODES` setting and shift-type lookup table with `FacilityModeType` (seeded with canonical `normal`, `development`, `maintenance`, `shutdown`, and `special` modes) and refactored `FacilityMode` into a `TimeFramedModel` interval using `BeamtimeManager` (`.with_duration()`), enabling ReportCraft analytics over facility operating modes on parity with `Beamtime` and `Downtime`.
+   - Implemented `BaseScheduleProvider` and `HttpScheduleProvider` (configured via `BASICLIVE_SCHEDULE["SCHEDULE_PROVIDER"]`) supporting independent configuration and windowed reconciliation (`sync(start, end, types=..., force=...)`) for `modes`, `beamtime`, `downtime`, and `support` via both `manage.py sync_schedule` and lazy calendar week synchronization in `calendar_view`.
+   - Preserved domain side-effects during schedule reconciliation: newly created future `Beamtime` allocations generate `EmailNotification` records, synced `Downtime` marks overlapping `Beamtime` as `cancelled=True` unless `cancelled` was explicitly specified upstream, and `BeamlineSupport` resolves existing `lims.User` accounts by username or email while logging a warning and skipping unknown staff rather than auto-provisioning privileged accounts.
