@@ -17,6 +17,7 @@
     </div>
     {% endif %}
 
+    {% if not bt.source_id %}
     <div class="tools-box float-end pe-0 my-1">
         <a href="#!" data-modal-url="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pe-0">
             {% show_icon icon='edit' size='sm' %}
@@ -25,6 +26,7 @@
             {% show_icon icon='trash' size='sm' %}
         </a>
     </div>
+    {% endif %}
 {% endif %}
 
 {% if bt.project.alias %}

@@ -41,6 +41,11 @@ def calendar_view(year, week):
     dates = month[i * 7:i * 7 + 7]
     start = dates[0]
     end = dates[-1] + timedelta(days=1)
+
+    provider = get_schedule_provider()
+    if provider is not None:
+        provider.sync(start, end)
+
     info = {
         'week': {
             d.strftime('%Y-%m-%d'): {
@@ -55,10 +60,6 @@ def calendar_view(year, week):
         'start': start.strftime('%Y-%m-%d'),
         'end': end.strftime('%Y-%m-%d'),
     }
-
-    provider = get_schedule_provider()
-    if provider is not None:
-        provider.sync(start, end)
 
     start_dt = timezone.make_aware(datetime.combine(start, time.min))
     end_dt = timezone.make_aware(datetime.combine(end, time.min))

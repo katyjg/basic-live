@@ -100,6 +100,13 @@ class BeamlineSupport(models.Model):
         django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE
     )
     date = models.DateField()
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = _("Beamline Support")
@@ -121,6 +128,13 @@ class Beamtime(models.Model):
     cancelled = models.BooleanField(default=False)
     start = models.DateTimeField(verbose_name=_('Start'))
     end = models.DateTimeField(verbose_name=_('End'))
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
 
     objects = BeamtimeManager()
 
@@ -184,10 +198,10 @@ class Beamtime(models.Model):
         }
 
     def info_subject(self):
-        return self.access.email_subject.format(**self.format_info())
+        return self.access.email_subject.format(**self.format_info()) if self.access else ""
 
     def info_body(self):
-        return self.access.email_body.format(**self.format_info())
+        return self.access.email_body.format(**self.format_info()) if self.access else ""
 
     def __str__(self):
         return f"{self.project} on {self.beamline.acronym}"
@@ -201,6 +215,13 @@ class Downtime(TimeFramedModel):
     scope = models.IntegerField(choices=SCOPE_CHOICES, default=SCOPE_CHOICES.FACILITY)
     beamline = models.ForeignKey(Beamline, related_name="downtime", on_delete=models.CASCADE)
     comments = models.TextField(blank=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
 
     objects = BeamtimeManager()
 
