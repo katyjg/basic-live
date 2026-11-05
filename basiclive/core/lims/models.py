@@ -489,17 +489,17 @@ class Project(ProjectEditorMixin, TimeStampedModel):
 
     def active_status(self):
         if self.is_expired:
-            return 'Expired'
+            return _('Expired')
         if self.is_pending:
-            return 'Pending'
+            return _('Pending')
         try:
             if not self.sessions.count():
-                return 'New'
+                return _('New')
             if self.last_session() >= (timezone.localtime() - timedelta(days=365)):
-                return 'Active'
+                return _('Active')
         except TypeError:
-            return 'Active'
-        return 'Idle'
+            return _('Active')
+        return _('Idle')
 
     def last_session(self):
         session = self.sessions.first()
