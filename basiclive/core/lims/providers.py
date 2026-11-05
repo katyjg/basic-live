@@ -66,7 +66,9 @@ class ExternalMemberData:
 @dataclass
 class ExternalProjectData:
     source_id: str
-    name: str
+    code: str = ""
+    name: str = ""
+    title: str = ""
     start_date: date | None = None
     end_date: date | None = None
     kind: str | None = None
@@ -82,6 +84,12 @@ class ExternalProjectData:
     country_code: str | None = None
     postal_code: str | None = None
     members: list[ExternalMemberData] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.code and self.name:
+            self.code = self.name
+        elif not self.name and self.code:
+            self.name = self.code
 
 
 @dataclass
@@ -148,21 +156,24 @@ class BaseProjectProvider:
 
     def _prepare_project_metadata(self, item: ExternalProjectData) -> tuple[Project, bool]:
         source_id = str(item.source_id).strip()
-        slug_name = str(item.name).strip()
+        slug_code = str(item.code or item.name).strip()
 
         project = Project.objects.filter(source_id=source_id).first()
         created = False
         if not project:
             project = Project.objects.filter(
-                name__iexact=slug_name, source_id__isnull=True
+                Q(code__iexact=slug_code) | Q(code__iexact=slug_code),
+                source_id__isnull=True,
             ).first()
             if project:
                 project.source_id = source_id
             else:
-                project = Project(source_id=source_id, name=slug_name)
+                project = Project(source_id=source_id, code=slug_code)
                 created = True
 
-        project.name = slug_name
+        project.code = slug_code
+        if item.title:
+            project.title = item.title.strip()
         if item.start_date is not None or created:
             project.start_date = item.start_date
         if item.end_date is not None or created:
@@ -367,7 +378,7 @@ class BaseProjectProvider:
             elif isinstance(proj_target, str) and proj_target.strip():
                 ident = proj_target.strip()
                 project = Project.objects.filter(
-                    Q(source_id=ident) | Q(name__iexact=ident)
+                    Q(source_id=ident) | Q(code__iexact=ident)
                 ).first()
                 if project:
                     self._apply_user_membership(
@@ -406,7 +417,9 @@ class BaseProjectProvider:
 class HttpProjectProvider(BaseProjectProvider):
     DEFAULT_FIELD_MAP = {
         "source_id": "source_id",
+        "code": "code",
         "name": "name",
+        "title": "title",
         "start_date": "start_date",
         "end_date": "end_date",
         "kind": "kind",
@@ -496,8 +509,10 @@ class HttpProjectProvider(BaseProjectProvider):
     def _parse_project(self, raw: dict[str, Any]) -> ExternalProjectData | None:
         fm = self.field_map
         source_id_val = raw.get(fm["source_id"])
-        name_val = raw.get(fm["name"])
-        if source_id_val is None or not name_val:
+        code_val = raw.get(fm.get("code", "code"))
+        name_val = raw.get(fm.get("name", "name"))
+        resolved_code = code_val or name_val
+        if source_id_val is None or not resolved_code:
             return None
 
         raw_members = raw.get(fm["members"]) or []
@@ -516,7 +531,9 @@ class HttpProjectProvider(BaseProjectProvider):
 
         return ExternalProjectData(
             source_id=str(source_id_val).strip(),
-            name=str(name_val).strip(),
+            code=str(resolved_code).strip(),
+            name=str(resolved_code).strip(),
+            title=_opt_str("title") or "",
             start_date=parse_date_value(raw.get(fm["start_date"])),
             end_date=parse_date_value(raw.get(fm["end_date"])),
             kind=_opt_str("kind"),

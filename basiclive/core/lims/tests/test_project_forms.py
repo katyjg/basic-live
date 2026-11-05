@@ -67,7 +67,8 @@ class ProjectFormsTestCase(TestCase):
 
     def test_new_project_form_successful_creation(self):
         form_data = {
-            'name': 'ark-discovery',
+            'code': 'ark-discovery',
+            'title': 'Ark Discovery Initiative',
             'kind': self.project_type.pk,
             'pi': self.pi.pk,
             'co_investigator': self.co_inv.pk,
@@ -91,6 +92,8 @@ class ProjectFormsTestCase(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         project = form.save()
 
+        self.assertEqual(project.code, 'ark-discovery')
+        self.assertEqual(project.title, 'Ark Discovery Initiative')
         self.assertEqual(project.name, 'ark-discovery')
         self.assertEqual(project.pi, self.pi)
         self.assertEqual(project.kind, self.project_type)
@@ -118,7 +121,7 @@ class ProjectFormsTestCase(TestCase):
 
     def test_new_project_form_requires_pi(self):
         form_data = {
-            'name': 'no-pi-project',
+            'code': 'no-pi-project',
             'kind': self.project_type.pk,
         }
         form = NewProjectForm(data=form_data)
@@ -129,7 +132,7 @@ class ProjectFormsTestCase(TestCase):
         # If PI or Co-Investigator is accidentally included in 'members',
         # their higher role should not be overridden to MEMBER.
         form_data = {
-            'name': 'overlap-project',
+            'code': 'overlap-project',
             'kind': self.project_type.pk,
             'pi': self.pi.pk,
             'co_investigator': self.co_inv.pk,
@@ -200,7 +203,7 @@ class ProjectFormsTestCase(TestCase):
 
     def test_form_validation_rejects_cross_country_region(self):
         form_data = {
-            'name': 'mismatch-form-proj',
+            'code': 'mismatch-form-proj',
             'kind': self.project_type.pk,
             'pi': self.pi.pk,
             'country': self.country_ca.pk,

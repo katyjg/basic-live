@@ -62,7 +62,7 @@ class ProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = (
-            'contact_person', 'contact_email', 'contact_phone',
+            'title', 'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'country',
             'region', 'postal_code', 'kind', 'alias', 'designation'
         )
@@ -90,7 +90,7 @@ class ProjectForm(ModalModelForm):
 
         if pk:
             self.body.title = _("Edit Project")
-            self.body.form_action = reverse_lazy('project-edit', kwargs={'name': self.instance.name})
+            self.body.form_action = reverse_lazy('project-edit', kwargs={'code': self.instance.code})
         else:
             self.body.title = _("Create New Profile")
             self.body.form_action = reverse_lazy('new-project')
@@ -101,6 +101,10 @@ class ProjectForm(ModalModelForm):
             self.fields['designation'].widget = forms.MultipleHiddenInput()
 
         self.body.layout = Layout(
+            Row(
+                FullWidth('title'),
+                style="g-2"
+            ),
             Row(
                 ThirdWidth(Field('kind', css_class='select')),
                 ThirdWidth('alias') if self.user.is_superuser else HalfWidth('alias'),
@@ -191,7 +195,7 @@ class NewProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = (
-            'name', 'kind', 'alias', 'designation',
+            'code', 'title', 'kind', 'alias', 'designation',
             'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes',
             'organisation', 'department', 'address', 'city', 'country',
@@ -223,8 +227,12 @@ class NewProjectForm(ModalModelForm):
         self.body.form_action = reverse_lazy('new-project')
         self.body.layout = Layout(
             Row(
-                HalfWidth('name'),
+                HalfWidth('code'),
                 HalfWidth(Field('kind', css_class="select")),
+                style="g-2"
+            ),
+            Row(
+                FullWidth('title'),
                 style="g-2"
             ),
             Row(

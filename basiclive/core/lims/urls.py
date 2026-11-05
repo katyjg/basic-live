@@ -11,11 +11,11 @@ urlpatterns = [
     path('projects/switch/<int:pk>/', views.SwitchProjectView.as_view(), name='switch-project'),
     path('projects/switch/', views.SwitchProjectView.as_view(), name='switch-project-form'),
     path('projects/new/', views.ProjectCreate.as_view(), name='new-project'),
-    path('projects/<slug:name>/', views.ProjectProfile.as_view(), name='project-profile'),
-    path('projects/<slug:name>/edit/', views.ProjectEdit.as_view(), name='project-edit'),
-    path('projects/<slug:name>/labels/', views.ProjectLabels.as_view(), name='project-labels'),
-    path('projects/<slug:name>/info/', views.ProjectInfo.as_view(), name='project-info'),
-    path('projects/<slug:name>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
+    path('projects/<slug:code>/', views.ProjectProfile.as_view(), name='project-profile'),
+    path('projects/<slug:code>/edit/', views.ProjectEdit.as_view(), name='project-edit'),
+    path('projects/<slug:code>/labels/', views.ProjectLabels.as_view(), name='project-labels'),
+    path('projects/<slug:code>/info/', views.ProjectInfo.as_view(), name='project-info'),
+    path('projects/<slug:code>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
     path('regions/', ajax_views.RegionLookup.as_view(), name='region-list-ajax'),
 
     # User routes

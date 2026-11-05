@@ -91,14 +91,14 @@ class ProjectLifecycleAndProvenanceTests(TestCase):
         operational_names = set(
             Project.objects.filter(
                 pk__in=[unbounded.pk, pending.pk, active.pk, expired.pk]
-            ).operational().values_list("name", flat=True)
+            ).operational().values_list("code", flat=True)
         )
         self.assertEqual(operational_names, {"unbounded-proj", "pending-proj", "active-proj"})
 
         currently_active_names = set(
             Project.objects.filter(
                 pk__in=[unbounded.pk, pending.pk, active.pk, expired.pk]
-            ).currently_active().values_list("name", flat=True)
+            ).currently_active().values_list("code", flat=True)
         )
         self.assertEqual(currently_active_names, {"unbounded-proj", "active-proj"})
 
@@ -269,16 +269,16 @@ class OperationalGatingAndHybridDeleteTests(TestCase):
         self.client.force_login(self.admin)
 
         # External project cannot be deleted via UI
-        ext_get = self.client.get(reverse("project-delete", kwargs={"name": external_proj.name}))
+        ext_get = self.client.get(reverse("project-delete", kwargs={"code": external_proj.code}))
         self.assertEqual(ext_get.status_code, 403)
-        ext_post = self.client.post(reverse("project-delete", kwargs={"name": external_proj.name}))
+        ext_post = self.client.post(reverse("project-delete", kwargs={"code": external_proj.code}))
         self.assertEqual(ext_post.status_code, 403)
         self.assertTrue(Project.objects.filter(pk=external_proj.pk).exists())
 
         # Local project can be accessed and deleted via UI
-        loc_get = self.client.get(reverse("project-delete", kwargs={"name": local_proj.name}))
+        loc_get = self.client.get(reverse("project-delete", kwargs={"code": local_proj.code}))
         self.assertEqual(loc_get.status_code, 200)
-        loc_post = self.client.post(reverse("project-delete", kwargs={"name": local_proj.name}))
+        loc_post = self.client.post(reverse("project-delete", kwargs={"code": local_proj.code}))
         self.assertIn(loc_post.status_code, (200, 302))
         self.assertFalse(Project.objects.filter(pk=local_proj.pk).exists())
 
@@ -377,7 +377,8 @@ class BulkProjectSyncTests(TestCase):
         StaticSyncProvider.projects_to_return = [
             ExternalProjectData(
                 source_id="PORTAL-1001",
-                name="gu-1001",
+                code="gu-1001",
+                title="Grand Unified Beamline Study",
                 start_date=self.today - timedelta(days=5),
                 end_date=self.today + timedelta(days=60),
                 contact_person="Ada Lovelace",
@@ -446,6 +447,8 @@ class BulkProjectSyncTests(TestCase):
 
         # Verify PORTAL-1001 creation, attributes, geographic resolution, and roster
         proj1 = Project.objects.get(source_id="PORTAL-1001")
+        self.assertEqual(proj1.code, "gu-1001")
+        self.assertEqual(proj1.title, "Grand Unified Beamline Study")
         self.assertEqual(proj1.name, "gu-1001")
         self.assertEqual(proj1.start_date, self.today - timedelta(days=5))
         self.assertEqual(proj1.end_date, self.today + timedelta(days=60))
@@ -501,7 +504,7 @@ class BulkProjectSyncTests(TestCase):
         ):
             call_command("sync_projects", stdout=out)
 
-        self.assertTrue(Project.objects.filter(source_id="CMD-3001", name="cmd-3001").exists())
+        self.assertTrue(Project.objects.filter(source_id="CMD-3001", code="cmd-3001").exists())
         self.assertIn("Created: 1", out.getvalue())
 
     def test_sync_projects_clears_incompatible_region_and_normalizes_roster_and_role_precedence(self):
@@ -564,6 +567,7 @@ class HttpProjectProviderTests(TestCase):
                 {
                     "id": 4201,
                     "proposal_id": "mx-4201",
+                    "proposal_title": "Macromolecular Crystallography of Polonium",
                     "start_date": "2026-01-15",
                     "end_date": "2027-01-15T00:00:00Z",
                     "institution": "Light Source Institute",
@@ -604,6 +608,7 @@ class HttpProjectProviderTests(TestCase):
             field_map={
                 "source_id": "id",
                 "name": "proposal_id",
+                "title": "proposal_title",
                 "start_date": "start_date",
                 "end_date": "end_date",
                 "organisation": "institution",
@@ -629,7 +634,9 @@ class HttpProjectProviderTests(TestCase):
         self.assertEqual(len(projects), 1)
         proj = projects[0]
         self.assertEqual(proj.source_id, "4201")
+        self.assertEqual(proj.code, "mx-4201")
         self.assertEqual(proj.name, "mx-4201")
+        self.assertEqual(proj.title, "Macromolecular Crystallography of Polonium")
         self.assertEqual(proj.start_date, date(2026, 1, 15))
         self.assertEqual(proj.end_date, date(2027, 1, 15))
         self.assertEqual(proj.organisation, "Light Source Institute")
