@@ -24,7 +24,7 @@ def natural_seconds(seconds, depth=2):
     units = ['year', 'month', 'week', 'day', 'hour', 'min', 'sec']
     values = [years, months, weeks, days, hours, minutes, seconds]
     entries = [
-        '{:0.0f} {}{}'.format(val, unit, 's' if val > 1 else '')
+        f'{val:0.0f} {unit}{"s" if val > 1 else ""}'
         for val, unit in zip(values, units) if round(val) > 0
     ]
 
