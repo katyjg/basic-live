@@ -1023,7 +1023,16 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
         if request.user.is_authenticated and not request.user.is_superuser:
             project = getattr(request, 'project', None)
             if not project or project.is_expired:
-                raise PermissionDenied("Cannot create a shipment for an expired project.")
+                return render(
+                    request, "lims/modal/alert.html",
+                    {
+                        "title": "Project Expired",
+                        "message": (
+                            "You cannot create a shipment for an expired project. "
+                            "Please switch to an active or pending project to proceed."
+                        )
+                    }
+                )
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, form, **kwargs):
