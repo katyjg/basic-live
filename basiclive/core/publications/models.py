@@ -1,11 +1,12 @@
 from django.db import models
-from django.db.models import F, Value as V
-from django.db.models.functions import Coalesce, Concat
+from django.db.models import Value as V
+from django.db.models.functions import Concat
+from django.utils import timezone
 from django.utils.translation import gettext as _
-from model_utils.models import TimeStampedModel
 from model_utils import Choices
+from model_utils.models import TimeStampedModel
+
 from basiclive.utils import fields
-from basiclive.utils import temporal
 
 
 class SubjectArea(TimeStampedModel):
@@ -13,6 +14,10 @@ class SubjectArea(TimeStampedModel):
     description = models.TextField(blank=True, null=True)
     code = models.CharField(_('ASJC Code'), max_length=10)
     parent = models.ForeignKey("SubjectArea", blank=True, null=True, related_name="children", on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = _("Subject Area")
+        verbose_name_plural = _("Subject Areas")
 
     def __str__(self):
         return self.name
@@ -28,6 +33,10 @@ class Tag(TimeStampedModel):
     description = models.TextField(blank=True)
     objects = TagManager()
 
+    class Meta:
+        verbose_name = _("Tag")
+        verbose_name_plural = _("Tags")
+
     def __str__(self):
         return self.name
 
@@ -39,28 +48,47 @@ class Journal(TimeStampedModel):
     title = models.TextField()
     short_name = models.TextField(blank=True, null=True)
     codes = fields.StringListField("ISSN", unique=True)
-    publisher = models.TextField(blank=True, null=True)
+    publisher = models.CharField(max_length=255, blank=True, null=True)
     topics = models.ManyToManyField(SubjectArea, related_name='journals', blank=True)
-    metrics = models.ForeignKey('JournalProfile', null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = _("Journal")
+        verbose_name_plural = _("Journals")
 
     def __str__(self):
         return self.title
 
 
-class JournalProfile(temporal.TemporalProfile):
-    owner = models.ForeignKey(Journal, on_delete=models.CASCADE, related_name='profiles')
+def default_year() -> int:
+    """
+    Returns the current year as an integer.
+    """
+    return timezone.localtime(timezone.now()).year
+
+
+class JournalMetric(TimeStampedModel):
+    journal = models.ForeignKey(Journal, related_name='metrics', on_delete=models.CASCADE)
     sjr_rank = models.FloatField("SJR-Rank", default=0.0, null=True)
     sjr_quartile = models.SmallIntegerField("SJR-Quartile", default=4, null=True)
     impact_factor = models.FloatField("Impact Factor", default=0.0, null=True)
     h_index = models.IntegerField("H-Index", default=1.0, null=True)
+    year = models.IntegerField("Year", default=default_year)
+
+    class Meta:
+        unique_together = ('journal', 'year')
+        verbose_name = "Journal Metric"
 
     def __str__(self):
-        return f"{self.owner} > {self.effective.isoformat()}"
+        return f"{self.journal} > {self.year}"
 
 
 class Funder(TimeStampedModel):
     name = models.TextField(unique=True)
     code = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Funder")
+        verbose_name_plural = _("Funders")
 
     def __str__(self):
         return self.name
@@ -69,13 +97,15 @@ class Funder(TimeStampedModel):
 class PublicationManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            cites=Coalesce('metrics__citations', 0),
-            mentions=Coalesce('metrics__mentions', 0),
             citation=Concat(
-                'author_names', V(" ("), 'published__year', V(") "), 'title', V(". "), "code",
+                'author_names',
+                V(" ("),
+                'published__year',
+                V(") "),
+                'title', V(". "),
+                "code",
                 output_field=models.TextField()
             ),
-            impact_factor=Coalesce('journal__metrics__impact_factor', 0.0),
         )
 
 
@@ -109,21 +139,30 @@ class Publication(TimeStampedModel):
     volume = models.CharField(max_length=100, blank=True, null=True)
     issue = models.CharField(max_length=20, blank=True, null=True)
     pages = models.CharField(max_length=20, blank=True, null=True)
-    metrics = models.ForeignKey("Metric", null=True, on_delete=models.SET_NULL, related_name='publication')
 
     objects = PublicationManager()
+
+    class Meta:
+        verbose_name = _("Publication")
+        verbose_name_plural = _("Publications")
 
     def __str__(self):
         return self.code
 
 
-class Metric(temporal.TemporalProfile):
-    owner = models.ForeignKey(Publication, null=True, on_delete=models.CASCADE, related_name='all_metrics')
-    citations = models.IntegerField(default=0)
-    mentions = models.IntegerField(default=0)
+class ArticleMetric(TimeStampedModel):
+    publication = models.ForeignKey(Publication, related_name='metrics', on_delete=models.CASCADE)
+    citations = models.IntegerField("Citations", default=0)
+    mentions = models.IntegerField("Mentions", default=0)
+    self_cites = models.IntegerField("Self-Citations", default=0)
+    year = models.IntegerField("Year", default=default_year)
+
+    class Meta:
+        unique_together = ('publication', 'year')
+        verbose_name = "Article Metric"
 
     def __str__(self):
-        return f'{self.citations}'
+        return f"{self.publication} > {self.year}"
 
 
 class Deposition(TimeStampedModel):
@@ -138,6 +177,10 @@ class Deposition(TimeStampedModel):
     tags = models.ManyToManyField(Tag, related_name='depositions', verbose_name='Tags')
     reference = models.ForeignKey(Publication, related_name='depositions', null=True, on_delete=models.SET_NULL)
     citation = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Deposition")
+        verbose_name_plural = _("Depositions")
 
     def __str__(self):
         return self.code

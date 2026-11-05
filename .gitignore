@@ -116,10 +116,27 @@ venv.bak/
 .mypy_cache/
 
 # local
-local/*
-!local/__init__.py
-!local/settings.py.example
+local/
 vendor/
 assets/
-.idea/copilot.*
 /docs/_build/
+
+# Ignore personal PyCharm/IntelliJ settings
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionary.xml
+.idea/shelf/
+
+# Ignore AWS Toolkit / Cloud Code plugin user configs if used
+.idea/assetWizardSettings.xml
+
+# Sensitive data / Crash reports
+.idea/caches/
+.idea/log/
+
+# OPTIONAL: The "Nuclear Option"
+# Uncomment the line below ONLY if nobody else on your team uses PyCharm
+# and you don't care about saving run configurations.
+#.idea/
+.sass-cache/

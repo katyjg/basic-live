@@ -4,20 +4,28 @@ from datetime import datetime
 from math import ceil
 
 import numpy
-from django.conf import settings
 from django.db.models import Count, Sum, F, Avg, FloatField, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timesince import timesince
-from memoize import memoize
 
+from basiclive.core.lims.conf import settings
 from basiclive.core.lims.models import Data, Sample, Session, Project, AnalysisReport, Container, Shipment, ProjectType, DataType
 from basiclive.utils.functions import ShiftEnd, ShiftStart, ShiftIndex
 from basiclive.utils.misc import humanize_duration, natural_duration
 from basiclive.utils.stats import make_table
 
+
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
+
 HOUR_SECONDS = 3600
-SHIFT = getattr(settings, "HOURS_PER_SHIFT", 8)
+SHIFT = get_hours_per_shift()
 SHIFT_SECONDS = SHIFT * HOUR_SECONDS
 MAX_COLUMN_USERS = 30
 
@@ -35,7 +43,6 @@ def js_epoch(dt):
     return int("{:0.0f}000".format(dt.timestamp() if dt else datetime.now().timestamp()))
 
 
-@memoize(timeout=HOUR_SECONDS)
 def get_data_periods(period='year'):
     field = 'created__{}'.format(period)
     return sorted(Data.objects.values_list(field, flat=True).order_by(field).distinct())
@@ -145,12 +152,12 @@ def usage_summary(period='year', **all_filters):
     samples_per_dataset = {key: samples_measured.get(key, 0) / dataset_counts.get(key, 1) for key in periods}
     # Sample Throughput (/h)
     sample_throughput = {
-        entry[field]: 3600. * entry['num_samples'] / entry['time'].total_seconds()
+        entry[field]: 0.0 if entry['time'].total_seconds() == 0.0 else 3600. * entry['num_samples'] / entry['time'].total_seconds()
         for entry in throughput_info if entry['time'] and entry['num_samples']
     }
     # MX Dataset Throughput (/h)
     data_throughput = {
-        entry[field]: 3600. * entry['num_datasets'] / entry['time'].total_seconds()
+        entry[field]: 0.0 if entry['time'].total_seconds() == 0.0 else 3600. * entry['num_datasets'] / entry['time'].total_seconds()
         for entry in throughput_info if entry['time'] and entry['num_datasets']
     }
 
@@ -301,7 +308,7 @@ def usage_summary(period='year', **all_filters):
         }
 
     beamtime = {}
-    if settings.LIMS_USE_SCHEDULE:
+    if settings.USE_SCHEDULE:
         from basiclive.core.schedule.stats import beamtime_summary
 
         beamtime = beamtime_summary(
@@ -903,7 +910,7 @@ def project_stats(project, **filters):
     beamtime = []
     visits = []
     stat_table = []
-    if settings.LIMS_USE_SCHEDULE:
+    if settings.USE_SCHEDULE:
 
         sched_field = field.replace('created', 'start')
         beamtime_counts = {
@@ -1395,7 +1402,7 @@ def project_stats(project, **filters):
     beamtime = []
     visits = []
     stat_table = []
-    if settings.LIMS_USE_SCHEDULE:
+    if settings.USE_SCHEDULE:
 
         sched_field = field.replace('created', 'start')
         beamtime_counts = {

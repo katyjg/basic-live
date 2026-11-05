@@ -1,0 +1,158 @@
+{
+  "simplemde": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2/",
+    "css": [
+      {
+        "path": "simplemde.min.css",
+        "sri": "sha512-lB03MbtC3LxImQ+BKnZIyvVHTQ8SSmQ15AhVh5U/+CCp4wKtZMvgLGXbZIjIBBbnKsmk3/6n2vcF8a9CtVVSfA=="
+      }
+    ],
+    "js": [
+      {
+        "path": "simplemde.min.js",
+        "sri": "sha512-ksSfTk6JIdsze75yZ8c+yDVLu09SNefa9IicxEE+HZvWo9kLPY1vrRlmucEMHQReWmEdKqusQWaDMpkTb3M2ug=="
+      }
+    ]
+  },
+  "katex": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/",
+    "css": [
+      {
+        "path": "katex.min.css",
+        "sri": "sha512-fHwaWebuwA7NSF5Qg/af4UeDx9XqUpYpOGgubo3yWu+b2IQR4UeQwbb42Ti7gVAjNtVoI/I9TEoYeu9omwcC6g=="
+      }
+    ],
+    "js": [
+      {
+        "path": "katex.min.js",
+        "sri": "sha512-LQNxIMR5rXv7o+b1l8+N1EZMfhG7iFZ9HhnbJkTp4zjNr5Wvst75AqUeFDxeRUa7l5vEDyUiAip//r+EFLLCyA=="
+      },
+      {
+        "path": "contrib/auto-render.min.js",
+        "sri": "sha512-iWiuBS5nt6r60fCz26Nd0Zqe0nbk1ZTIQbl3Kv7kYsX+yKMUFHzjaH2+AnM6vp2Xs+gNmaBAVWJjSmuPw76Efg==",
+        "file": "auto-render.min.js"
+      }
+    ]
+  },
+  "dropzone": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/",
+    "css": [
+      {
+        "path": "dropzone.min.css",
+        "sri": "sha512-WvVX1YO12zmsvTpUQV8s7ZU98DnkaAokcciMZJfnNWyNzm7//QRV61t4aEr0WdIa4pe854QHLTV302vH92FSMw=="
+      }
+    ],
+    "js": [
+      {
+        "path": "dropzone.min.js",
+        "sri": "sha512-oQq8uth41D+gIH/NJvSJvVB85MFk1eWpMK6glnkg6I7EdMqC1XVkW7RxLheXwmFdG03qScCM7gKS/Cx3FYt7Tg=="
+      }
+    ]
+  },
+  "atrament": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/atrament.js/0.3.1/",
+    "js": [
+      {
+        "sri": "sha512-9URTP1dLQ4Gl7Wydj9A3o9ibol246q2KuoaHlJTsd1pUBYBQWa5QvkpI6ly8QR3IK33MN/uII1ROl4MIIaPhmQ==",
+        "path": "atrament.min.js"
+      }
+    ]
+  },
+  "papaparse": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/",
+    "js": [
+      {
+        "path": "papaparse.min.js",
+        "sri": "sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ=="
+      }
+    ]
+  },
+  "d3": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/",
+    "js": [
+      {
+        "path": "d3/5.12.0/d3.min.js",
+        "sri": "sha512-G5tjYfxaCjl3tuKZo9Zo1+AmuXvADSTd3oH1z6zCrQq05nGXveIRG5bPIC3ZytDmnDw+TROBkeg8rbQy1zQhcg=="
+      },
+      {
+        "path": "d3-legend/2.25.6/d3-legend.min.js",
+        "sri": "sha512-wNH6xsp2n8CfB91nrBtfc4sfLwYPBMjSWVUwQOp60AYYXH6i8yCwuKFZ4rgK2i6pQek/b+bSyR7b01/922IBzQ=="
+      }
+    ]
+  },
+  "clndr": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/clndr/1.5.1/",
+    "js": [
+      {
+        "path": "clndr.min.js",
+        "sri": "sha512-9qEXAi4dhZfov+O9Jl7mMeogPQ76tGWzmX1nBbsrchczAAQEaeqhE6wpXFbZMlaXXKKZ4QKJ4St+/R7kFwN19A=="
+      }
+    ]
+  },
+  "moment": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/",
+    "js": [
+      {
+        "path": "moment.min.js",
+        "sri": "sha512-QoJS4DOhdmG8kbbHkxmB/rtPdN62cGWXAdAFWWJPvUFF1/zxcPSdAnn4HhYZSIlVoLVEJ0LesfNlusgm2bPfnA=="
+      }
+    ]
+  },
+  "tinycolorpicker": {
+    "url": "https://cdn.jsdelivr.net/npm/tinycolorpicker@0.9.5/",
+    "js": [
+      {
+        "path": "lib/jquery.tinycolorpicker.min.js",
+        "sri": "sha512-rRF13lzuvaISLhnD7fDYpZ/UUu8wXKbKiOqYTvssfVSTJ+t7WjuWSDOPXEvZJjpbrAm5ZcOVZXV2vQPb4URoqA=="
+      }
+    ]
+  },
+  "misc": {
+    "url": "https://cdn.jsdelivr.net/npm/vanilla-picker@2.12.3/dist/",
+    "js": [
+      {
+        "path": "vanilla-picker.min.js",
+        "sri": "sha256-ASh7VW9d9TDlZCroC7h4LKmi2E6iB9jCKXQp7OnmHxc="
+      }
+    ],
+    "css": [
+      {
+        "path": "vanilla-picker.csp.min.css"
+      }
+    ]
+  },
+  "html5sortable": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/html5sortable/0.14.0/",
+    "js": [
+      {
+        "path": "html5sortable.min.js",
+        "sri": "sha512-B/yiMlkxhtHzzJxPa5kNOO/+8cq0Fj4ndMUxVo2kGunCCH8g8XrPnzqg+sOon3hQ8RaEY2YytH+PIseTtfstjg=="
+      }
+    ]
+  },
+  "highlight": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/",
+    "css": [
+      {
+        "path": "styles/default.min.css",
+        "sri": "sha512-hasIneQUHlh06VNBe7f6ZcHmeRTLIaQWFd43YriJ0UND19bvYRauxthDg8E4eVNPm9bRUhr5JGeqH7FRFXQu5g==",
+        "file": "default.min.css"
+      }
+    ],
+    "js": [
+      {
+        "path": "highlight.min.js",
+        "sri": "sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ=="
+      }
+    ]
+  },
+  "markjs": {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/",
+    "js": [
+      {
+        "path": "jquery.mark.min.js",
+        "sri": "sha512-mhbv5DqBMgrWL+32MmsDOt/OAvqr/cHimk6B8y/bx/xS88MVkYGPiVv2ixKVrkywF2qHplNRUvFsAHUdxZ3Krg=="
+      }
+    ]
+  }
+}

@@ -6,31 +6,42 @@ import os
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
 
-from django.conf import settings
+from django.conf import settings as main_settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, F, Count, CharField, BooleanField, Value, Sum
 from django.db.models.functions import Coalesce, Concat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-
-from memoize import memoize
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
+from basiclive.core.lims.conf import settings
 from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
 from basiclive.utils.functions import ShiftEnd, ShiftStart
+from basiclive.utils.singleton import SingletonManager, Singleton
+from basiclive.utils.network import get_client_address
+from basiclive.utils.cache import cached_method
+
+
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
 
 IDENTITY_FORMAT = '-%y%m'
-RESTRICT_DOWNLOADS = getattr(settings, 'RESTRICT_DOWNLOADS', False)
-SHIFT_HRS = getattr(settings, 'HOURS_PER_SHIFT', 8)
+RESTRICT_DOWNLOADS = settings.RESTRICT_DOWNLOADS
+SHIFT_HRS = get_hours_per_shift()
 SHIFT_SECONDS = SHIFT_HRS * 3600
-
-MAX_CONTAINER_DEPTH = getattr(settings, 'MAX_CONTAINER_DEPTH', 2)
+MAX_CONTAINER_DEPTH = settings.MAX_CONTAINER_DEPTH
 SAMPLE_PORT_FIELDS = [
                          "container{}__location__name".format("__".join([""] + (["parent"] * i)))
                          for i in reversed(range(MAX_CONTAINER_DEPTH))
@@ -72,6 +83,92 @@ class OrphanSample(object):
         self.orphaned_datasets = []
         self.orphaned_reports = []
 
+    def reports(self, session=None):
+        if session:
+            return [
+                report for report in self.orphaned_reports
+                if report.data.filter(session=session).exists()
+            ]
+        else:
+            return self.orphaned_reports
+
+
+class CountryManager(models.Manager):
+    def get_by_natural_key(self, code):
+        return self.get(alpha3=code)
+
+
+class Country(models.Model):
+    """
+    Model to store country data based on ISO 3166-1 standard.
+    """
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="The common name of the country."
+    )
+    alpha2 = models.CharField(
+        max_length=2,
+        unique=True,
+        verbose_name="ISO 3166-1 alpha-2",
+        help_text="Two-letter country code."
+    )
+    alpha3 = models.CharField(
+        max_length=3,
+        unique=True,
+        verbose_name="ISO 3166-1 alpha-3",
+        help_text="Three-letter country code."
+    )
+    code = models.CharField(
+        max_length=3,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="ISO 3166-1 numeric code",
+        help_text="Three-digit country code."
+    )
+
+    objects = CountryManager()
+
+    class Meta:
+        verbose_name_plural = "Countries"
+        ordering = ['name']
+
+    def natural_key(self):
+        return (self.alpha3,)
+
+    def __str__(self):
+        return self.name
+
+
+class RegionManager(models.Manager):
+    def get_by_natural_key(self, code):
+        return self.get(code=code)
+
+
+class Region(models.Model):
+    """
+    Model for top-level administrative subdivisions of a country (e.g., state, province).
+    Corresponds to ISO 3166-2.
+    """
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="regions")
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10,  unique=True,  verbose_name="ISO 3166-2 code")
+    lat = models.FloatField(null=True, blank=True, verbose_name="Latitude")
+    lon = models.FloatField(null=True, blank=True, verbose_name="Longitude")
+    objects = RegionManager()
+
+    class Meta:
+        verbose_name_plural = "Regions"
+        unique_together = [['country', 'name']]
+        ordering = ['country__name', 'name']
+
+    def natural_key(self):
+        return (self.code,)
+
+    def __str__(self):
+        return f"{self.name}, {self.country.name}"
+
 
 class Beamline(models.Model):
     """
@@ -84,14 +181,29 @@ class Beamline(models.Model):
     energy_hi = models.FloatField(default=18.5)
     contact_phone = models.CharField(max_length=60)
     automounters = models.ManyToManyField('Container', through='Automounter', through_fields=('beamline', 'container'))
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(
+        default=True,
+        help_text=_(
+            "Designates whether this beamline is operational. Unselect instead of deleting decommissioned beamlines."
+        )
+    )
+    simulated = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Designates whether this beamline is used for testing and simulation rather than physical production."
+        )
+    )
+
+    class Meta:
+        verbose_name = _("Beamline")
+        verbose_name_plural = _("Beamlines")
 
     def __str__(self):
         return self.acronym
 
     def active_session(self):
         """
-        Returns the session that is currently running on the beamline, if there is one.
+        Returns the session currently running on the beamline, if there is one.
         """
         return self.sessions.filter(pk__in=Stretch.objects.active().values_list('session__pk')).first()
 
@@ -101,6 +213,14 @@ class Beamline(models.Model):
         only one active automounter referencing each beamline at any given time.
         """
         return self.layouts.filter(active=True).first()
+
+    @property
+    def is_decommissioned(self):
+        return not self.active
+
+    @property
+    def is_production(self):
+        return self.active and not self.simulated
 
 
 class Carrier(models.Model):
@@ -112,6 +232,10 @@ class Carrier(models.Model):
 
     name = models.CharField(max_length=60)
     url = models.URLField()
+
+    class Meta:
+        verbose_name = _("Courier Carrier")
+        verbose_name_plural = _("Courier Carriers")
 
     def __str__(self):
         return self.name
@@ -129,43 +253,224 @@ class ProjectDesignation(TimeStampedModel):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = _("Project Designation")
+        verbose_name_plural = _("Project Designations")
+
     def __str__(self):
         return self.name
 
 
-class Project(AbstractUser):
+class User(AbstractUser):
+    name = models.CharField(max_length=255, blank=True, default='')
+    phone = models.CharField(max_length=60, blank=True, default='', verbose_name=_('Phone'))
+    default_project = models.ForeignKey(
+        'lims.Project',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name=_('Default Project'),
+    )
+
+    class Meta:
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
+        swappable = 'AUTH_USER_MODEL'
+
+    def __str__(self):
+        return self.get_full_name() or self.name or self.username
+
+    def get_projects(self):
+        return Project.objects.filter(
+            Q(memberships__user=self) | Q(pi=self)
+        ).distinct().order_by('name')
+
+    def get_status(self):
+        if self.is_superuser:
+            return "Super-User"
+        elif self.is_staff:
+            return "Staff"
+        else:
+            return "User"
+
+    def can_access_project(self, project) -> bool:
+        if not self.is_authenticated:
+            return False
+        if self.is_superuser:
+            return True
+        if not project:
+            return False
+        return project.is_member(self)
+
+    def save(self, *args, **kwargs):
+        if not self.name and (self.first_name or self.last_name):
+            self.name = f"{self.first_name} {self.last_name}".strip()
+        elif not self.name:
+            self.name = self.username
+        super().save(*args, **kwargs)
+
+
+class ProjectMembership(TimeStampedModel):
+    class Role(models.TextChoices):
+        PI = 'PI', _('Principal Investigator')
+        CO_INVESTIGATOR = 'CO_INVESTIGATOR', _('Co-Investigator')
+        MEMBER = 'MEMBER', _('Member')
+
+    ROLES = Role
+
+    user = models.ForeignKey(
+        'lims.User',
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    project = models.ForeignKey(
+        'lims.Project',
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+
+    class Meta:
+        unique_together = ('user', 'project')
+        verbose_name = _('Project Membership')
+        verbose_name_plural = _('Project Memberships')
+
+    def __str__(self):
+        return f"{self.user} - {self.project} ({self.get_role_display()})"
+
+
+class ProjectEditorMixin:
+    def can_edit(self, user):
+        if hasattr(self, 'project') and hasattr(user, 'can_access_project'):
+            return user.can_access_project(self.project)
+        return False
+
+    def can_view(self, user):
+        return self.can_edit(user) or user.is_staff
+
+
+class ProjectQuerySet(models.QuerySet):
+    def operational(self, today=None):
+        today = today or timezone.localdate()
+        return self.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+
+    def currently_active(self, today=None):
+        today = today or timezone.localdate()
+        return self.filter(
+            (Q(start_date__isnull=True) | Q(start_date__lte=today))
+            & (Q(end_date__isnull=True) | Q(end_date__gte=today))
+        )
+
+
+ProjectManager = models.Manager.from_queryset(ProjectQuerySet)
+
+
+class Project(ProjectEditorMixin, TimeStampedModel):
     HELP = {
         'contact_person': _("Full name of contact person"),
     }
-    name = models.SlugField()
+    name = models.SlugField(max_length=100, unique=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        unique=True,
+        db_index=True,
+    )
+    start_date = models.DateField(_("Start Date"), null=True, blank=True)
+    end_date = models.DateField(_("End Date"), null=True, blank=True)
+    external_roster = models.JSONField(_("External Roster"), default=list, blank=True)
+    pi = models.ForeignKey(
+        'lims.User',
+        related_name='led_projects',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    members = models.ManyToManyField(
+        'lims.User',
+        through=ProjectMembership,
+        related_name='projects',
+        blank=True
+    )
     contact_person = models.CharField(max_length=200, blank=True, null=True)
     contact_email = models.EmailField(max_length=100, blank=True, null=True)
     carrier = models.ForeignKey(Carrier, blank=True, null=True, on_delete=models.SET_NULL)
-    account_number = models.CharField(max_length=50, blank=True, null=True)
+    account_number = models.CharField("Carrier Account Number", max_length=50, blank=True, null=True)
+    shipping_notes = models.TextField("Shipping Notes", blank=True, null=True)
     department = models.CharField(max_length=600, blank=True, null=True)
     address = models.CharField(max_length=600, blank=True, null=True)
     city = models.CharField(max_length=180, blank=True, null=True)
-    province = models.CharField(max_length=180, blank=True, null=True)
+    region = models.ForeignKey(
+        Region,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="projects",
+        verbose_name=_("State / Province / Region")
+    )
     postal_code = models.CharField(max_length=30, blank=True, null=True)
-    country = models.CharField(max_length=180, blank=True, null=True)
+    country = models.ForeignKey(
+        Country,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="projects",
+        verbose_name=_("Country")
+    )
     contact_phone = models.CharField(max_length=60, blank=True, null=True)
     contact_fax = models.CharField(max_length=60, blank=True, null=True)
     organisation = models.CharField(max_length=600, blank=True, null=True)
     show_archives = models.BooleanField(default=True)
-    key = models.TextField(blank=True)
-    kind = models.ForeignKey(ProjectType, blank=True, null=True, on_delete=models.SET_NULL,
-                             verbose_name=_("Project Type"))
+    kind = models.ForeignKey(
+        ProjectType, blank=True, null=True, on_delete=models.SET_NULL, verbose_name=_("Project Type")
+    )
     alias = models.CharField(max_length=20, blank=True, null=True)
     designation = models.ManyToManyField(ProjectDesignation, verbose_name=_("Project Designation"), blank=True)
-    created = models.DateTimeField(_('date created'), auto_now_add=True, editable=False)
-    modified = models.DateTimeField(_('date modified'), auto_now=True, editable=False)
     updated = models.BooleanField(default=False)
 
+    objects = ProjectManager()
+
+    class Meta:
+        verbose_name = _("Project")
+        verbose_name_plural = _("Projects")
+
     def __str__(self):
-        return self.name.upper()
+        return self.name.upper() if self.name else ""
+
+    @property
+    def is_expired(self) -> bool:
+        return bool(self.end_date and timezone.localdate() > self.end_date)
+
+    @property
+    def is_pending(self) -> bool:
+        return bool(self.start_date and timezone.localdate() < self.start_date and not self.is_expired)
+
+    @property
+    def is_operational(self) -> bool:
+        return not self.is_expired
+
+    @property
+    def contact_name(self):
+        if self.contact_person:
+            return self.contact_person
+        if self.pi:
+            return self.pi.get_full_name() or self.pi.name or self.pi.username
+        return self.name
+
+    def get_contact(self):
+        """
+        Returns the contact person for the project. If a contact person is not explicitly set, it will return the PI.
+        """
+        contact = self.members.filter(role=ProjectMembership.Role.CO_INVESTIGATOR).first()
+        if not contact:
+            contact = self.pi
+        return contact
 
     def get_absolute_url(self):
-        return reverse('user-detail', kwargs={'username': self.username})
+        return reverse('project-profile', kwargs={'name': self.name})
 
     def onsite_containers(self):
         return self.containers.filter(status=Container.STATES.ON_SITE).count()
@@ -174,6 +479,10 @@ class Project(AbstractUser):
         return self.name
 
     def active_status(self):
+        if self.is_expired:
+            return 'Expired'
+        if self.is_pending:
+            return 'Pending'
         try:
             if not self.sessions.count():
                 return 'New'
@@ -187,22 +496,75 @@ class Project(AbstractUser):
         session = self.sessions.first()
         return session.created if session else None
 
+    @property
+    def region_code(self):
+        if not self.region:
+            return ""
+        if '-' in self.region.code:
+            return self.region.code.split('-', 1)[1]
+        return self.region.code
+
+    def clean(self):
+        super().clean()
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': _("The end date cannot be earlier than the start date.")
+            })
+        if self.region:
+            if not self.country:
+                self.country = self.region.country
+            elif self.region.country_id != self.country_id:
+                raise ValidationError({
+                    'region': _("The selected region does not belong to the selected country.")
+                })
+
+    def is_member(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.pi_id == user.pk or self.members.filter(pk=user.pk).exists()
+
+    def is_owner(self, user):
+        if not user.is_authenticated:
+            return False
+        return (
+            self.pi_id == user.pk or
+            self.memberships.filter(pk=user.pk, role=ProjectMembership.Role.CO_INVESTIGATORPI).exists()
+        )
+
     def save(self, *args, **kwargs):
         if not self.kind:
             self.kind = ProjectType.objects.first()
+        self.clean()
         super().save(*args, **kwargs)
-
-    class Meta:
-        verbose_name = _("Project Account")
+        if self.pi:
+            ProjectMembership.objects.get_or_create(
+                user=self.pi,
+                project=self,
+                defaults={'role': ProjectMembership.Role.PI}
+            )
 
 
 class SSHKey(TimeStampedModel):
     name = models.CharField(max_length=60)
     key = models.TextField()
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="sshkeys")
+    user = models.ForeignKey(
+        'lims.User',
+        on_delete=models.CASCADE,
+        related_name="sshkeys",
+        null=True,
+        blank=True
+    )
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="sshkeys",
+        null=True,
+        blank=True
+    )
 
     class Meta:
-        verbose_name = "SSH Key"
+        verbose_name = _("SSH Key")
+        verbose_name_plural = _("SSH Keys")
 
     def fingerprint(self):
         import hashlib
@@ -243,6 +605,18 @@ class ProjectObjectManager(models.Manager):
         return super().get_queryset().select_related('project')
 
 
+class ShipmentQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(status__in=[Shipment.STATES.ACTIVE, Shipment.STATES.PROCESSING])
+
+    def recent(self):
+        recently = timezone.now() - timedelta(days=7)
+        return self.filter(Q(date_received__gte=recently) | Q(date_shipped__gte=recently))
+
+    def on_site(self):
+        return self.filter(status__in=[Shipment.STATES.ON_SITE, Shipment.STATES.LOADED])
+
+
 class SessionQuerySet(models.QuerySet):
     def with_duration(self):
         return self.annotate(
@@ -273,19 +647,21 @@ class Session(models.Model):
     objects = SessionManager()
 
     class Meta:
+        verbose_name = _("Session")
+        verbose_name_plural = _("Sessions")
         ordering = ('-created',)
 
     def __str__(self):
-        return '{}-{}'.format(self.project.name.upper(), self.name)
+        return f'{self.project.name.upper()}-{self.name}'
 
     def identity(self):
-        return 'SES-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SES-{self.id:07,d}'.replace(',', '-')
 
     def download_url(self):
-        return '{}/{}.tar.gz'.format(self.url, self.name)
+        return f'{self.url}/{self.name}.tar.gz'
 
     def feedback_key(self):
-        return encrypt("{user}:{name}".format(user=self.project.username, name=self.name))
+        return encrypt(f"{self.project.name}:{self.name}")
 
     def launch(self):
         Stretch.objects.active(extras={'session__beamline': self.beamline}).exclude(session=self).update(
@@ -325,11 +701,17 @@ class Session(models.Model):
     def samples(self):
         return self.project.samples.filter(datasets__session=self).distinct()
 
-    @memoize(60)
+    def sample_groups(self):
+        return {
+            group: self.project.samples.filter(datasets__session=self, group=group).distinct()
+            for group in self.groups()
+        }
+
+    @cached_method(60)
     def is_active(self):
         return self.stretches.active().exists()
 
-    @memoize(60)
+    @cached_method(60)
     def is_recent(self):
         return self.end() >= (timezone.now() - timedelta(days=7))
 
@@ -351,29 +733,34 @@ class Session(models.Model):
                 shifts.add(st)
             return len(shifts)
 
-    @memoize(60)
+    @cached_method(60)
     def total_time(self):
         """
         Returns total time the session was active, in hours
         """
         total = self.stretches.with_duration().aggregate(time=Sum('duration'))
 
-        return total['time'].total_seconds() / 3600
+        return total['time'].total_seconds() / 3600 if total.get('time') else 0.0
 
     total_time.short_description = _("Duration")
 
-    @memoize(60)
+    @cached_method(60)
     def start(self):
         return timezone.localtime(self.stretches.earliest('start').start)
 
-    @memoize(60)
+    @cached_method(60)
     def end(self):
         return timezone.localtime(self.stretches.latest('start').end or timezone.localtime())
 
-    @memoize(60)
+    @cached_method(60)
     def last_record_time(self):
         last_data = self.datasets.last()
         return last_data.modified if last_data else self.created
+
+    @cached_method(60)
+    def first_record_time(self):
+        first_data = self.datasets.first()
+        return first_data.modified if first_data else self.created
 
     def gaps(self):
         data = list(self.datasets.order_by('start_time'))
@@ -396,12 +783,12 @@ class Stretch(models.Model):
     objects = StretchManager()
 
     class Meta:
-        verbose_name = _("Beamline Usage")
-        verbose_name_plural = _("Beamline Usage")
+        verbose_name = _("Session Stretch")
+        verbose_name_plural = _("Session Stretches")
         ordering = ['-start', ]
 
 
-class ProjectObjectMixin(models.Model):
+class ProjectObjectMixin(ProjectEditorMixin, models.Model):
     """ STATES/TRANSITIONS define a finite state machine (FSM) for the Shipment (and other
     models.Model instances also defined in this file).
 
@@ -550,10 +937,14 @@ class Shipment(TransitStatusMixin):
     carrier = models.ForeignKey(Carrier, null=True, blank=True, on_delete=models.SET_NULL, related_name='projects')
     storage_location = models.CharField(max_length=60, null=True, blank=True)
 
-    objects = ProjectObjectManager()
+    objects = ShipmentQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _("Shipment")
+        verbose_name_plural = _("Shipments")
 
     def identity(self):
-        return 'SHP-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SHP-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('shipment-detail', kwargs={'pk': self.id})
@@ -576,7 +967,12 @@ class Shipment(TransitStatusMixin):
     def num_datasets(self):
         return self.datasets().count()
 
-    def reports(self):
+    def reports(self, session=None):
+        if session:
+            return self.project.reports.filter(
+                data__session=session,
+                data__sample__container__shipment__pk=self.pk
+            )
         return self.project.reports.filter(data__sample__container__shipment__pk=self.pk)
 
     def num_reports(self):
@@ -706,6 +1102,10 @@ class Shipment(TransitStatusMixin):
 class ComponentType(models.Model):
     name = models.CharField(max_length=50)
 
+    class Meta:
+        verbose_name = _("Component Type")
+        verbose_name_plural = _("Component Types")
+
     def __str__(self):
         return self.name
 
@@ -713,6 +1113,10 @@ class ComponentType(models.Model):
 class Component(models.Model):
     shipment = models.ForeignKey(Shipment, related_name="components", on_delete=models.CASCADE)
     kind = models.ForeignKey(ComponentType, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _("Component")
+        verbose_name_plural = _("Components")
 
 
 class ContainerType(models.Model):
@@ -744,6 +1148,10 @@ class ContainerType(models.Model):
     envelope = models.CharField(max_length=200, blank=True, choices=ENVELOPES)
     active = models.BooleanField("User option", default=False)
 
+    class Meta:
+        verbose_name = _("Container Type")
+        verbose_name_plural = _("Container Types")
+
     def __str__(self):
         return self.name
 
@@ -755,6 +1163,11 @@ class ContainerLocation(models.Model):
     x = models.FloatField(default=0.0)
     y = models.FloatField(default=0.0)
 
+    class Meta:
+        verbose_name = _("Container Location")
+        verbose_name_plural = _("Container Locations")
+        ordering = ('kind', 'name')
+
     def __str__(self):
         return self.name
 
@@ -762,6 +1175,12 @@ class ContainerLocation(models.Model):
 class ContainerQuerySet(models.QuerySet):
     def with_port(self):
         return self.annotate(port_name=Concat(*CONTAINER_PORT_FIELDS))
+
+    def on_site(self):
+        return self.filter(shipment__isnull=False, status=Container.STATES.ON_SITE)
+
+    def in_transit(self):
+        return self.filter(shipment__isnull=False, status=Container.STATES.SENT)
 
 
 class ContainerManager(models.Manager.from_queryset(ContainerQuerySet)):
@@ -785,6 +1204,8 @@ class Container(TransitStatusMixin):
     objects = ContainerManager()
 
     class Meta:
+        verbose_name = _("Container")
+        verbose_name_plural = _("Containers")
         unique_together = (
             ("project", "name", "shipment"),
         )
@@ -814,12 +1235,15 @@ class Container(TransitStatusMixin):
     def has_children(self):
         return self.children.count() > 0
 
-    @memoize(3600)
+    @cached_method(60)
     def accepts_children(self):
         return self.kind.locations.filter(accepts__isnull=False).exists()
 
     def accepted_by(self):
         return ContainerType.objects.filter(pk__in=self.kind.locations.values_list('contents', flat=True))
+
+    def accepts(self, container: 'Container'):
+        return self.kind.locations.filter(accepts=container.kind).exists()
 
     def children_by_location(self):
         return self.children.order_by('location')
@@ -841,7 +1265,7 @@ class Container(TransitStatusMixin):
                 groups.append(sample.group)
         return groups
 
-    @memoize(timeout=60)
+    @cached_method(60)
     def automounter(self):
         return self.beamlines.filter(active=True).first() or self.parent and self.parent.automounter() or None
 
@@ -849,12 +1273,23 @@ class Container(TransitStatusMixin):
         if hasattr(self, 'port_name'):  # fetch from default annotation
             return self.port_name
         elif self.parent and self.location:
-            return "{}{}".format(self.parent.port(), self.location.name)
+            return f"{self.parent.port()}{self.location.name}"
         return ""
+
+    def loaded_name(self):
+        name_parts = []
+        automounter = self.automounter()
+        if automounter:
+            name_parts.append(automounter.beamline.acronym)
+        port = self.port()
+        if port:
+            name_parts.append(port)
+        name_parts.append(self.name)
+        return ' | '.join(name_parts)
 
     def get_project(self):
         if self.children.count():
-            return '/'.join(set(self.children.values_list('project__username', flat=True)))
+            return '/'.join(set(self.children.values_list('project__name', flat=True)))
         return self.project
 
     def get_location_name(self):
@@ -939,19 +1374,22 @@ class Container(TransitStatusMixin):
 class LoadHistory(models.Model):
     start = models.DateTimeField(auto_now_add=True, editable=False)
     end = models.DateTimeField(null=True, blank=True)
-    child = models.ForeignKey(Container, null=False, blank=False, related_name='parent_history',
-                              on_delete=models.CASCADE)
-    parent = models.ForeignKey(Container, null=False, blank=False, related_name='children_history',
-                               on_delete=models.CASCADE)
+    child = models.ForeignKey(
+        Container, null=False, blank=False, related_name='parent_history', on_delete=models.CASCADE
+    )
+    parent = models.ForeignKey(
+        Container, null=False, blank=False, related_name='children_history', on_delete=models.CASCADE
+    )
     location = models.ForeignKey(ContainerLocation, blank=True, null=True, on_delete=models.SET_NULL)
-
     objects = StretchManager()
 
     class Meta:
         ordering = ['-start', ]
+        verbose_name = _("Load History")
+        verbose_name_plural = _("Load Histories")
 
     def __str__(self):
-        return '{}|{}|{}|{}'.format(self.child, self.parent, self.start, self.end)
+        return f'{self.child}|{self.parent}|{self.start}|{self.end}'
 
 
 class Automounter(models.Model):
@@ -966,11 +1404,15 @@ class Automounter(models.Model):
     modified = models.DateTimeField('date modified', auto_now=True, editable=False)
     active = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = _("Automounter")
+        verbose_name_plural = _("Automounters")
+
     def __str__(self):
         return "{} | {}".format(self.beamline.acronym, self.container.name)
 
     def identity(self):
-        return 'ATM-{:07,d}'.format(self.id).replace(',', '-')
+        return f'ATM-{self.id:07,d}'.replace(',', '-')
 
     def json_dict(self):
         return {
@@ -988,7 +1430,7 @@ REQUEST_SPEC_SCHEMA = {
     "propertyNames": {
         "pattern": r"^[^\d\W]\w*\Z$"
     },
-    "additionalProperties": { "$ref": "#/definitions/field"},
+    "additionalProperties": {"$ref": "#/definitions/field"},
     "definitions": {
         "field": {
             "title": "Request Type Specification",
@@ -1005,8 +1447,8 @@ REQUEST_SPEC_SCHEMA = {
                 },
                 "choices": {
                     "type": "array",
-                    "description": "Choices (comma-separated list)",
-                    "items": { "$ref": "#/definitions/choice" },
+                    "description": "Choices",
+                    "items": {"$ref": "#/definitions/choice"},
                     "uniqueItems": True
                 },
                 "required": {"type": "boolean", "default": False},
@@ -1037,11 +1479,15 @@ class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     scope = models.CharField(max_length=15, default=SCOPES.UNLIMITED)
-    edit_template = models.CharField(max_length=100, default="requests/base-edit.html")
+    edit_template = models.CharField(max_length=100, default="lims/requests/base-edit.html")
     view_template = models.CharField(max_length=100, default="")
     spec = models.JSONField(blank=True)
     layout = models.JSONField(blank=True, default=list)
     active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = _('Request Type')
+        verbose_name_plural = _('Request Types')
 
     def __str__(self):
         return self.name
@@ -1072,12 +1518,13 @@ class Request(ProjectObjectMixin):
 
     class Meta:
         verbose_name = _('Request')
+        verbose_name_plural = _('Requests')
         ordering = ['priority']
 
     def identity(self):
-        return 'REQ-{:07,d}'.format(self.id).replace(',', '-')
+        return f'REQ-{self.id:07,d}'.replace(',', '-')
 
-    def parameter_labels(self):
+    def labeled_parameters(self):
         parameters = self.parameters or {}
         p = {self.kind.spec.get(k, {}).get('label') or k: v for k, v in parameters.items() if v not in [None, '']}
         return p
@@ -1130,13 +1577,14 @@ class Group(ProjectObjectMixin):
 
     class Meta:
         verbose_name = _('Group')
+        verbose_name_plural = _('Groups')
         unique_together = (
             ("project", "name", "shipment"),
         )
         ordering = ['priority']
 
     def identity(self):
-        return 'GRP-{:07,d}'.format(self.id).replace(',', '-')
+        return f'GRP-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('group-detail', kwargs={'pk': self.id})
@@ -1193,6 +1641,8 @@ class Sample(ProjectObjectMixin):
     objects = SampleManager()
 
     class Meta:
+        verbose_name = _('Sample')
+        verbose_name_plural = _('Samples')
         unique_together = (
             ("container", "location"),
         )
@@ -1202,12 +1652,16 @@ class Sample(ProjectObjectMixin):
         return reverse('sample-detail', kwargs={'pk': self.id})
 
     def identity(self):
-        return 'SPL-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SPL-{self.id:07,d}'.replace(',', '-')
 
     def automounter(self):
         return self.container.automounter()
 
-    def reports(self):
+    def reports(self, session=None):
+        if session:
+            return AnalysisReport.objects.filter(
+                project=self.project, data__sample=self, data__session=session
+            )
         return AnalysisReport.objects.filter(project=self.project, data__sample=self)
 
     def all_requests(self):
@@ -1242,8 +1696,10 @@ class FrameField(models.TextField):
             except:
                 pass
             if isinstance(value, list):
-                val_str = ",".join([r[0] == r[1] and "{}".format(r[0]) or "{}-{}".format(r[0], r[1])
-                                    for r in list(frame_ranges(value))])
+                val_str = ",".join([
+                    r[0] == r[1] and f"{r[0]}" or f"{r[0]}-{r[1]}"
+                    for r in list(frame_ranges(value))
+                ])
                 return val_str
         return value
 
@@ -1275,6 +1731,10 @@ class DataType(models.Model):
 
     objects = DataTypeManager()
 
+    class Meta:
+        verbose_name = _('Data Type')
+        verbose_name_plural = _('Data Types')
+
     def natural_key(self):
         return self.acronym,
 
@@ -1291,7 +1751,7 @@ class Data(ActiveStatusMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='datasets')
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
     sample = models.ForeignKey(Sample, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
-    session = models.ForeignKey(Session, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
+    session = models.ForeignKey(Session, null=True, blank=True, on_delete=models.CASCADE, related_name='datasets')
     start_time = models.DateTimeField(null=True, blank=False)
     end_time = models.DateTimeField(null=True, blank=False)
     file_name = models.CharField(max_length=200, null=True, blank=True)
@@ -1300,7 +1760,7 @@ class Data(ActiveStatusMixin):
     frames_per_file = models.IntegerField(_("Maximum Frames per File"), default=1)
     exposure_time = models.FloatField(null=True, blank=True)
     attenuation = models.FloatField(default=0.0)
-    energy = models.DecimalField(decimal_places=4, max_digits=10)
+    energy = models.FloatField(default=0.0)
     beamline = models.ForeignKey(Beamline, on_delete=models.PROTECT, related_name='datasets')
     beam_size = models.FloatField(null=True, blank=True)
     url = models.CharField(max_length=200)
@@ -1312,26 +1772,51 @@ class Data(ActiveStatusMixin):
 
     class Meta:
         verbose_name = _('Dataset')
+        verbose_name_plural = _('Datasets')
         ordering = ['created', ]
 
     def __str__(self):
         return '%s (%d)' % (self.name, self.num_frames)
 
     def identity(self):
-        return 'DAT-{:07,d}'.format(self.id).replace(',', '-')
+        return f'DAT-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('data-detail', kwargs={'pk': self.id})
 
     def download_url(self):
-        return "{}/{}.tar.gz".format(self.url, self.name)
+        return f"{self.url}/{self.name}.tar.gz"
 
     def frame_sets(self):
         if isinstance(self.frames, list):
-            val_str = ",".join([r[0] == r[1] and "{}".format(r[0]) or "{}-{}".format(r[0], r[1])
-                                for r in list(frame_ranges(self.frames))])
+            val_str = ",".join([
+                r[0] == r[1] and f"{r[0]}" or f"{r[0]}-{r[1]}"
+                for r in list(frame_ranges(self.frames))
+            ])
             return val_str
         return self.frames
+
+    def frame_records(self):
+        if not self.frames:
+            return []
+
+        start_angle = float(self.meta_data.get('start_angle', 0))
+        delta_angle = round(float(self.meta_data.get('delta_angle', 0)), 2)
+
+        def _rounder(x):
+            return round(x/delta_angle, 0)*delta_angle
+
+        records = [
+            {
+                "file_name": self.file_name.format(f),
+                "frame": f,
+                "url": f'{self.url}/{self.file_name.format(f)}',
+                "start": f"{_rounder(start_angle + delta_angle * (f - 1)):g}",
+                "end": f"{_rounder(start_angle + delta_angle * f):g}"
+            }
+            for f in self.frames
+        ]
+        return records
 
     def first_frame(self):
         return 1 if not len(self.frames) else self.frames[0]
@@ -1340,7 +1825,7 @@ class Data(ActiveStatusMixin):
         return self.file_name.format(self.first_frame())
 
     def snapshot_url(self):
-        return "{}/{}.png".format(self.url, self.name)
+        return f"{self.url}/{self.name}.png"
 
     def get_meta_data(self):
         return OrderedDict([(k, self.meta_data.get(k)) for k in self.kind.metadata if k in self.meta_data])
@@ -1375,14 +1860,16 @@ class AnalysisReport(ActiveStatusMixin):
     objects = ProjectObjectManager()
 
     class Meta:
+        verbose_name = _('Analysis Report')
+        verbose_name_plural = _('Analysis Reports')
         ordering = ['created', '-score']
 
     def download_url(self):
         dataset = self.data.first()
-        return '{}/{}-report-{}.tar.gz'.format(self.url, dataset.name, self.pk)
+        return f'{self.url}/{dataset.name}-report-{self.pk}.tar.gz'
 
     def identity(self):
-        return 'RPT-{:07,d}'.format(self.id).replace(',', '-')
+        return f'RPT-{self.id:07,d}'.replace(',', '-')
 
     def label(self):
         if 'MX' in self.kind:
@@ -1407,41 +1894,40 @@ class AnalysisReport(ActiveStatusMixin):
 
 class ActivityLogManager(models.Manager):
     def log_activity(self, request, obj, action_type, description=''):
-        e = self.model()
+        user = getattr(request, 'user', None)
+        if not user and isinstance(obj, User):
+            user = obj
+        activity = self.model(user=user)
         if obj is None:
-            try:
-                project = request.user
-                e.project_id = project.pk
-            except Project.DoesNotExist:
-                pass
-
+            activity.project = getattr(request, 'project', None)
         else:
             if getattr(obj, 'project', None) is not None:
-                e.project_id = obj.project.pk
-            elif getattr(request, 'project', None) is not None:
-                e.project_id = request.project.pk
+                activity.project_id = obj.project.pk
+            elif getattr(request, 'project', None):
+                activity.project_id = request.project.pk
             elif isinstance(obj, Project):
-                e.project_id = obj.pk
+                activity.project_id = obj.pk
 
-            e.object_id = obj.pk
-            e.affected_item = obj
-            e.content_type = ContentType.objects.get_for_model(obj)
-        try:
-            e.user = request.user
-            e.user_description = request.user.username
-        except:
-            e.user_description = _("System")
-        e.ip_number = request.META['REMOTE_ADDR']
-        e.action_type = action_type
-        e.description = description
+            if action_type != ActivityLog.TYPE.DELETE:
+                activity.object_id = obj.pk
+                activity.affected_item = obj
+                activity.content_type = ContentType.objects.get_for_model(obj)
+
+        activity.ip_number = get_client_address(request) or '127.0.0.1'
+        activity.action_type = action_type
+        activity.description = description
         if obj is not None:
-            e.object_repr = '%s: %s' % (obj.__class__.__name__.upper(), obj)
+            activity.object_repr = f'{obj.__class__.__name__.upper()}: {obj}'
         else:
-            e.object_repr = 'N/A'
-        e.save()
+            activity.object_repr = 'N/A'
+        activity.save()
 
-    def last_login(self, request):
-        logs = self.filter(user__exact=request.user, action_type__exact=ActivityLog.TYPE.LOGIN)
+    def last_login(self, request, user=None):
+        if user is None:
+            user = getattr(request, 'user', None)
+        if not user or not getattr(user, 'is_authenticated', False):
+            return None
+        logs = self.filter(user__exact=user, action_type__exact=ActivityLog.TYPE.LOGIN)
         if logs.count() > 1:
             return logs[1]
         else:
@@ -1460,8 +1946,9 @@ class ActivityLog(models.Model):
     )
     created = models.DateTimeField(_('Date/Time'), auto_now_add=True, editable=False)
     project = models.ForeignKey(Project, blank=True, null=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey(Project, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
-    user_description = models.CharField(_('User name'), max_length=60, blank=True, null=True)
+    user = models.ForeignKey(
+        main_settings.AUTH_USER_MODEL, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL
+    )
     ip_number = models.GenericIPAddressField(_('IP Address'))
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_type = models.ForeignKey(ContentType, blank=True, null=True, on_delete=models.SET_NULL)
@@ -1473,6 +1960,8 @@ class ActivityLog(models.Model):
     objects = ActivityLogManager()
 
     class Meta:
+        verbose_name = _('Activity Log')
+        verbose_name_plural = _('Activity Logs')
         ordering = ('-created',)
 
     def __str__(self):
@@ -1509,6 +1998,11 @@ class Guide(TimeStampedModel):
     modal = models.BooleanField(default=False)
     url = models.CharField(_("URL or Resource"), max_length=200, blank=True, null=True)
 
+    class Meta:
+        verbose_name = _('Guide')
+        verbose_name_plural = _('Guides')
+        ordering = ("-staff_only", "priority",)
+
     def has_document(self):
         if self.attachment:
             mime, encoding = mimetypes.guess_type(self.attachment.url)
@@ -1527,5 +2021,73 @@ class Guide(TimeStampedModel):
     def __str__(self):
         return self.title
 
+
+class LoaderConfig(TimeStampedModel):
+    beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE)
+    automounter = models.ForeignKey(Automounter, on_delete=models.CASCADE)
+    selected = models.ForeignKey(Container, related_name='selected', on_delete=models.SET_NULL, null=True)
+    pending = models.BooleanField(default=True)
+
     class Meta:
-        ordering = ("-staff_only", "priority",)
+        verbose_name = _("Automounter Config")
+        verbose_name_plural = _("Automounter Configs")
+        ordering = ("-modified",)
+
+    def __str__(self):
+        return f"{self.automounter.container.kind}"
+
+
+class SystemSettings(Singleton):
+    name = models.CharField(max_length=200, default="ACME Facility")
+    acronym = models.CharField(max_length=20, default="ACME")
+    maintenance_mode = models.BooleanField(default=False)
+    contact_person = models.CharField(max_length=200, blank=True, null=True)
+    support_email = models.EmailField(default="support@example.com")
+    contact_phone = models.CharField(max_length=60, blank=True, null=True)
+    organisation = models.CharField(max_length=600, blank=True, null=True)
+    department = models.CharField(max_length=600, blank=True, null=True)
+    address = models.CharField(max_length=600, blank=True, null=True)
+    city = models.CharField(max_length=180, blank=True, null=True)
+    region = models.ForeignKey(
+        Region,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("State / Province / Region")
+    )
+    postal_code = models.CharField(max_length=30, blank=True, null=True)
+    country = models.ForeignKey(
+        Country,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Country")
+    )
+
+    class Meta:
+        verbose_name = _("System Settings")
+
+    def __str__(self):
+        return _("System Settings")
+
+    @property
+    def region_code(self):
+        if not self.region:
+            return ""
+        if '-' in self.region.code:
+            return self.region.code.split('-', 1)[1]
+        return self.region.code
+
+    def clean(self):
+        """
+        Ensure the region and country are consistent
+        """
+        super().clean()
+        if self.region:
+            if not self.country:
+                self.country = self.region.country
+            elif self.region.country_id != self.country_id:
+                raise ValidationError({
+                    'region': _("The selected region does not belong to the selected country.")
+                })
+

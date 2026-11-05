@@ -1,0 +1,93 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load humanize %}
+{% load bl_icons %}
+{% load bl_tags %}
+{% load bl_themes %}
+
+{% block page-styles %}
+    <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block page-pre-title %}Project{% endblock %}
+{% block page-title %}
+<strong>{{ object.name|upper }}</strong>{% if object.pi %} <span class="fw-lighter">| {{ object.contact_name }}</span>{% endif %}
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">Allocated since {{ object.created|naturalday }}</span>
+{% endblock %}
+
+{% block page-tools %}
+    <a href="{% url 'data-list' %}?search={{ object.name }}" title="Go to Data for {{ object.name }}">
+        {% show_icon label="Data" icon="data" size='md' badge=object.datasets.count %}
+    </a>
+    <a class="float-end" href="{% url 'result-list' %}?search={{ object.name }}" title="Go to Reports for {{ object.name }}">
+        {% show_icon label="Reports" icon="reports" size='md' badge=object.reports.count %}
+    </a>
+    <a class="float-end" href="{% url 'session-list' %}?search={{ object.name }}" title="Go to Sessions for {{ object.name }}">
+        {% show_icon label="Sessions" icon="history" size='md' badge=object.sessions.count %}
+    </a>
+    {% if user.is_superuser %}
+    <span class="separator"></span>
+    <a href="{% url 'project-labels' object.name %}" title="Get Shipping Labels">
+        {% show_icon label="Labels" icon="tag" size='md' %}
+    </a>
+    <a href="#!" data-modal-url="{% url 'project-edit' object.name %}" title="Edit Project">
+        {% show_icon label="Edit" icon="edit" size='md' %}
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% status_theme object.active_status success='Active' secondary='Idle' info="New" %}"
+        title="Last session on {{ object.last_session }}"
+    >
+        <span class="fw-lighter">{{ object.kind }} | </span>{{ object.active_status }}
+    </span>
+    <div class="col-3 float-end text-end">
+        <small class="text-muted text-condensed">Groups:</small><br>
+        {{ object.sample_groups.count }}
+    </div>
+    <div class="col-2 float-end text-end">
+        <small class="text-muted text-condensed">Shipments:</small><br>
+        {{ object.shipments.count }}
+    </div>
+    <div class="col-2 float-end text-end">
+        <small class="text-muted text-condensed">Samples:</small><br>
+        {{ object.samples.count }}
+    </div>
+{% endblock %}
+
+{% block page-content %}
+
+    <div class="row">
+        <div class="col-12">
+            {% include "lims/details/address-card.html" %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="data-stats" class="col-12"></div>
+    </div>
+{% endblock %}
+
+{% block page-scripts %}
+    <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/basiclive-reports.min.js' %}"></script>
+
+    <script type="text/javascript">
+        let report = {{ report | jsonify }};
+        $(document).ready(function() {
+            $('#data-stats').liveReport({
+                data: report
+            });
+        });
+    </script>
+{% endblock %}

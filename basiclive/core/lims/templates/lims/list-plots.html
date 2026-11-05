@@ -1,9 +1,10 @@
 {% extends "lims/base.html" %}
 {% load static %}
-{% load stats %}
-{% load icons %}
+{% load bl_stats %}
+{% load bl_icons %}
+{% load bl_tags %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         {{ view.page_title }} Statistics
     </h3>
@@ -20,10 +21,10 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {% if view.list_url %}
         <a href="{{ view.list_url }}" title="Support Areas">
-            {% show_icon label='List' icon='ti ti-md ti-list' %}
+            {% show_icon label='List' icon='list' size='md' %}
         </a>
         {% if view.tool_template %}
             <a class="separator"></a>
@@ -32,12 +33,12 @@
     {% if view.tool_template %}{% include view.tool_template %}{% endif %}
 {% endblock %}
 
-{% block extra_css %}
+{% block page-styles %}
     <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div class="col">
             {% include "itemlist/filters.html" %}
@@ -46,16 +47,16 @@
     </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block page-scripts %}
     <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/basiclive-reports.min.js' %}"></script>
 
     <script type="text/javascript">
-        var report = {{ report | safe }};
+        var report = {{ report | jsonify }};
         $(document).ready(function() {
             $('#data-stats').liveReport({
                 data: report

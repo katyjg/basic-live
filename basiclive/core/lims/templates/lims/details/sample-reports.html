@@ -1,0 +1,14 @@
+{% load bl_badges %}
+{% load bl_tags %}
+{% filter_reports sample select_session as reports %}
+
+{% for report in reports %}
+    <a href="{% url 'report-detail' report.pk %}" class="d-inline-block p-1">
+    {% label_badge header=report.label value=report|report_summary score=report.score %}
+    </a>
+{% endfor %}
+{% for report in sample.orphaned_reports %}
+    <a href="{% url 'report-detail' report.pk %}" class="d-inline-block p-1">
+    {% label_badge header=report.label value=report|report_summary score=report.score %}
+    </a>
+{% endfor %}

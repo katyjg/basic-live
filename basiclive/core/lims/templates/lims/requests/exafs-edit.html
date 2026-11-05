@@ -1,0 +1,50 @@
+{% load static bl_icons %}
+{% load crispy_forms_tags %}
+
+{% crispy form form.body %}
+<style>
+    table.regions {
+      font-size: 0.95rem;
+    }
+    table.regions thead  th:not(:first-child), tbody td:not(:first-child) {
+      text-align: right;
+    }
+    table.regions tbody  td:first-child {
+      opacity: 0.6;
+    }
+    table.regions tbody  td:not(:first-child) {
+      text-align: right;
+    }
+</style>
+
+<div class="row g-2">
+    <div class="col mb-3">
+        <label>Regions<span class="asteriskField">*</span></label>
+        <div id="selector" class="w-100"></div>
+        <table class="table regions table-sm">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Start</th>
+              <th scope="col">End</th>
+              <th scope="col">Step</th>
+              <th scope="col">Time</th>
+              <th scope="col">K-space</th>
+            </tr>
+          </thead>
+          <tbody id="table"></tbody>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <small class="col alert alert-info">
+        The regions table is automatically updated when you add or remove
+        regions in the selector above. Left-click the selector to split a region at that point. Righ-click a region to merge it to the region to the right.
+        The table is editable, but changes will be overwritten if you modify the regions in the plot. Click K-space column to toggle.
+    </small>
+</div>
+<script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'lims/js/exafs-regions.js' %}"></script>
+<script type="text/javascript" >
+    $('#selector').selectRegions('[name="parameters-regions"], [name="regions"]');
+</script>

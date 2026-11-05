@@ -1,0 +1,6237 @@
+- model: reportcraft.datasource
+  pk: 1
+  fields:
+    created: 2026-09-29 23:22:30.745290+00:00
+    modified: 2026-09-30 16:23:39.719597+00:00
+    code: 2c0e380b-8b14-4d2f-9102-6affc39f188b
+    name: Session Summary Dataset
+    description: Summary of facility usage by year based on session information
+    group_by:
+    - year
+    filters: year isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 2
+  fields:
+    created: 2026-09-30 16:49:08.298385+00:00
+    modified: 2026-09-30 16:51:40.016206+00:00
+    code: 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+    name: Usage by Project Type
+    description: Breakdown of facility usage by project type
+    group_by:
+    - type
+    filters: type isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 3
+  fields:
+    created: 2026-09-30 17:45:33.110650+00:00
+    modified: 2026-09-30 17:53:11.017927+00:00
+    code: de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+    name: Yearly Publication Statistics Dataset
+    description: Summary of facility publications by  year
+    group_by:
+    - year
+    filters: year > 2005
+    limit: null
+- model: reportcraft.datasource
+  pk: 4
+  fields:
+    created: 2026-09-30 18:13:18.822556+00:00
+    modified: 2026-09-30 18:26:31.058876+00:00
+    code: 86eee73d-1064-456c-bc8f-4eae2e393b5c
+    name: New Projects by Year and Project Type
+    description: Breakdown of new projects by type and year
+    group_by:
+    - year
+    - type
+    filters: type isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 5
+  fields:
+    created: 2026-09-30 18:31:52.196099+00:00
+    modified: 2026-09-30 19:09:41.897117+00:00
+    code: 04ab0166-73cc-46da-a89a-2dfcfa1eb3d0
+    name: Total Projects by Year and Project Type
+    description: Total number of Projects by type and year
+    group_by:
+    - year
+    - type
+    filters: type isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 6
+  fields:
+    created: 2026-09-30 20:53:25.712315+00:00
+    modified: 2026-09-30 20:54:03.070953+00:00
+    code: a028ddb4-c07a-43db-a49b-6c64734c412f
+    name: Usage by Project Type and Year
+    description: Breakdown of facility usage by project type and year
+    group_by:
+    - year
+    - type
+    filters: type isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 7
+  fields:
+    created: 2026-10-02 03:27:34.100123+00:00
+    modified: 2026-10-02 04:14:49.924464+00:00
+    code: 66f7c332-c34d-4b66-96d7-adee2f547efb
+    name: Data Collection Parameters
+    description: Parameters used during data collections
+    group_by:
+    - type
+    - instrument
+    filters: simulated=False
+    limit: null
+- model: reportcraft.datasource
+  pk: 8
+  fields:
+    created: 2026-10-02 05:37:09.852507+00:00
+    modified: 2026-10-02 17:17:00.507569+00:00
+    code: 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+    name: Data Processing Score
+    description: Distribution of Data Processing Score
+    group_by: []
+    filters: (simulated = False) and (avg_score isnull False)
+    limit: null
+- model: reportcraft.datasource
+  pk: 9
+  fields:
+    created: 2026-10-02 20:49:32.536428+00:00
+    modified: 2026-10-02 20:56:37.319098+00:00
+    code: db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+    name: Dataset Statistics
+    description: Dataset statistics by year and type
+    group_by:
+    - year
+    - type
+    - instrument
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 10
+  fields:
+    created: 2026-10-03 03:09:10.032162+00:00
+    modified: 2026-10-03 03:31:43.664284+00:00
+    code: b156c5d6-cf2d-432a-86c0-51fef1f316ad
+    name: Project Samples Statistics
+    description: Top projects by sample count
+    group_by: []
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 11
+  fields:
+    created: 2026-10-03 03:31:09.574988+00:00
+    modified: 2026-10-03 03:31:30.569530+00:00
+    code: 8ee673a3-67c2-414b-8060-bd61a74bf813
+    name: Project Data Statistics
+    description: Top projects by dataset count
+    group_by: []
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 12
+  fields:
+    created: 2026-10-03 03:32:28.160113+00:00
+    modified: 2026-10-03 03:33:00.087441+00:00
+    code: 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+    name: Project Visits Statistics
+    description: Top projects by unique visits
+    group_by: []
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 13
+  fields:
+    created: 2026-10-03 03:33:56.991979+00:00
+    modified: 2026-10-03 03:37:05.245710+00:00
+    code: 05f902bd-abfd-45ae-91c3-913a9e7b5755
+    name: Project Time Used Statistics
+    description: Top projects by time used
+    group_by:
+    - project
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 14
+  fields:
+    created: 2026-10-03 05:43:28.989025+00:00
+    modified: 2026-10-03 06:10:17.254821+00:00
+    code: 17d19a6f-390c-4e7b-8994-90b4378800a7
+    name: Yearly Scheduled Project Type
+    description: Yearly scheduled beam time data by project type
+    group_by:
+    - year
+    - type
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 15
+  fields:
+    created: 2026-10-03 06:09:14.170978+00:00
+    modified: 2026-10-03 06:09:54.504374+00:00
+    code: 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+    name: Yearly Scheduled Access Type
+    description: Yearly scheduled beam time data by access type
+    group_by:
+    - year
+    - type
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 16
+  fields:
+    created: 2026-10-04 03:45:52.088489+00:00
+    modified: 2026-10-04 03:45:52.088503+00:00
+    code: 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+    name: Yearly Downtime Data
+    description: Downtime by year broken down by scope
+    group_by:
+    - year
+    - category
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 17
+  fields:
+    created: 2026-10-04 04:04:08.101896+00:00
+    modified: 2026-10-04 04:04:08.101910+00:00
+    code: 3208fdab-d25c-410f-b35f-e41c2b9c95bf
+    name: Down time Events
+    description: Downtime events data
+    group_by: []
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 18
+  fields:
+    created: 2026-10-04 04:52:03.506052+00:00
+    modified: 2026-10-04 15:55:54.022054+00:00
+    code: 38745991-dd1d-4d8d-bad3-6af7e714078d
+    name: Support KPI Data
+    description: Key Performance Indicators based on Support Records
+    group_by:
+    - category
+    - type
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 19
+  fields:
+    created: 2026-10-05 04:19:07.647170+00:00
+    modified: 2026-10-05 04:20:00.458154+00:00
+    code: 619039a4-e127-4d69-8bb8-9d3568af899d
+    name: Problems by Project Data
+    description: Lost time and Failures aggregated by project
+    group_by:
+    - project_name
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 20
+  fields:
+    created: 2026-10-05 04:44:54.320822+00:00
+    modified: 2026-10-05 04:44:54.320835+00:00
+    code: 78873be1-7dbb-4b0e-9276-a98e3ff13e3f
+    name: User Distribution Data
+    description: Geographic distribution of user groups
+    group_by:
+    - province
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 21
+  fields:
+    created: 2026-10-06 18:57:19.802571+00:00
+    modified: 2026-10-06 21:06:56.063506+00:00
+    code: d65aab86-36f6-4904-94e2-8a52c0a7c662
+    name: National Distribution of Users
+    description: Distribution of Users in Canada
+    group_by:
+    - province
+    filters: country = "CAN"
+    limit: null
+- model: reportcraft.datasource
+  pk: 22
+  fields:
+    created: 2026-10-06 19:44:01.328768+00:00
+    modified: 2026-10-06 20:37:04.177113+00:00
+    code: 43434713-097d-4094-8a95-b510c3f215d7
+    name: Global Distribution of Users
+    description: Distribution of Users in globally
+    group_by:
+    - country_code
+    filters: country_code isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 23
+  fields:
+    created: 2026-10-06 21:09:44.677567+00:00
+    modified: 2026-10-06 21:09:44.677580+00:00
+    code: 88240967-a39a-443c-9b9e-5d167ff01987
+    name: Users and Projects by Institution
+    description: User and Project Counts by Institution
+    group_by:
+    - institution
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 24
+  fields:
+    created: 2026-10-07 04:44:13.867217+00:00
+    modified: 2026-10-09 05:19:22.470857+00:00
+    code: ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+    name: User Feedback Data
+    description: Summary statistics from user feedback surveys
+    group_by:
+    - topic
+    - answer
+    - scale
+    - beamline
+    filters: simulated = False
+    limit: null
+- model: reportcraft.datasource
+  pk: 25
+  fields:
+    created: 2026-10-07 22:12:16.073247+00:00
+    modified: 2026-10-07 22:46:33.705423+00:00
+    code: 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+    name: Publication Statistics
+    description: Yearly distribution of Publications
+    group_by:
+    - year
+    filters: year isnull False
+    limit: null
+- model: reportcraft.datasource
+  pk: 26
+  fields:
+    created: 2026-10-07 23:00:50.576224+00:00
+    modified: 2026-10-07 23:00:50.576239+00:00
+    code: f0259ffe-7c22-4ff1-ba4a-2a7052225ed2
+    name: Deposition Statistics
+    description: Statistics of PDB Depositions
+    group_by:
+    - year
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 27
+  fields:
+    created: 2026-10-07 23:21:01.443724+00:00
+    modified: 2026-10-07 23:21:01.443737+00:00
+    code: 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+    name: Top Publications
+    description: Top Cited / Mentioned Articles
+    group_by: []
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 29
+  fields:
+    created: 2026-10-09 00:18:25.471950+00:00
+    modified: 2026-10-09 00:19:02.429999+00:00
+    code: 34315e78-48af-4d42-81f3-fc1f370d2862
+    name: Triennial Publication Statistics Dataset
+    description: Summary of facility publications by  triennial
+    group_by:
+    - year
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 30
+  fields:
+    created: 2026-10-09 02:57:57.366085+00:00
+    modified: 2026-10-09 03:37:01.030540+00:00
+    code: 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    name: Quaterly Publication Statistics Dataset
+    description: Summary of facility publications by quarter
+    group_by:
+    - quarter
+    - age
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 31
+  fields:
+    created: 2026-10-09 04:52:59.615101+00:00
+    modified: 2026-10-09 04:55:00.043159+00:00
+    code: 8a0a3785-c886-439f-bbce-b9575cc74e21
+    name: User Feedback Averages
+    description: Summary average ratings from user feedback surveys
+    group_by:
+    - topic
+    - scale
+    filters: ''
+    limit: null
+- model: reportcraft.datasource
+  pk: 32
+  fields:
+    created: 2026-10-09 15:10:48.919447+00:00
+    modified: 2026-10-09 15:14:20.556479+00:00
+    code: b700f9f5-e6aa-4433-9a75-cb3935bab464
+    name: Individual Feedback Average Scores
+    description: Average Scores for Individual feedback records
+    group_by: []
+    filters: comments != ""
+    limit: null
+- model: reportcraft.datasource
+  pk: 33
+  fields:
+    created: 2026-10-09 16:32:52.395989+00:00
+    modified: 2026-10-09 17:26:32.825187+00:00
+    code: 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+    name: Feedback Response Rates
+    description: Yearly breakdown of feedback responses vs sessions per beamline
+    group_by:
+    - year
+    - beamline_name
+    filters: (year > 2018) and (sim = False)
+    limit: null
+- model: reportcraft.datasource
+  pk: 34
+  fields:
+    created: 2026-10-09 17:32:07.015272+00:00
+    modified: 2026-10-09 17:42:45.622809+00:00
+    code: 67540142-2127-45c5-b191-b88f1079b5af
+    name: Yearly User Feedback Averages
+    description: Yearly summary average ratings from user feedback surveys
+    group_by:
+    - year
+    - beamline
+    filters: sim = False
+    limit: null
+- model: reportcraft.datamodel
+  pk: 4
+  fields:
+    created: 2026-09-30 00:02:39.168593+00:00
+    modified: 2026-09-30 15:43:53.513088+00:00
+    code: 63471510-b8e2-423b-a7d0-1299423cf2d0
+    model:
+    - lims
+    - data
+    name: lims.Data
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 5
+  fields:
+    created: 2026-09-30 00:07:06.804418+00:00
+    modified: 2026-09-30 16:25:45.453851+00:00
+    code: 84ff1661-b46b-42d5-9190-eaf19930e8e4
+    model:
+    - lims
+    - sample
+    name: lims.Sample
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 6
+  fields:
+    created: 2026-09-30 00:09:35.835160+00:00
+    modified: 2026-09-30 15:45:14.769609+00:00
+    code: ce9aab3a-9bb7-41e3-abef-8834ed5b4fd5
+    model:
+    - lims
+    - session
+    name: lims.Session
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 7
+  fields:
+    created: 2026-09-30 00:12:20.316878+00:00
+    modified: 2026-09-30 16:10:35.959223+00:00
+    code: 68f6e5ac-061c-4e6a-aa18-4e094e034f28
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 8
+  fields:
+    created: 2026-09-30 15:34:17.101690+00:00
+    modified: 2026-09-30 15:46:04.584421+00:00
+    code: 4697d06c-b8e8-4f34-a1a5-b2f5c500c60c
+    model:
+    - lims
+    - stretch
+    name: lims.Stretch
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 12
+  fields:
+    created: 2026-09-30 16:36:18.539131+00:00
+    modified: 2026-09-30 16:36:18.539143+00:00
+    code: d8e9d652-19e5-4a8f-9d51-09e75d3e1b17
+    model:
+    - lims
+    - analysisreport
+    name: lims.Analysisreport
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datamodel
+  pk: 13
+  fields:
+    created: 2026-09-30 16:49:51.832168+00:00
+    modified: 2026-09-30 21:51:51.410320+00:00
+    code: 9991f427-f5df-4327-85b4-8acc9124b3f1
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datamodel
+  pk: 14
+  fields:
+    created: 2026-09-30 16:53:15.535917+00:00
+    modified: 2026-09-30 21:51:39.006909+00:00
+    code: ff268992-047e-4b7e-a216-44fc757d6a3e
+    model:
+    - lims
+    - session
+    name: lims.Session
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datamodel
+  pk: 15
+  fields:
+    created: 2026-09-30 16:58:02.166625+00:00
+    modified: 2026-09-30 21:51:58.995925+00:00
+    code: cdd1bd19-7b5c-4fe7-861b-ea545f15cd0b
+    model:
+    - lims
+    - shipment
+    name: lims.Shipment
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datamodel
+  pk: 16
+  fields:
+    created: 2026-09-30 16:59:04.648584+00:00
+    modified: 2026-09-30 21:52:04.346397+00:00
+    code: 618ebe3d-07ab-4eca-add8-2dc8fc438d7c
+    model:
+    - lims
+    - data
+    name: lims.Data
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datamodel
+  pk: 17
+  fields:
+    created: 2026-09-30 16:59:18.408392+00:00
+    modified: 2026-09-30 21:52:10.193868+00:00
+    code: a80fc695-6cd4-4f0f-bdfb-f614be8aacc0
+    model:
+    - lims
+    - sample
+    name: lims.Sample
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datamodel
+  pk: 18
+  fields:
+    created: 2026-09-30 17:46:22.995244+00:00
+    modified: 2026-09-30 17:46:22.995257+00:00
+    code: b954081f-3342-4489-8d38-a69fb5399d99
+    model:
+    - publications
+    - publication
+    name: publications.Publication
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datamodel
+  pk: 19
+  fields:
+    created: 2026-09-30 17:47:13.077678+00:00
+    modified: 2026-09-30 17:52:47.439649+00:00
+    code: 3b740f66-dab3-4627-bf54-6030339c17a3
+    model:
+    - publications
+    - deposition
+    name: publications.Deposition
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datamodel
+  pk: 26
+  fields:
+    created: 2026-09-30 18:19:01.316306+00:00
+    modified: 2026-09-30 21:49:35.810804+00:00
+    code: e5b05919-d321-4881-be68-2ece223aedfd
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+- model: reportcraft.datamodel
+  pk: 27
+  fields:
+    created: 2026-09-30 18:31:52.206761+00:00
+    modified: 2026-09-30 21:47:19.356080+00:00
+    code: 061056c5-20d4-4a64-9e4b-a8531744b47b
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 04ab0166-73cc-46da-a89a-2dfcfa1eb3d0
+- model: reportcraft.datamodel
+  pk: 28
+  fields:
+    created: 2026-09-30 20:53:25.732256+00:00
+    modified: 2026-09-30 21:19:25.855135+00:00
+    code: acc251a5-f3f7-4e8d-abc6-b3c8cda5ae0c
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datamodel
+  pk: 33
+  fields:
+    created: 2026-09-30 21:02:58.672553+00:00
+    modified: 2026-09-30 21:19:44.875666+00:00
+    code: 5687cf3f-d4a4-4aa2-9558-705596e0bec5
+    model:
+    - lims
+    - data
+    name: lims.Data
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datamodel
+  pk: 34
+  fields:
+    created: 2026-09-30 21:15:00.208041+00:00
+    modified: 2026-09-30 21:19:35.699939+00:00
+    code: 2af85722-bb2c-4d41-a72a-c2e0955dca0f
+    model:
+    - lims
+    - sample
+    name: lims.Sample
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datamodel
+  pk: 35
+  fields:
+    created: 2026-10-02 03:27:43.193034+00:00
+    modified: 2026-10-02 03:50:29.200708+00:00
+    code: e6e73f96-42b4-4a58-803a-6d50e0b34908
+    model:
+    - lims
+    - data
+    name: lims.Data
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datamodel
+  pk: 37
+  fields:
+    created: 2026-10-02 05:37:43.762324+00:00
+    modified: 2026-10-02 05:39:15.048072+00:00
+    code: d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    model:
+    - lims
+    - analysisreport
+    name: lims.Analysisreport
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datamodel
+  pk: 38
+  fields:
+    created: 2026-10-02 20:49:57.521986+00:00
+    modified: 2026-10-02 20:53:53.685271+00:00
+    code: f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    model:
+    - lims
+    - data
+    name: lims.Data
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datamodel
+  pk: 39
+  fields:
+    created: 2026-10-03 03:09:35.523802+00:00
+    modified: 2026-10-03 03:09:35.523813+00:00
+    code: c19931fa-2520-4379-b6ad-ef6f6f1c69e0
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - b156c5d6-cf2d-432a-86c0-51fef1f316ad
+- model: reportcraft.datamodel
+  pk: 40
+  fields:
+    created: 2026-10-03 03:31:09.588518+00:00
+    modified: 2026-10-03 03:31:09.588533+00:00
+    code: f260c7a0-144d-46db-800d-8f7962955e44
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 8ee673a3-67c2-414b-8060-bd61a74bf813
+- model: reportcraft.datamodel
+  pk: 41
+  fields:
+    created: 2026-10-03 03:32:28.170198+00:00
+    modified: 2026-10-03 03:32:28.170211+00:00
+    code: 9651f9d6-5c6f-41ac-ab8b-a7b968594b4b
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+- model: reportcraft.datamodel
+  pk: 42
+  fields:
+    created: 2026-10-03 03:33:57.001890+00:00
+    modified: 2026-10-03 03:39:36.481503+00:00
+    code: 905ed833-fa01-4dbc-b1b0-3d1a6178b831
+    model:
+    - lims
+    - stretch
+    name: lims.Stretch
+    source:
+    - 05f902bd-abfd-45ae-91c3-913a9e7b5755
+- model: reportcraft.datamodel
+  pk: 43
+  fields:
+    created: 2026-10-03 05:44:09.814942+00:00
+    modified: 2026-10-03 05:51:45.823279+00:00
+    code: 5a72fab7-e5d4-49bb-aab0-e4d3336afa04
+    model:
+    - schedule
+    - beamtime
+    name: schedule.Beamtime
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+- model: reportcraft.datamodel
+  pk: 44
+  fields:
+    created: 2026-10-03 06:09:14.181684+00:00
+    modified: 2026-10-03 06:10:45.359981+00:00
+    code: 72cc1350-7c67-4d9d-8a48-c4af1844c779
+    model:
+    - schedule
+    - beamtime
+    name: schedule.Beamtime
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+- model: reportcraft.datamodel
+  pk: 45
+  fields:
+    created: 2026-10-04 03:46:32.545859+00:00
+    modified: 2026-10-04 03:46:32.545873+00:00
+    code: 666cb13f-31c5-401b-b61b-87d3c9b1b95b
+    model:
+    - schedule
+    - downtime
+    name: schedule.Downtime
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+- model: reportcraft.datamodel
+  pk: 47
+  fields:
+    created: 2026-10-04 04:04:22.728782+00:00
+    modified: 2026-10-04 04:04:22.728793+00:00
+    code: 51b92407-d098-4d27-abc6-59e901f8417b
+    model:
+    - schedule
+    - downtime
+    name: schedule.Downtime
+    source:
+    - 3208fdab-d25c-410f-b35f-e41c2b9c95bf
+- model: reportcraft.datamodel
+  pk: 48
+  fields:
+    created: 2026-10-04 04:52:43.906825+00:00
+    modified: 2026-10-04 15:56:03.089913+00:00
+    code: 7d7df703-3455-4230-a031-42298739f9ba
+    model:
+    - crm
+    - supportrecord
+    name: crm.Supportrecord
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datamodel
+  pk: 49
+  fields:
+    created: 2026-10-05 04:25:53.776477+00:00
+    modified: 2026-10-05 04:26:06.687750+00:00
+    code: dd8f17b9-7146-4dc6-9e9e-de9bb8bf657a
+    model:
+    - crm
+    - supportrecord
+    name: crm.Supportrecord
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+- model: reportcraft.datamodel
+  pk: 50
+  fields:
+    created: 2026-10-05 04:45:51.497173+00:00
+    modified: 2026-10-05 04:45:51.497185+00:00
+    code: f944fe48-f3d4-451a-9638-fd1b3c5b21ff
+    model:
+    - lims
+    - project
+    name: lims.Project
+    source:
+    - 78873be1-7dbb-4b0e-9276-a98e3ff13e3f
+- model: reportcraft.datamodel
+  pk: 51
+  fields:
+    created: 2026-10-06 18:58:08.753835+00:00
+    modified: 2026-10-06 19:43:37.597921+00:00
+    code: 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    model:
+    - lims
+    - user
+    name: lims.User
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datamodel
+  pk: 52
+  fields:
+    created: 2026-10-06 19:44:01.337767+00:00
+    modified: 2026-10-06 19:44:01.337778+00:00
+    code: f480e3a6-cb08-41eb-844a-012e40192536
+    model:
+    - lims
+    - user
+    name: lims.User
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+- model: reportcraft.datamodel
+  pk: 53
+  fields:
+    created: 2026-10-06 21:10:33.085228+00:00
+    modified: 2026-10-06 21:10:33.085240+00:00
+    code: 89ef1ab2-8db5-480f-b68c-f6451d7e4abf
+    model:
+    - lims
+    - user
+    name: lims.User
+    source:
+    - 88240967-a39a-443c-9b9e-5d167ff01987
+- model: reportcraft.datamodel
+  pk: 54
+  fields:
+    created: 2026-10-07 04:45:56.883615+00:00
+    modified: 2026-10-09 04:27:08.706593+00:00
+    code: d32686a7-0fc8-4050-8269-383acf5e8a3a
+    model:
+    - crm
+    - areafeedback
+    name: crm.Areafeedback
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datamodel
+  pk: 55
+  fields:
+    created: 2026-10-07 22:13:37.711035+00:00
+    modified: 2026-10-07 22:14:31.686820+00:00
+    code: 9bcd6345-e286-4916-b938-cc758b917cd8
+    model:
+    - publications
+    - publication
+    name: publications.Publication
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datamodel
+  pk: 56
+  fields:
+    created: 2026-10-07 22:15:58.806991+00:00
+    modified: 2026-10-07 22:15:58.807002+00:00
+    code: e2ab19f3-2f6a-4613-a051-ee44fb16027d
+    model:
+    - publications
+    - deposition
+    name: publications.Deposition
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datamodel
+  pk: 58
+  fields:
+    created: 2026-10-07 22:41:54.157587+00:00
+    modified: 2026-10-08 13:42:53.065067+00:00
+    code: 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    model:
+    - publications
+    - articlemetric
+    name: publications.Articlemetric
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datamodel
+  pk: 59
+  fields:
+    created: 2026-10-07 23:01:12.696663+00:00
+    modified: 2026-10-07 23:01:12.696674+00:00
+    code: 2d18a542-d1a6-4276-ae9c-178cff871785
+    model:
+    - publications
+    - deposition
+    name: publications.Deposition
+    source:
+    - f0259ffe-7c22-4ff1-ba4a-2a7052225ed2
+- model: reportcraft.datamodel
+  pk: 60
+  fields:
+    created: 2026-10-07 23:21:45.190549+00:00
+    modified: 2026-10-07 23:21:45.190561+00:00
+    code: e5d34690-7987-4dfe-ac8b-206efaa73f92
+    model:
+    - publications
+    - publication
+    name: publications.Publication
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+- model: reportcraft.datamodel
+  pk: 63
+  fields:
+    created: 2026-10-08 21:21:06.508354+00:00
+    modified: 2026-10-08 21:21:06.508367+00:00
+    code: 57804def-8ac3-4f40-aa07-63d1f95cc868
+    model:
+    - publications
+    - articlemetric
+    name: publications.Articlemetric
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datamodel
+  pk: 64
+  fields:
+    created: 2026-10-09 00:18:25.484273+00:00
+    modified: 2026-10-09 00:19:19.734004+00:00
+    code: 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    model:
+    - publications
+    - publication
+    name: publications.Publication
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datamodel
+  pk: 65
+  fields:
+    created: 2026-10-09 00:18:25.493577+00:00
+    modified: 2026-10-09 00:21:28.451592+00:00
+    code: 24e299ed-aae1-4d79-af8a-68892f8b8386
+    model:
+    - publications
+    - deposition
+    name: publications.Deposition
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datamodel
+  pk: 67
+  fields:
+    created: 2026-10-09 02:57:57.386068+00:00
+    modified: 2026-10-09 03:37:39.668283+00:00
+    code: ae5cbe3d-19a5-429a-bfbb-a0c937f08735
+    model:
+    - publications
+    - deposition
+    name: publications.Deposition
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datamodel
+  pk: 68
+  fields:
+    created: 2026-10-09 02:57:57.394700+00:00
+    modified: 2026-10-09 03:37:46.631353+00:00
+    code: b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    model:
+    - publications
+    - publication
+    name: publications.Publication
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datamodel
+  pk: 69
+  fields:
+    created: 2026-10-09 04:52:59.625214+00:00
+    modified: 2026-10-09 04:52:59.625227+00:00
+    code: c13b917b-3fa9-495f-a07e-f94d6eea1bbb
+    model:
+    - crm
+    - areafeedback
+    name: crm.Areafeedback
+    source:
+    - 8a0a3785-c886-439f-bbce-b9575cc74e21
+- model: reportcraft.datamodel
+  pk: 70
+  fields:
+    created: 2026-10-09 15:10:59.447141+00:00
+    modified: 2026-10-09 15:10:59.447152+00:00
+    code: 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    model:
+    - crm
+    - feedback
+    name: crm.Feedback
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datamodel
+  pk: 71
+  fields:
+    created: 2026-10-09 16:33:28.424791+00:00
+    modified: 2026-10-09 16:37:46.291488+00:00
+    code: 05d6e633-a578-41d0-849b-760e43537a8b
+    model:
+    - crm
+    - feedback
+    name: crm.Feedback
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datamodel
+  pk: 72
+  fields:
+    created: 2026-10-09 16:34:03.815583+00:00
+    modified: 2026-10-09 16:35:54.760413+00:00
+    code: 6e8c9558-705b-4a5f-b6ed-aed54dc41538
+    model:
+    - lims
+    - session
+    name: lims.Session
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datamodel
+  pk: 73
+  fields:
+    created: 2026-10-09 17:32:07.024661+00:00
+    modified: 2026-10-09 17:39:53.388272+00:00
+    code: 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    model:
+    - crm
+    - areafeedback
+    name: crm.Areafeedback
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.datafield
+  pk: 9
+  fields:
+    created: 2026-09-30 00:02:39.182078+00:00
+    modified: 2026-09-30 15:43:53.497457+00:00
+    name: year
+    code: 9d5e06dc-775b-4845-b281-a2963a2846b8
+    model:
+    - 63471510-b8e2-423b-a7d0-1299423cf2d0
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 11
+  fields:
+    created: 2026-09-30 00:05:34.750780+00:00
+    modified: 2026-09-30 16:39:13.402333+00:00
+    name: num_data
+    code: efe0bd26-36cf-4b12-bb1d-0cd1b8e66f49
+    model:
+    - 63471510-b8e2-423b-a7d0-1299423cf2d0
+    label: Datasets
+    default: 0
+    expression: Count(this, filter=Q(beamline__active=True), distinct=True)
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 12
+  fields:
+    created: 2026-09-30 00:07:06.823462+00:00
+    modified: 2026-09-30 16:25:45.438101+00:00
+    name: year
+    code: f84dde9e-4282-4472-8646-e7ff6d73e64c
+    model:
+    - 84ff1661-b46b-42d5-9190-eaf19930e8e4
+    label: Year
+    default: null
+    expression: Datasets.Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 13
+  fields:
+    created: 2026-09-30 00:07:30.626448+00:00
+    modified: 2026-09-30 16:26:25.354851+00:00
+    name: num_samples
+    code: ab0ff192-fcb7-4b17-9e75-7cbf1ca710c4
+    model:
+    - 84ff1661-b46b-42d5-9190-eaf19930e8e4
+    label: Samples
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 14
+  fields:
+    created: 2026-09-30 00:09:35.845612+00:00
+    modified: 2026-09-30 15:45:14.744773+00:00
+    name: year
+    code: 357b24c7-9d01-4830-b8cc-0e6151f494e1
+    model:
+    - ce9aab3a-9bb7-41e3-abef-8834ed5b4fd5
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 15
+  fields:
+    created: 2026-09-30 00:10:40.117599+00:00
+    modified: 2026-09-30 16:42:38.259000+00:00
+    name: num_sessions
+    code: a5edc4a1-fe8f-4145-907a-de204badb76a
+    model:
+    - ce9aab3a-9bb7-41e3-abef-8834ed5b4fd5
+    label: Sessions
+    default: 0
+    expression: Count(this, filter=Q(beamline__active=True), distinct=True)
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 16
+  fields:
+    created: 2026-09-30 00:12:20.328661+00:00
+    modified: 2026-09-30 16:10:35.952112+00:00
+    name: year
+    code: ec6168b7-f83c-4e7a-a565-ef7a7ca16b47
+    model:
+    - 68f6e5ac-061c-4e6a-aa18-4e094e034f28
+    label: Year
+    default: null
+    expression: Sessions.Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 18
+  fields:
+    created: 2026-09-30 12:57:15.698398+00:00
+    modified: 2026-09-30 16:43:21.424037+00:00
+    name: hours_used
+    code: ec1dc006-f6c4-4d66-a447-4189e3c36cc6
+    model:
+    - 4697d06c-b8e8-4f34-a1a5-b2f5c500c60c
+    label: Hours Used
+    default: 0
+    expression: Sum(Hours(End - Start), filter=Q(session__beamline__active=True))
+    precision: 0
+    position: 8
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 19
+  fields:
+    created: 2026-09-30 15:34:17.114455+00:00
+    modified: 2026-09-30 15:46:04.553011+00:00
+    name: year
+    code: ce95fed1-a76c-4625-a89c-82d42ddc8ac4
+    model:
+    - 4697d06c-b8e8-4f34-a1a5-b2f5c500c60c
+    label: Year
+    default: null
+    expression: Start.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 25
+  fields:
+    created: 2026-09-30 16:00:38.337048+00:00
+    modified: 2026-09-30 16:12:30.392875+00:00
+    name: shifts_used
+    code: fd161cbb-b935-45a3-8ddb-8da27c89ec0c
+    model:
+    - 4697d06c-b8e8-4f34-a1a5-b2f5c500c60c
+    label: Shifts Used
+    default: 0
+    expression: Sum(Shifts(End - Start))
+    precision: 0
+    position: 10
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 27
+  fields:
+    created: 2026-09-30 16:10:22.715499+00:00
+    modified: 2026-09-30 16:11:05.347432+00:00
+    name: distinct_projects
+    code: da159237-6f2c-4420-8d84-7e92b599249b
+    model:
+    - 68f6e5ac-061c-4e6a-aa18-4e094e034f28
+    label: Distinct Projects
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 10
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 33
+  fields:
+    created: 2026-09-30 16:36:18.560727+00:00
+    modified: 2026-09-30 16:36:18.568975+00:00
+    name: year
+    code: 7ba5f1b7-4504-4639-bc17-5f42f1836ecd
+    model:
+    - d8e9d652-19e5-4a8f-9d51-09e75d3e1b17
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 34
+  fields:
+    created: 2026-09-30 16:37:10.002548+00:00
+    modified: 2026-09-30 16:37:10.002559+00:00
+    name: reports
+    code: 59861619-3db7-4de7-b562-7a31363e9439
+    model:
+    - d8e9d652-19e5-4a8f-9d51-09e75d3e1b17
+    label: Analysis Reports
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 12
+    ordering: null
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+- model: reportcraft.datafield
+  pk: 35
+  fields:
+    created: 2026-09-30 16:49:51.844214+00:00
+    modified: 2026-09-30 21:51:51.401734+00:00
+    name: type
+    code: e92774d4-17d2-4a2e-a010-0822be0dafa8
+    model:
+    - 9991f427-f5df-4327-85b4-8acc9124b3f1
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 36
+  fields:
+    created: 2026-09-30 16:52:26.787545+00:00
+    modified: 2026-09-30 16:52:26.787558+00:00
+    name: num_projects
+    code: cc65a3ba-e2b4-4258-a59d-fc3ac447d7d3
+    model:
+    - 9991f427-f5df-4327-85b4-8acc9124b3f1
+    label: Projects
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 37
+  fields:
+    created: 2026-09-30 16:53:15.554824+00:00
+    modified: 2026-09-30 21:51:38.997666+00:00
+    name: type
+    code: befa8202-6e9d-4506-a468-5d2c123457b5
+    model:
+    - ff268992-047e-4b7e-a216-44fc757d6a3e
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 39
+  fields:
+    created: 2026-09-30 16:56:00.242115+00:00
+    modified: 2026-09-30 16:57:14.552822+00:00
+    name: sessions
+    code: c85fe42a-0273-4dc9-8797-f85edff33fd0
+    model:
+    - ff268992-047e-4b7e-a216-44fc757d6a3e
+    label: Sessions
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 40
+  fields:
+    created: 2026-09-30 16:58:02.175999+00:00
+    modified: 2026-09-30 21:51:58.987408+00:00
+    name: type
+    code: 4a9b56a0-34cc-4e01-805e-db5c7792bfed
+    model:
+    - cdd1bd19-7b5c-4fe7-861b-ea545f15cd0b
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 41
+  fields:
+    created: 2026-09-30 16:58:30.714073+00:00
+    modified: 2026-09-30 16:58:30.714085+00:00
+    name: shipments
+    code: 53b06e05-e5f3-40bb-aad5-9c2abb9fe3c7
+    model:
+    - cdd1bd19-7b5c-4fe7-861b-ea545f15cd0b
+    label: Shipments
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: 0
+    position: 6
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 42
+  fields:
+    created: 2026-09-30 16:59:04.660355+00:00
+    modified: 2026-09-30 21:52:04.337761+00:00
+    name: type
+    code: 53312c02-f198-43fc-a7f7-f2c42e04c174
+    model:
+    - 618ebe3d-07ab-4eca-add8-2dc8fc438d7c
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 43
+  fields:
+    created: 2026-09-30 16:59:18.420382+00:00
+    modified: 2026-09-30 21:52:10.185072+00:00
+    name: type
+    code: fdf87735-440e-463f-8c72-1a2df859f964
+    model:
+    - a80fc695-6cd4-4f0f-bdfb-f614be8aacc0
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 44
+  fields:
+    created: 2026-09-30 17:00:15.048357+00:00
+    modified: 2026-09-30 17:00:15.048369+00:00
+    name: samples
+    code: 61fa23fe-8736-4df6-90ac-ef240b9c4b55
+    model:
+    - a80fc695-6cd4-4f0f-bdfb-f614be8aacc0
+    label: Samples
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 9
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 45
+  fields:
+    created: 2026-09-30 17:00:47.154304+00:00
+    modified: 2026-09-30 17:00:47.154315+00:00
+    name: datasets
+    code: 4e6fda24-2b77-4b2d-af46-1136b82d1001
+    model:
+    - 618ebe3d-07ab-4eca-add8-2dc8fc438d7c
+    label: Datasets
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 10
+    ordering: null
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+- model: reportcraft.datafield
+  pk: 46
+  fields:
+    created: 2026-09-30 17:46:23.016652+00:00
+    modified: 2026-09-30 17:46:23.024462+00:00
+    name: year
+    code: 42ae20f3-6b5c-4e3e-9aad-c072d3842661
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Year
+    default: null
+    expression: Published.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 47
+  fields:
+    created: 2026-09-30 17:47:13.089200+00:00
+    modified: 2026-09-30 17:52:47.432744+00:00
+    name: year
+    code: ac7c4ada-32b3-4e19-87b7-f006f0fbbc0b
+    model:
+    - 3b740f66-dab3-4627-bf54-6030339c17a3
+    label: Year
+    default: null
+    expression: Released.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 48
+  fields:
+    created: 2026-09-30 17:48:29.508513+00:00
+    modified: 2026-10-08 14:02:51.349668+00:00
+    name: publications
+    code: 720e3ef1-b85d-49e1-b65f-65a4abcea018
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Publications
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 51
+  fields:
+    created: 2026-09-30 17:57:43.766881+00:00
+    modified: 2026-10-08 21:23:21.575015+00:00
+    name: num_citations
+    code: 61953953-8a07-42de-9df9-0c95a39834e4
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Citations
+    default: 0
+    expression: Sum(Metrics.Citations, filter=(Published.Year = Metrics.Year))
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 53
+  fields:
+    created: 2026-09-30 18:00:29.388572+00:00
+    modified: 2026-10-08 19:59:09.056346+00:00
+    name: avg_impact_factor
+    code: d39d9147-6012-492d-b1a4-2b6cf200b698
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Average Impact Factor
+    default: 0
+    expression: Avg(Journal.Metrics.ImpactFactor, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 5
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 54
+  fields:
+    created: 2026-09-30 18:01:15.639335+00:00
+    modified: 2026-09-30 18:01:15.639348+00:00
+    name: num_pdbs
+    code: 5f3ac0b6-886d-4796-be90-6ad65445c6ac
+    model:
+    - 3b740f66-dab3-4627-bf54-6030339c17a3
+    label: PDB Depositions
+    default: 0
+    expression: Count(this)
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 55
+  fields:
+    created: 2026-09-30 18:04:20.922513+00:00
+    modified: 2026-10-08 20:02:07.796412+00:00
+    name: avg_sjr
+    code: 21cbdb2c-11a5-41bd-bae1-978c24d74787
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Average SJR
+    default: 0
+    expression: Avg(Journal.Metrics.SjrRank, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 7
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 56
+  fields:
+    created: 2026-09-30 18:05:04.693899+00:00
+    modified: 2026-10-08 20:02:16.561460+00:00
+    name: avg_hindex
+    code: 9da8abc2-b3dd-42d4-a21e-380b51feda81
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Average H-Index
+    default: 0
+    expression: Avg(Journal.Metrics.HIndex, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 0
+    position: 8
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 57
+  fields:
+    created: 2026-09-30 18:06:10.809737+00:00
+    modified: 2026-10-08 20:02:25.727951+00:00
+    name: avg_quartile
+    code: 46c10f1c-387b-4396-8539-efefc71cc289
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Average Quartile
+    default: 0
+    expression: Avg(Journal.Metrics.SjrQuartile, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 9
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 58
+  fields:
+    created: 2026-09-30 18:07:23.688927+00:00
+    modified: 2026-09-30 18:07:23.688941+00:00
+    name: cites_per_article
+    code: 7f4eb40d-6744-4beb-9733-f255017bce1e
+    model:
+    - b954081f-3342-4489-8d38-a69fb5399d99
+    label: Citations/Article
+    default: 0
+    expression: Sum(Metrics.Citations) / Count(this, distinct=True)
+    precision: 1
+    position: 10
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 65
+  fields:
+    created: 2026-09-30 18:13:18.916866+00:00
+    modified: 2026-10-03 03:05:30.467024+00:00
+    name: num_projects
+    code: 8d87484b-7cbd-4f51-b52b-5cdf9e27bc7c
+    model:
+    - e5b05919-d321-4881-be68-2ece223aedfd
+    label: Projects
+    default: 0
+    expression: Count(this, distinct=True, filter=Q(sessions__isnull=False))
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+- model: reportcraft.datafield
+  pk: 76
+  fields:
+    created: 2026-09-30 18:19:01.326637+00:00
+    modified: 2026-09-30 21:49:35.795196+00:00
+    name: year
+    code: fe3065f2-2fd9-4eaf-962c-8ba2f3bc1b24
+    model:
+    - e5b05919-d321-4881-be68-2ece223aedfd
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+- model: reportcraft.datafield
+  pk: 77
+  fields:
+    created: 2026-09-30 18:19:01.339162+00:00
+    modified: 2026-09-30 21:49:35.803761+00:00
+    name: type
+    code: b4307dd5-e050-4010-9532-76bd8ae090eb
+    model:
+    - e5b05919-d321-4881-be68-2ece223aedfd
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+- model: reportcraft.datafield
+  pk: 78
+  fields:
+    created: 2026-09-30 18:31:52.219347+00:00
+    modified: 2026-09-30 21:47:19.338142+00:00
+    name: year
+    code: 96978e23-8282-4aa5-bd88-f6be2903ad52
+    model:
+    - 061056c5-20d4-4a64-9e4b-a8531744b47b
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: 1
+    source:
+    - 04ab0166-73cc-46da-a89a-2dfcfa1eb3d0
+- model: reportcraft.datafield
+  pk: 79
+  fields:
+    created: 2026-09-30 18:31:52.227874+00:00
+    modified: 2026-09-30 20:40:35.847793+00:00
+    name: total_projects
+    code: 76358c4d-8ca5-4383-9999-5213dd06f919
+    model:
+    - 061056c5-20d4-4a64-9e4b-a8531744b47b
+    label: Projects
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 04ab0166-73cc-46da-a89a-2dfcfa1eb3d0
+- model: reportcraft.datafield
+  pk: 80
+  fields:
+    created: 2026-09-30 18:31:52.235882+00:00
+    modified: 2026-09-30 21:47:19.346257+00:00
+    name: type
+    code: fe969f55-eda9-49e3-8c68-9a80446e6a48
+    model:
+    - 061056c5-20d4-4a64-9e4b-a8531744b47b
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 04ab0166-73cc-46da-a89a-2dfcfa1eb3d0
+- model: reportcraft.datafield
+  pk: 84
+  fields:
+    created: 2026-09-30 20:53:25.780244+00:00
+    modified: 2026-09-30 21:19:25.848249+00:00
+    name: type
+    code: 79f91ea4-5a6a-41f1-a9f1-f1aa8c6d2d53
+    model:
+    - acc251a5-f3f7-4e8d-abc6-b3c8cda5ae0c
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 94
+  fields:
+    created: 2026-09-30 20:54:19.000825+00:00
+    modified: 2026-09-30 21:19:25.829891+00:00
+    name: year
+    code: 085461fb-5611-4151-b5e1-9f20d68b5f3a
+    model:
+    - acc251a5-f3f7-4e8d-abc6-b3c8cda5ae0c
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 100
+  fields:
+    created: 2026-09-30 21:01:04.428307+00:00
+    modified: 2026-09-30 21:14:26.395016+00:00
+    name: num_datasets
+    code: 67349c92-72f7-4154-b0ee-c9008caf7cd8
+    model:
+    - 5687cf3f-d4a4-4aa2-9558-705596e0bec5
+    label: Datasets
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 101
+  fields:
+    created: 2026-09-30 21:02:58.683247+00:00
+    modified: 2026-09-30 21:19:44.859031+00:00
+    name: year
+    code: 49a20c93-08e1-4eb6-b6ad-a7d7486ecd0c
+    model:
+    - 5687cf3f-d4a4-4aa2-9558-705596e0bec5
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 102
+  fields:
+    created: 2026-09-30 21:02:58.696455+00:00
+    modified: 2026-09-30 21:19:44.868518+00:00
+    name: type
+    code: c758fbfa-01f3-445b-9452-ba62d0ed4f5c
+    model:
+    - 5687cf3f-d4a4-4aa2-9558-705596e0bec5
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 104
+  fields:
+    created: 2026-09-30 21:15:00.218225+00:00
+    modified: 2026-09-30 21:19:35.681059+00:00
+    name: year
+    code: 62498e6e-9896-4777-bd9c-06fb010ad2be
+    model:
+    - 2af85722-bb2c-4d41-a72a-c2e0955dca0f
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 105
+  fields:
+    created: 2026-09-30 21:15:00.231139+00:00
+    modified: 2026-09-30 21:19:35.692930+00:00
+    name: type
+    code: fb46aeb4-165b-4649-a9f7-33e016a7b2cc
+    model:
+    - 2af85722-bb2c-4d41-a72a-c2e0955dca0f
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 106
+  fields:
+    created: 2026-09-30 21:15:34.164239+00:00
+    modified: 2026-09-30 21:15:34.164250+00:00
+    name: num_samples
+    code: 3b9a6d58-a126-44db-9666-205f72b4f553
+    model:
+    - 2af85722-bb2c-4d41-a72a-c2e0955dca0f
+    label: Samples
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 7
+    ordering: null
+    source:
+    - a028ddb4-c07a-43db-a49b-6c64734c412f
+- model: reportcraft.datafield
+  pk: 108
+  fields:
+    created: 2026-10-02 03:28:17.992523+00:00
+    modified: 2026-10-02 03:52:06.119578+00:00
+    name: avg_exposure
+    code: 9d9894f6-1dff-4311-b371-1710fc2589e0
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Average Exposure
+    default: null
+    expression: Avg(ExposureTime)
+    precision: 3
+    position: 0
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 109
+  fields:
+    created: 2026-10-02 03:29:44.600286+00:00
+    modified: 2026-10-02 03:50:29.185816+00:00
+    name: type
+    code: 4c996cff-d47b-412b-b2a2-c8f8a697c3fc
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 110
+  fields:
+    created: 2026-10-02 03:31:11.028452+00:00
+    modified: 2026-10-02 03:51:54.477739+00:00
+    name: avg_energy
+    code: 37eca375-804d-4450-a345-45dcb16d1985
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Average Energy
+    default: null
+    expression: Avg(Energy)
+    precision: 2
+    position: 2
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 111
+  fields:
+    created: 2026-10-02 03:31:57.413653+00:00
+    modified: 2026-10-02 03:52:41.731002+00:00
+    name: avg_frames
+    code: f592d6f7-7056-4e20-b026-4e94b6a30e4d
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Avg Frame Count
+    default: 0
+    expression: Avg(NumFrames)
+    precision: 0
+    position: 3
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 112
+  fields:
+    created: 2026-10-02 03:32:43.868504+00:00
+    modified: 2026-10-02 03:53:14.762950+00:00
+    name: avg_duration
+    code: 81634a29-db01-4fd5-bbac-976d6ceda230
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Average Duration
+    default: 0
+    expression: Avg(Minutes(EndTime - StartTime))
+    precision: 2
+    position: 4
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 113
+  fields:
+    created: 2026-10-02 03:34:52.722984+00:00
+    modified: 2026-10-02 03:50:29.195187+00:00
+    name: instrument
+    code: 86010623-522e-494e-8505-77e3a5a36365
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Instrument
+    default: null
+    expression: Beamline.Acronym
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 114
+  fields:
+    created: 2026-10-02 03:36:25.574602+00:00
+    modified: 2026-10-02 03:53:58.651453+00:00
+    name: avg_aperture
+    code: ee0c5b8e-33fa-42f0-b8d6-fb87cacd89ff
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Average Beam Size
+    default: 0
+    expression: Avg(BeamSize)
+    precision: 1
+    position: 6
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 116
+  fields:
+    created: 2026-10-02 03:54:46.003623+00:00
+    modified: 2026-10-02 03:54:46.003636+00:00
+    name: max_exposure
+    code: 5323ec0c-2d3e-43f8-84e0-2567c32b33ee
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Max Exposure
+    default: 0
+    expression: Max(ExposureTime)
+    precision: 3
+    position: 7
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 117
+  fields:
+    created: 2026-10-02 03:55:17.401662+00:00
+    modified: 2026-10-02 03:55:17.401677+00:00
+    name: min_exposure
+    code: 4a1e582e-31bc-4161-9be9-bc825034c390
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Min Exposure
+    default: 0
+    expression: Min(ExposureTime)
+    precision: 3
+    position: 8
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 118
+  fields:
+    created: 2026-10-02 03:56:12.129194+00:00
+    modified: 2026-10-02 03:56:12.129206+00:00
+    name: min_energy
+    code: c05843d2-9a30-4e2e-b388-2b3eed1931d2
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Min Energy
+    default: 0
+    expression: Min(Energy)
+    precision: 3
+    position: 9
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 119
+  fields:
+    created: 2026-10-02 03:56:45.482425+00:00
+    modified: 2026-10-02 03:56:45.482436+00:00
+    name: max_energy
+    code: e165e7a3-4dd0-40f9-816d-4bf7928bc927
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Max Energy
+    default: 0
+    expression: Max(Energy)
+    precision: 3
+    position: 10
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 120
+  fields:
+    created: 2026-10-02 04:13:31.488610+00:00
+    modified: 2026-10-02 04:14:05.324428+00:00
+    name: simulated
+    code: 0ed718d4-e1dd-4501-b135-1c16bc5d3969
+    model:
+    - e6e73f96-42b4-4a58-803a-6d50e0b34908
+    label: Simulated
+    default: 0
+    expression: Beamline.Simulated
+    precision: null
+    position: 11
+    ordering: null
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+- model: reportcraft.datafield
+  pk: 124
+  fields:
+    created: 2026-10-02 05:37:43.774171+00:00
+    modified: 2026-10-02 05:39:15.010811+00:00
+    name: year
+    code: 02d41cdf-64c4-4f19-ad90-a9593b34a607
+    model:
+    - d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datafield
+  pk: 125
+  fields:
+    created: 2026-10-02 05:37:43.789707+00:00
+    modified: 2026-10-02 05:39:15.036390+00:00
+    name: beamline
+    code: 66ccd831-b02e-46cd-bfc4-6a43201a2588
+    model:
+    - d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    label: Beamline
+    default: null
+    expression: Data.Beamline.Acronym
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datafield
+  pk: 126
+  fields:
+    created: 2026-10-02 05:37:43.804466+00:00
+    modified: 2026-10-02 19:00:09.889035+00:00
+    name: type
+    code: ae579afd-459f-4b51-98e2-d960baef56f5
+    model:
+    - d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    label: Data Type
+    default: null
+    expression: Data.Kind.Name
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datafield
+  pk: 128
+  fields:
+    created: 2026-10-02 05:40:14.836017+00:00
+    modified: 2026-10-02 17:16:25.068310+00:00
+    name: avg_score
+    code: ec690e4b-99c3-48d2-9809-7599d936c090
+    model:
+    - d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    label: Avg Score
+    default: null
+    expression: Avg(Score)
+    precision: 2
+    position: 4
+    ordering: null
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datafield
+  pk: 129
+  fields:
+    created: 2026-10-02 17:13:34.380425+00:00
+    modified: 2026-10-02 17:13:34.380440+00:00
+    name: simulated
+    code: 038acb6f-2d67-48a3-8ddc-ec5816ea512c
+    model:
+    - d9710e56-d7ad-4f31-abf1-ffb2d8a8a214
+    label: Simulated
+    default: true
+    expression: Data.Beamline.Simulated
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+- model: reportcraft.datafield
+  pk: 130
+  fields:
+    created: 2026-10-02 20:49:57.534601+00:00
+    modified: 2026-10-02 20:53:53.649309+00:00
+    name: year
+    code: 8b50141b-17c8-42b1-8018-719880899bcc
+    model:
+    - f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datafield
+  pk: 131
+  fields:
+    created: 2026-10-02 20:49:57.550703+00:00
+    modified: 2026-10-02 20:53:53.666038+00:00
+    name: type
+    code: a2c35a04-30e3-47bb-92f1-2ecf38a19862
+    model:
+    - f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    label: Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datafield
+  pk: 132
+  fields:
+    created: 2026-10-02 20:51:05.112670+00:00
+    modified: 2026-10-02 20:51:05.112684+00:00
+    name: counts
+    code: e4c6f008-6679-402c-86f0-086da576f3c6
+    model:
+    - f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    label: Totals
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: 0
+    position: 2
+    ordering: null
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datafield
+  pk: 134
+  fields:
+    created: 2026-10-02 20:53:53.672590+00:00
+    modified: 2026-10-02 20:53:53.679798+00:00
+    name: instrument
+    code: 8986dcad-9866-4c2d-9d12-b9583ff3cd9f
+    model:
+    - f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    label: Instrument
+    default: null
+    expression: Beamline.Acronym
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datafield
+  pk: 135
+  fields:
+    created: 2026-10-02 20:57:15.964895+00:00
+    modified: 2026-10-02 20:57:15.964908+00:00
+    name: simulated
+    code: bba852dc-315d-4c25-9d46-5db4443ce153
+    model:
+    - f0b9b0bb-8e0d-443e-9812-56acd993dc77
+    label: Simulated
+    default: true
+    expression: Beamline.Simulated
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+- model: reportcraft.datafield
+  pk: 136
+  fields:
+    created: 2026-10-03 03:10:02.409489+00:00
+    modified: 2026-10-03 03:10:02.409503+00:00
+    name: type
+    code: 40ccc969-6668-4e26-a98c-c1a4b7ac77c0
+    model:
+    - c19931fa-2520-4379-b6ad-ef6f6f1c69e0
+    label: Project Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - b156c5d6-cf2d-432a-86c0-51fef1f316ad
+- model: reportcraft.datafield
+  pk: 137
+  fields:
+    created: 2026-10-03 03:10:49.454964+00:00
+    modified: 2026-10-03 03:31:01.977140+00:00
+    name: num_items
+    code: 25dd5382-dd7f-409a-8531-47394e25af28
+    model:
+    - c19931fa-2520-4379-b6ad-ef6f6f1c69e0
+    label: Samples
+    default: 0
+    expression: Count(Samples, distinct=True)
+    precision: 0
+    position: 1
+    ordering: -1
+    source:
+    - b156c5d6-cf2d-432a-86c0-51fef1f316ad
+- model: reportcraft.datafield
+  pk: 138
+  fields:
+    created: 2026-10-03 03:11:10.605093+00:00
+    modified: 2026-10-03 03:13:10.148140+00:00
+    name: name
+    code: e38b53e3-48b7-49ca-9bc6-ede7d3687a4f
+    model:
+    - c19931fa-2520-4379-b6ad-ef6f6f1c69e0
+    label: Project Name
+    default: null
+    expression: ''
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - b156c5d6-cf2d-432a-86c0-51fef1f316ad
+- model: reportcraft.datafield
+  pk: 141
+  fields:
+    created: 2026-10-03 03:31:09.599929+00:00
+    modified: 2026-10-03 03:31:09.599941+00:00
+    name: type
+    code: 71115051-17bb-40d5-bbd9-32a1a6b32eef
+    model:
+    - f260c7a0-144d-46db-800d-8f7962955e44
+    label: Project Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 8ee673a3-67c2-414b-8060-bd61a74bf813
+- model: reportcraft.datafield
+  pk: 142
+  fields:
+    created: 2026-10-03 03:31:09.607930+00:00
+    modified: 2026-10-03 03:32:12.539819+00:00
+    name: num_items
+    code: 4586d433-0e2e-4600-8ee4-5805931e31e4
+    model:
+    - f260c7a0-144d-46db-800d-8f7962955e44
+    label: Datasets
+    default: 0
+    expression: Count(Datasets, distinct=True)
+    precision: 0
+    position: 1
+    ordering: -1
+    source:
+    - 8ee673a3-67c2-414b-8060-bd61a74bf813
+- model: reportcraft.datafield
+  pk: 143
+  fields:
+    created: 2026-10-03 03:31:09.615543+00:00
+    modified: 2026-10-03 03:31:09.615557+00:00
+    name: name
+    code: 2c545766-78d9-4878-9538-0271082a0da4
+    model:
+    - f260c7a0-144d-46db-800d-8f7962955e44
+    label: Project Name
+    default: null
+    expression: ''
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 8ee673a3-67c2-414b-8060-bd61a74bf813
+- model: reportcraft.datafield
+  pk: 144
+  fields:
+    created: 2026-10-03 03:32:28.184346+00:00
+    modified: 2026-10-03 03:32:28.184359+00:00
+    name: type
+    code: e6065759-abc2-4ef8-a97e-12513e61f915
+    model:
+    - 9651f9d6-5c6f-41ac-ab8b-a7b968594b4b
+    label: Project Type
+    default: null
+    expression: Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+- model: reportcraft.datafield
+  pk: 145
+  fields:
+    created: 2026-10-03 03:32:28.193839+00:00
+    modified: 2026-10-03 03:33:14.513658+00:00
+    name: num_items
+    code: 475eb60a-d801-4064-b20c-eac8d270ab2e
+    model:
+    - 9651f9d6-5c6f-41ac-ab8b-a7b968594b4b
+    label: Sessions
+    default: 0
+    expression: Count(Sessions, distinct=True)
+    precision: 0
+    position: 1
+    ordering: -1
+    source:
+    - 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+- model: reportcraft.datafield
+  pk: 146
+  fields:
+    created: 2026-10-03 03:32:28.202435+00:00
+    modified: 2026-10-03 03:32:28.202447+00:00
+    name: name
+    code: 1278a0a7-5483-4733-9db9-98d4cc0fabe4
+    model:
+    - 9651f9d6-5c6f-41ac-ab8b-a7b968594b4b
+    label: Project Name
+    default: null
+    expression: ''
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+- model: reportcraft.datafield
+  pk: 147
+  fields:
+    created: 2026-10-03 03:33:57.015624+00:00
+    modified: 2026-10-03 03:41:12.096354+00:00
+    name: type
+    code: 01b77d1f-987c-40d7-aa8d-f6762373e48c
+    model:
+    - 905ed833-fa01-4dbc-b1b0-3d1a6178b831
+    label: Project Type
+    default: null
+    expression: Session.Project.Kind.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 05f902bd-abfd-45ae-91c3-913a9e7b5755
+- model: reportcraft.datafield
+  pk: 148
+  fields:
+    created: 2026-10-03 03:33:57.024561+00:00
+    modified: 2026-10-03 03:41:45.282756+00:00
+    name: total
+    code: 062fd751-9674-4446-8d1f-b1888fa54b63
+    model:
+    - 905ed833-fa01-4dbc-b1b0-3d1a6178b831
+    label: Time Used
+    default: 0
+    expression: Sum(Hours(End - Start))
+    precision: 0
+    position: 1
+    ordering: null
+    source:
+    - 05f902bd-abfd-45ae-91c3-913a9e7b5755
+- model: reportcraft.datafield
+  pk: 150
+  fields:
+    created: 2026-10-03 03:37:23.396997+00:00
+    modified: 2026-10-03 03:41:28.971090+00:00
+    name: project
+    code: 568ddb72-cc89-400e-94e0-75e4fa2ba80c
+    model:
+    - 905ed833-fa01-4dbc-b1b0-3d1a6178b831
+    label: Project
+    default: null
+    expression: Session.Project.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 05f902bd-abfd-45ae-91c3-913a9e7b5755
+- model: reportcraft.datafield
+  pk: 151
+  fields:
+    created: 2026-10-03 05:44:09.826838+00:00
+    modified: 2026-10-03 05:51:45.809798+00:00
+    name: year
+    code: 3d096e7f-f8ed-433b-ad2c-d437a553503b
+    model:
+    - 5a72fab7-e5d4-49bb-aab0-e4d3336afa04
+    label: Year
+    default: null
+    expression: Start.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+- model: reportcraft.datafield
+  pk: 152
+  fields:
+    created: 2026-10-03 05:44:09.839926+00:00
+    modified: 2026-10-03 05:51:45.817873+00:00
+    name: type
+    code: d4241d59-8e24-4ab1-97cd-dccf81aa6d63
+    model:
+    - 5a72fab7-e5d4-49bb-aab0-e4d3336afa04
+    label: Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+- model: reportcraft.datafield
+  pk: 153
+  fields:
+    created: 2026-10-03 05:45:31.318774+00:00
+    modified: 2026-10-03 05:45:31.318787+00:00
+    name: num_shifts
+    code: 68b8433a-7fb6-49c5-bdbf-896c95e71854
+    model:
+    - 5a72fab7-e5d4-49bb-aab0-e4d3336afa04
+    label: Shifts Scheduled
+    default: 0
+    expression: Sum(Shifts(End - Start))
+    precision: 0
+    position: 2
+    ordering: null
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+- model: reportcraft.datafield
+  pk: 154
+  fields:
+    created: 2026-10-03 06:09:14.192408+00:00
+    modified: 2026-10-03 06:10:45.343720+00:00
+    name: year
+    code: 9d808b07-1609-4027-85b4-a9d70941cd92
+    model:
+    - 72cc1350-7c67-4d9d-8a48-c4af1844c779
+    label: Year
+    default: null
+    expression: Start.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+- model: reportcraft.datafield
+  pk: 155
+  fields:
+    created: 2026-10-03 06:09:14.200812+00:00
+    modified: 2026-10-03 06:10:45.353168+00:00
+    name: type
+    code: 18232e6b-b281-4bb8-95b4-be8786a6d46e
+    model:
+    - 72cc1350-7c67-4d9d-8a48-c4af1844c779
+    label: Type
+    default: null
+    expression: Access.Name
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+- model: reportcraft.datafield
+  pk: 156
+  fields:
+    created: 2026-10-03 06:09:14.208640+00:00
+    modified: 2026-10-03 19:48:58.522665+00:00
+    name: color
+    code: 89899474-676e-47bc-b343-bd7b0bea4b3b
+    model:
+    - 72cc1350-7c67-4d9d-8a48-c4af1844c779
+    label: Color
+    default: '#9b9795'
+    expression: Access.Color
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+- model: reportcraft.datafield
+  pk: 157
+  fields:
+    created: 2026-10-03 19:55:43.161968+00:00
+    modified: 2026-10-03 19:55:43.161988+00:00
+    name: num_shifts
+    code: ec27192b-8ae4-4a93-85c9-08483b214c89
+    model:
+    - 72cc1350-7c67-4d9d-8a48-c4af1844c779
+    label: Shifts Scheduled
+    default: 0
+    expression: Sum(Shifts(End-Start))
+    precision: 0
+    position: 3
+    ordering: null
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+- model: reportcraft.datafield
+  pk: 158
+  fields:
+    created: 2026-10-04 03:46:32.556717+00:00
+    modified: 2026-10-04 03:46:32.563183+00:00
+    name: year
+    code: a150f7b4-0c9f-4c33-930d-0dcaaaa293de
+    model:
+    - 666cb13f-31c5-401b-b61b-87d3c9b1b95b
+    label: Year
+    default: null
+    expression: Start.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+- model: reportcraft.datafield
+  pk: 159
+  fields:
+    created: 2026-10-04 03:46:32.569564+00:00
+    modified: 2026-10-04 03:46:32.575751+00:00
+    name: category
+    code: 1d2332c1-279e-4271-82d8-8125eadc10de
+    model:
+    - 666cb13f-31c5-401b-b61b-87d3c9b1b95b
+    label: Category
+    default: null
+    expression: DisplayName(Scope)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+- model: reportcraft.datafield
+  pk: 160
+  fields:
+    created: 2026-10-04 03:47:35.463025+00:00
+    modified: 2026-10-04 03:49:37.024246+00:00
+    name: shifts
+    code: 4cf2762d-07be-4a02-bcbc-e509f2209509
+    model:
+    - 666cb13f-31c5-401b-b61b-87d3c9b1b95b
+    label: Shifts Down
+    default: 0
+    expression: Sum(Shifts(End - Start))
+    precision: 0
+    position: 2
+    ordering: null
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+- model: reportcraft.datafield
+  pk: 164
+  fields:
+    created: 2026-10-04 04:05:43.822563+00:00
+    modified: 2026-10-04 04:05:43.822575+00:00
+    name: category
+    code: 79a79949-c16f-48ce-8826-e8e82fc6c8f8
+    model:
+    - 51b92407-d098-4d27-abc6-59e901f8417b
+    label: Category
+    default: null
+    expression: DisplayName(Scope)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 3208fdab-d25c-410f-b35f-e41c2b9c95bf
+- model: reportcraft.datafield
+  pk: 165
+  fields:
+    created: 2026-10-04 04:06:11.838532+00:00
+    modified: 2026-10-04 04:06:11.838543+00:00
+    name: start
+    code: 6acdd62c-bf95-4e85-a9e2-e83f3faacbfb
+    model:
+    - 51b92407-d098-4d27-abc6-59e901f8417b
+    label: Start Date
+    default: null
+    expression: ''
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 3208fdab-d25c-410f-b35f-e41c2b9c95bf
+- model: reportcraft.datafield
+  pk: 166
+  fields:
+    created: 2026-10-04 04:06:36.934229+00:00
+    modified: 2026-10-04 04:06:36.934239+00:00
+    name: end
+    code: 9a59ae51-7125-4f01-9348-66a59e902514
+    model:
+    - 51b92407-d098-4d27-abc6-59e901f8417b
+    label: End Date
+    default: null
+    expression: ''
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 3208fdab-d25c-410f-b35f-e41c2b9c95bf
+- model: reportcraft.datafield
+  pk: 172
+  fields:
+    created: 2026-10-04 05:22:09.433986+00:00
+    modified: 2026-10-04 18:48:07.457987+00:00
+    name: totals
+    code: b467621a-f081-4f2f-a4dd-6c697ba5a065
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: Records
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 173
+  fields:
+    created: 2026-10-04 05:24:05.066852+00:00
+    modified: 2026-10-04 16:01:52.339088+00:00
+    name: mrt
+    code: 6588ca57-a090-474f-af6f-3982ddd027f5
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: MRT (hrs)
+    default: 0
+    expression: Avg(LostTime, distinct=True)
+    precision: 2
+    position: 2
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 174
+  fields:
+    created: 2026-10-04 05:25:39.920173+00:00
+    modified: 2026-10-04 16:01:43.819811+00:00
+    name: lost_hours
+    code: 0e10d2f6-0b86-4d3b-82f2-4bee4559fa3a
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: Time Lost (hrs)
+    default: 0
+    expression: Sum(LostTime, distinct=True)
+    precision: 2
+    position: 3
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 176
+  fields:
+    created: 2026-10-04 14:47:04.511629+00:00
+    modified: 2026-10-04 15:56:20.584343+00:00
+    name: type
+    code: 3cb73b58-f33b-4cca-a620-3cb5d5856b2a
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: Type
+    default: null
+    expression: DisplayName(kind)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 178
+  fields:
+    created: 2026-10-04 15:56:03.065667+00:00
+    modified: 2026-10-04 20:01:07.225733+00:00
+    name: category
+    code: c02d7689-1082-4fd3-a60d-0367a030bb7a
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: Category
+    default: null
+    expression: Area.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 179
+  fields:
+    created: 2026-10-04 18:41:58.749495+00:00
+    modified: 2026-10-04 18:44:19.090848+00:00
+    name: mtbf
+    code: 793fe055-86f5-4ef5-8585-3833c5fce588
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: MTBF (hrs)
+    default: 0
+    expression: Avg(Hours(Created - Previous.Created), distinct=True)
+    precision: 1
+    position: 5
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 180
+  fields:
+    created: 2026-10-04 18:45:14.374551+00:00
+    modified: 2026-10-04 18:45:14.374563+00:00
+    name: external
+    code: ddd42eec-7d55-4a0f-acb2-aaaa4379769e
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: External
+    default: null
+    expression: Area.External
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 181
+  fields:
+    created: 2026-10-04 19:58:37.085995+00:00
+    modified: 2026-10-04 19:58:37.086008+00:00
+    name: system
+    code: 444ee9d3-ce01-4e7d-b25f-4b688b9e3d16
+    model:
+    - 7d7df703-3455-4230-a031-42298739f9ba
+    label: System
+    default: ''
+    expression: BoolMap(Area.External, "Beamline", "Facility", "Other")
+    precision: null
+    position: 7
+    ordering: null
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+- model: reportcraft.datafield
+  pk: 182
+  fields:
+    created: 2026-10-05 04:25:53.797472+00:00
+    modified: 2026-10-05 04:27:02.745210+00:00
+    name: project_name
+    code: 9b67b6de-7863-4852-8640-7090ccf51b53
+    model:
+    - dd8f17b9-7146-4dc6-9e9e-de9bb8bf657a
+    label: Project Name
+    default: null
+    expression: Upper(Project.Name)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+- model: reportcraft.datafield
+  pk: 183
+  fields:
+    created: 2026-10-05 04:27:58.558561+00:00
+    modified: 2026-10-05 04:27:58.558579+00:00
+    name: num_failures
+    code: dc82c607-a07c-469a-a05c-d15eb3827972
+    model:
+    - dd8f17b9-7146-4dc6-9e9e-de9bb8bf657a
+    label: Failures
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+- model: reportcraft.datafield
+  pk: 184
+  fields:
+    created: 2026-10-05 04:28:55.853317+00:00
+    modified: 2026-10-05 04:28:55.853331+00:00
+    name: time_lost
+    code: 20da08f8-650d-4b0e-8db2-2ad063d53fdf
+    model:
+    - dd8f17b9-7146-4dc6-9e9e-de9bb8bf657a
+    label: Time Lost (hrs)
+    default: 0
+    expression: Sum(LostTime, distinct=True)
+    precision: 1
+    position: 2
+    ordering: null
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+- model: reportcraft.datafield
+  pk: 185
+  fields:
+    created: 2026-10-05 04:35:20.190268+00:00
+    modified: 2026-10-05 04:35:20.190280+00:00
+    name: type
+    code: e0699229-adb9-49a9-beb6-f07519e7a1ad
+    model:
+    - dd8f17b9-7146-4dc6-9e9e-de9bb8bf657a
+    label: Project Type
+    default: null
+    expression: Project.Kind.Name
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+- model: reportcraft.datafield
+  pk: 186
+  fields:
+    created: 2026-10-05 04:45:51.511142+00:00
+    modified: 2026-10-05 04:45:51.519535+00:00
+    name: province
+    code: 5b071f29-dd46-4d1a-8749-dbc44b097d07
+    model:
+    - f944fe48-f3d4-451a-9638-fd1b3c5b21ff
+    label: Province
+    default: null
+    expression: Province
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 78873be1-7dbb-4b0e-9276-a98e3ff13e3f
+- model: reportcraft.datafield
+  pk: 187
+  fields:
+    created: 2026-10-06 18:58:08.765172+00:00
+    modified: 2026-10-06 19:43:37.582057+00:00
+    name: province
+    code: c33775c8-d2e7-4211-b13f-1a2039a177e1
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Province
+    default: null
+    expression: DefaultProject.Region.Code
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 188
+  fields:
+    created: 2026-10-06 19:00:55.876845+00:00
+    modified: 2026-10-06 19:00:55.876856+00:00
+    name: num_items
+    code: f28d1988-b809-4f7d-86b4-ca5c885e19f2
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Users
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 189
+  fields:
+    created: 2026-10-06 19:44:01.348712+00:00
+    modified: 2026-10-06 20:29:28.134929+00:00
+    name: country_code
+    code: 59139481-ab3b-4497-bb68-4ebe1cf92f09
+    model:
+    - f480e3a6-cb08-41eb-844a-012e40192536
+    label: Country Code
+    default: null
+    expression: DefaultProject.Country.Alpha3
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+- model: reportcraft.datafield
+  pk: 190
+  fields:
+    created: 2026-10-06 19:44:01.355783+00:00
+    modified: 2026-10-06 19:44:01.355792+00:00
+    name: num_items
+    code: 5039134b-3e3e-45ff-ba03-4c34612d6230
+    model:
+    - f480e3a6-cb08-41eb-844a-012e40192536
+    label: Users
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+- model: reportcraft.datafield
+  pk: 191
+  fields:
+    created: 2026-10-06 20:28:21.431440+00:00
+    modified: 2026-10-06 20:36:15.545189+00:00
+    name: country_name
+    code: 629929a5-5e3c-441e-b339-5b320670ef57
+    model:
+    - f480e3a6-cb08-41eb-844a-012e40192536
+    label: Country
+    default: Unknown
+    expression: DefaultProject.Country.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+- model: reportcraft.datafield
+  pk: 192
+  fields:
+    created: 2026-10-06 20:42:13.546413+00:00
+    modified: 2026-10-06 20:42:13.546425+00:00
+    name: institutions
+    code: a064de66-d307-4cbc-9f18-1d7ac9bb16a3
+    model:
+    - f480e3a6-cb08-41eb-844a-012e40192536
+    label: Institutions
+    default: null
+    expression: Count(DefaultProject.Organisation, distinct=True)
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+- model: reportcraft.datafield
+  pk: 193
+  fields:
+    created: 2026-10-06 20:45:23.567272+00:00
+    modified: 2026-10-06 20:45:23.567283+00:00
+    name: institutions
+    code: 80534a94-5b19-4fae-960e-e12925fc77a1
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Institutions
+    default: 0
+    expression: Count(DefaultProject.Organisation, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 194
+  fields:
+    created: 2026-10-06 20:46:15.704645+00:00
+    modified: 2026-10-06 21:05:26.976919+00:00
+    name: region_name
+    code: bcbea053-4dbf-4d71-8f13-b8468c11c590
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Region / Province / State
+    default: null
+    expression: DefaultProject.Region.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 195
+  fields:
+    created: 2026-10-06 20:59:17.663310+00:00
+    modified: 2026-10-06 20:59:17.663322+00:00
+    name: lat
+    code: 24a79833-9f11-4c2b-a1d6-a3479ae87a19
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Latitude
+    default: null
+    expression: DefaultProject.Region.Lat
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 196
+  fields:
+    created: 2026-10-06 20:59:44.176820+00:00
+    modified: 2026-10-06 20:59:44.176833+00:00
+    name: lon
+    code: 09f298b6-6f9d-4cf8-b5c2-9246fc60c47d
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Longitude
+    default: null
+    expression: DefaultProject.Region.Lon
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 197
+  fields:
+    created: 2026-10-06 21:05:16.230598+00:00
+    modified: 2026-10-06 21:05:16.230609+00:00
+    name: country
+    code: aa5daeaf-72d2-4da3-9c47-fce8ab4a6ad2
+    model:
+    - 5f8e01c4-bafe-40a4-a0b6-38f00c25081d
+    label: Country
+    default: null
+    expression: DefaultProject.Country.Alpha3
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+- model: reportcraft.datafield
+  pk: 198
+  fields:
+    created: 2026-10-06 21:10:33.106574+00:00
+    modified: 2026-10-06 21:10:33.112689+00:00
+    name: institution
+    code: e0157425-5ed2-4f67-be44-a09265ba3e22
+    model:
+    - 89ef1ab2-8db5-480f-b68c-f6451d7e4abf
+    label: Institution
+    default: null
+    expression: Projects.Organisation
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 88240967-a39a-443c-9b9e-5d167ff01987
+- model: reportcraft.datafield
+  pk: 199
+  fields:
+    created: 2026-10-06 21:11:20.087665+00:00
+    modified: 2026-10-06 21:11:20.087678+00:00
+    name: num_users
+    code: a5e738ce-7cdf-4e7b-aa67-8fe8d9c243d5
+    model:
+    - 89ef1ab2-8db5-480f-b68c-f6451d7e4abf
+    label: Users
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 88240967-a39a-443c-9b9e-5d167ff01987
+- model: reportcraft.datafield
+  pk: 200
+  fields:
+    created: 2026-10-06 21:12:06.078736+00:00
+    modified: 2026-10-06 21:12:06.078748+00:00
+    name: num_projects
+    code: c5d337f2-9640-4833-95fb-970eeaafe251
+    model:
+    - 89ef1ab2-8db5-480f-b68c-f6451d7e4abf
+    label: Projects
+    default: 0
+    expression: Count(Projects, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 88240967-a39a-443c-9b9e-5d167ff01987
+- model: reportcraft.datafield
+  pk: 201
+  fields:
+    created: 2026-10-07 04:45:56.894317+00:00
+    modified: 2026-10-09 04:27:08.676680+00:00
+    name: topic
+    code: fadc1d55-ca18-41a0-b45f-d61321bf49b4
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Topic
+    default: null
+    expression: Area.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 202
+  fields:
+    created: 2026-10-07 04:45:56.907107+00:00
+    modified: 2026-10-07 04:45:56.912781+00:00
+    name: year
+    code: e05277f3-f452-424a-b4b9-75d7fa637763
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Year
+    default: null
+    expression: Feedback.Created.Year
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 203
+  fields:
+    created: 2026-10-07 04:46:59.593601+00:00
+    modified: 2026-10-07 05:01:49.640272+00:00
+    name: score
+    code: 1b47c6f0-0656-4911-adb2-08d60a000dd8
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Score
+    default: 0
+    expression: Avg(Rating)
+    precision: 1
+    position: 2
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 204
+  fields:
+    created: 2026-10-07 04:48:46.375443+00:00
+    modified: 2026-10-07 05:02:52.112554+00:00
+    name: freq
+    code: 925f2382-83b3-4787-bdb1-1c1d05919064
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Frequency
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 205
+  fields:
+    created: 2026-10-07 05:05:25.501193+00:00
+    modified: 2026-10-09 04:27:08.686317+00:00
+    name: answer
+    code: 3bb10fe4-47c0-4df0-81a7-23e1d2d49a7a
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Answer
+    default: null
+    expression: Label
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 206
+  fields:
+    created: 2026-10-07 18:08:46.238899+00:00
+    modified: 2026-10-09 04:27:08.699584+00:00
+    name: scale
+    code: 5ad78687-55c5-41f5-930d-15b367af6d0b
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Scale
+    default: null
+    expression: Area.Scale
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 207
+  fields:
+    created: 2026-10-07 22:13:37.732855+00:00
+    modified: 2026-10-07 22:14:31.662128+00:00
+    name: year
+    code: cbebf110-ce5a-4689-9f6a-28ed1a71f4e2
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Year
+    default: null
+    expression: Published.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 209
+  fields:
+    created: 2026-10-07 22:15:58.818867+00:00
+    modified: 2026-10-07 22:15:58.825092+00:00
+    name: year
+    code: 9ac19400-6860-4f47-87bd-c80d7581994b
+    model:
+    - e2ab19f3-2f6a-4613-a051-ee44fb16027d
+    label: Year
+    default: null
+    expression: Deposited.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 210
+  fields:
+    created: 2026-10-07 22:16:28.343933+00:00
+    modified: 2026-10-07 22:16:28.343945+00:00
+    name: publications
+    code: 56e89ee1-6d16-4e41-af45-82cae6996b3b
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Publications
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 211
+  fields:
+    created: 2026-10-07 22:16:56.663789+00:00
+    modified: 2026-10-07 22:16:56.663813+00:00
+    name: depositions
+    code: 492fa191-0501-4f9a-97ae-4dad011aeff8
+    model:
+    - e2ab19f3-2f6a-4613-a051-ee44fb16027d
+    label: PDB Depositions
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 3
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 214
+  fields:
+    created: 2026-10-07 22:25:16.784074+00:00
+    modified: 2026-10-07 22:42:24.064526+00:00
+    name: num_cites
+    code: a4b315a5-6bdd-4d27-a997-9acfe5379ca0
+    model:
+    - 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    label: Citations
+    default: 0
+    expression: Sum(Citations)
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 215
+  fields:
+    created: 2026-10-07 22:25:48.854472+00:00
+    modified: 2026-10-07 22:43:54.689069+00:00
+    name: num_mentions
+    code: ddcaae8e-dc7c-476a-a508-be20ef76f5d5
+    model:
+    - 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    label: Mentions
+    default: 0
+    expression: Sum(Mentions)
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 216
+  fields:
+    created: 2026-10-07 22:29:46.737981+00:00
+    modified: 2026-10-07 22:44:08.324483+00:00
+    name: cites_per_article
+    code: 7902ceaf-4b71-4d7a-adbd-8d7ad3aaff2e
+    model:
+    - 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    label: Citations/Article
+    default: 0
+    expression: Avg(Citations)
+    precision: 1
+    position: 6
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 217
+  fields:
+    created: 2026-10-07 22:30:58.373917+00:00
+    modified: 2026-10-07 22:44:18.314849+00:00
+    name: mentions_per_article
+    code: 3b214049-b575-459c-b65b-90a8fa8ee830
+    model:
+    - 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    label: Mentions/Article
+    default: 0
+    expression: Avg(Mentions)
+    precision: 1
+    position: 7
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 218
+  fields:
+    created: 2026-10-07 22:32:34.592588+00:00
+    modified: 2026-10-07 22:32:34.592600+00:00
+    name: avg_impact_factor
+    code: d8da5e4c-d773-45e2-86b7-4057bcf3e36e
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Average Impact Factor
+    default: 0
+    expression: Avg(Journal.Metrics.ImpactFactor)
+    precision: 1
+    position: 8
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 219
+  fields:
+    created: 2026-10-07 22:33:50.524916+00:00
+    modified: 2026-10-07 22:33:50.524929+00:00
+    name: avg_sjr
+    code: b564acca-9e23-45bd-ae8e-65a1836615f3
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Average SJR
+    default: 0
+    expression: Avg(Journal.Metrics.SjrRank)
+    precision: 1
+    position: 9
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 220
+  fields:
+    created: 2026-10-07 22:34:41.424680+00:00
+    modified: 2026-10-07 22:34:41.424691+00:00
+    name: avg_quartile
+    code: 69f15a3e-fced-4752-97d6-e5ad4c294c60
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Average Quartile
+    default: 0
+    expression: Avg(Journal.Metrics.SjrQuartile)
+    precision: 1
+    position: 10
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 221
+  fields:
+    created: 2026-10-07 22:35:56.777709+00:00
+    modified: 2026-10-07 22:35:56.777721+00:00
+    name: avg_hindex
+    code: 2c53de50-c5b7-4a71-b865-7245389d958b
+    model:
+    - 9bcd6345-e286-4916-b938-cc758b917cd8
+    label: Average H-Index
+    default: 0
+    expression: Avg(Journal.Metrics.HIndex)
+    precision: 1
+    position: 11
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 222
+  fields:
+    created: 2026-10-07 22:41:54.169936+00:00
+    modified: 2026-10-08 13:42:53.056363+00:00
+    name: year
+    code: de82de2c-059f-4ea1-9ccd-122b31739e6c
+    model:
+    - 222c507a-e6d5-4b29-a051-4be30e5f93e9
+    label: Year
+    default: null
+    expression: Publication.Published.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+- model: reportcraft.datafield
+  pk: 223
+  fields:
+    created: 2026-10-07 23:01:12.707487+00:00
+    modified: 2026-10-07 23:01:12.713664+00:00
+    name: year
+    code: e11a5b8f-c24c-4d59-9efd-bdaaa22855d1
+    model:
+    - 2d18a542-d1a6-4276-ae9c-178cff871785
+    label: Year
+    default: null
+    expression: Released.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - f0259ffe-7c22-4ff1-ba4a-2a7052225ed2
+- model: reportcraft.datafield
+  pk: 224
+  fields:
+    created: 2026-10-07 23:02:11.484498+00:00
+    modified: 2026-10-07 23:06:58.731858+00:00
+    name: publish_lag
+    code: 7da65810-fabc-4074-9351-d404cd952a3f
+    model:
+    - 2d18a542-d1a6-4276-ae9c-178cff871785
+    label: Publication Lag (Months)
+    default: 0
+    expression: Avg(Hours(Released - Collected)) / 730.5
+    precision: 0
+    position: 1
+    ordering: null
+    source:
+    - f0259ffe-7c22-4ff1-ba4a-2a7052225ed2
+- model: reportcraft.datafield
+  pk: 225
+  fields:
+    created: 2026-10-07 23:24:42.276244+00:00
+    modified: 2026-10-08 14:08:04.509611+00:00
+    name: num_citations
+    code: 22e54151-f447-4f13-a9d8-af66d8e02dff
+    model:
+    - e5d34690-7987-4dfe-ac8b-206efaa73f92
+    label: Citations
+    default: 0
+    expression: Sum(Metrics.Citations, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+- model: reportcraft.datafield
+  pk: 226
+  fields:
+    created: 2026-10-07 23:25:11.268534+00:00
+    modified: 2026-10-08 14:08:27.405588+00:00
+    name: num_mentions
+    code: 1b10c042-fd81-4365-aabd-3181d416c0d1
+    model:
+    - e5d34690-7987-4dfe-ac8b-206efaa73f92
+    label: Mentions
+    default: 0
+    expression: Sum(Metrics.Mentions, distinct=True)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+- model: reportcraft.datafield
+  pk: 227
+  fields:
+    created: 2026-10-07 23:26:47.404862+00:00
+    modified: 2026-10-07 23:35:08.073181+00:00
+    name: cite_text
+    code: ba10c95a-7345-4aaa-bdd0-8c461603278d
+    model:
+    - e5d34690-7987-4dfe-ac8b-206efaa73f92
+    label: Article
+    default: null
+    expression: Citation
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+- model: reportcraft.datafield
+  pk: 232
+  fields:
+    created: 2026-10-08 21:21:06.520821+00:00
+    modified: 2026-10-08 21:21:06.528615+00:00
+    name: year
+    code: 195763b2-fea7-4e8f-857c-31413973d900
+    model:
+    - 57804def-8ac3-4f40-aa07-63d1f95cc868
+    label: Year
+    default: null
+    expression: Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+- model: reportcraft.datafield
+  pk: 233
+  fields:
+    created: 2026-10-09 00:18:25.511378+00:00
+    modified: 2026-10-09 00:19:19.725633+00:00
+    name: year
+    code: 81535389-6e49-44a1-8ba1-a5bf2bbe2202
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Year
+    default: null
+    expression: Triennial(Published)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 234
+  fields:
+    created: 2026-10-09 00:18:25.519789+00:00
+    modified: 2026-10-09 00:21:28.441699+00:00
+    name: year
+    code: f1071267-5379-4a01-9269-1cfdf828519f
+    model:
+    - 24e299ed-aae1-4d79-af8a-68892f8b8386
+    label: Year
+    default: null
+    expression: Triennial(Released)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 236
+  fields:
+    created: 2026-10-09 00:18:25.536281+00:00
+    modified: 2026-10-09 00:18:25.536290+00:00
+    name: publications
+    code: 260af266-a0d7-4b4d-aa12-25605235dc20
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Publications
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 237
+  fields:
+    created: 2026-10-09 00:18:25.544285+00:00
+    modified: 2026-10-09 00:18:25.544295+00:00
+    name: num_citations
+    code: b03ec425-3dec-4fc4-9d2a-51a3e556b284
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Citations
+    default: 0
+    expression: Sum(Metrics.Citations, filter=(Published.Year = Metrics.Year))
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 238
+  fields:
+    created: 2026-10-09 00:18:25.552312+00:00
+    modified: 2026-10-09 00:18:25.552322+00:00
+    name: avg_impact_factor
+    code: a5215b3c-26d4-492a-ab99-a933ac87b578
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Average Impact Factor
+    default: 0
+    expression: Avg(Journal.Metrics.ImpactFactor, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 5
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 239
+  fields:
+    created: 2026-10-09 00:18:25.560341+00:00
+    modified: 2026-10-09 00:18:25.560350+00:00
+    name: num_pdbs
+    code: 910b18b6-d0f5-4669-9cf8-c64013b59dde
+    model:
+    - 24e299ed-aae1-4d79-af8a-68892f8b8386
+    label: PDB Depositions
+    default: 0
+    expression: Count(this)
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 240
+  fields:
+    created: 2026-10-09 00:18:25.568418+00:00
+    modified: 2026-10-09 00:18:25.568428+00:00
+    name: avg_sjr
+    code: 34228e39-f982-4870-904b-bfb12933e520
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Average SJR
+    default: 0
+    expression: Avg(Journal.Metrics.SjrRank, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 7
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 241
+  fields:
+    created: 2026-10-09 00:18:25.576404+00:00
+    modified: 2026-10-09 00:18:25.576413+00:00
+    name: avg_hindex
+    code: d0fd0d70-8cd2-4b26-bfd3-6c3d357c6c98
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Average H-Index
+    default: 0
+    expression: Avg(Journal.Metrics.HIndex, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 0
+    position: 8
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 242
+  fields:
+    created: 2026-10-09 00:18:25.584445+00:00
+    modified: 2026-10-09 00:18:25.584454+00:00
+    name: avg_quartile
+    code: 2e1965a6-4b70-40e4-8627-b0e1757a8526
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Average Quartile
+    default: 0
+    expression: Avg(Journal.Metrics.SjrQuartile, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 9
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 243
+  fields:
+    created: 2026-10-09 00:18:25.592427+00:00
+    modified: 2026-10-09 00:18:25.592436+00:00
+    name: cites_per_article
+    code: 6d182433-f8d7-4972-bd2f-1d661cd02e96
+    model:
+    - 3f7f44c8-f983-4d91-899e-29f1297edc6b
+    label: Citations/Article
+    default: 0
+    expression: Sum(Metrics.Citations) / Count(this, distinct=True)
+    precision: 1
+    position: 10
+    ordering: null
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+- model: reportcraft.datafield
+  pk: 244
+  fields:
+    created: 2026-10-09 02:57:57.405656+00:00
+    modified: 2026-10-09 03:37:46.625933+00:00
+    name: age
+    code: 6aabe2f6-bd4e-425f-9172-e99d2f10b1a8
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Age
+    default: 0
+    expression: AgeInYears(Published)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 246
+  fields:
+    created: 2026-10-09 02:57:57.419206+00:00
+    modified: 2026-10-09 02:57:57.419215+00:00
+    name: publications
+    code: 00aae274-0a2c-422f-be8b-86a518bad47f
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Publications
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 247
+  fields:
+    created: 2026-10-09 02:57:57.427273+00:00
+    modified: 2026-10-09 02:57:57.427286+00:00
+    name: num_citations
+    code: 6ab933d7-2dd3-4966-9651-98904332718a
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Citations
+    default: 0
+    expression: Sum(Metrics.Citations, filter=(Published.Year = Metrics.Year))
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 248
+  fields:
+    created: 2026-10-09 02:57:57.435416+00:00
+    modified: 2026-10-09 02:57:57.435424+00:00
+    name: avg_impact_factor
+    code: 949c167e-624a-41e8-90c9-98b1feb22adf
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Average Impact Factor
+    default: 0
+    expression: Avg(Journal.Metrics.ImpactFactor, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 5
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 249
+  fields:
+    created: 2026-10-09 02:57:57.443264+00:00
+    modified: 2026-10-09 02:57:57.443272+00:00
+    name: num_pdbs
+    code: 1965d4cb-2ff3-493a-90cc-3db3a17fa60c
+    model:
+    - ae5cbe3d-19a5-429a-bfbb-a0c937f08735
+    label: PDB Depositions
+    default: 0
+    expression: Count(this)
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 250
+  fields:
+    created: 2026-10-09 02:57:57.451420+00:00
+    modified: 2026-10-09 02:57:57.451429+00:00
+    name: avg_sjr
+    code: fbd227d7-e2c0-4219-910d-d4306d4499a6
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Average SJR
+    default: 0
+    expression: Avg(Journal.Metrics.SjrRank, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 7
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 251
+  fields:
+    created: 2026-10-09 02:57:57.459331+00:00
+    modified: 2026-10-09 02:57:57.459338+00:00
+    name: avg_hindex
+    code: 94f2256d-0e0e-4cca-af3a-26f6b0cefcc7
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Average H-Index
+    default: 0
+    expression: Avg(Journal.Metrics.HIndex, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 0
+    position: 8
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 252
+  fields:
+    created: 2026-10-09 02:57:57.467563+00:00
+    modified: 2026-10-09 02:57:57.467574+00:00
+    name: avg_quartile
+    code: f683d402-3e7c-4d7a-bef8-e0c6a8edf7d0
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Average Quartile
+    default: 0
+    expression: Avg(Journal.Metrics.SjrQuartile, filter=(Published.Year = Journal.Metrics.Year))
+    precision: 1
+    position: 9
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 253
+  fields:
+    created: 2026-10-09 02:57:57.481661+00:00
+    modified: 2026-10-09 02:57:57.481669+00:00
+    name: cites_per_article
+    code: ae06f445-8b1a-4f78-af99-7ca027f4fa5c
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Citations/Article
+    default: 0
+    expression: Sum(Metrics.Citations) / Count(this, distinct=True)
+    precision: 1
+    position: 10
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 254
+  fields:
+    created: 2026-10-09 02:58:54.428240+00:00
+    modified: 2026-10-09 03:37:46.618254+00:00
+    name: quarter
+    code: 3299d582-595f-433b-957d-cb0969c4ea07
+    model:
+    - b19a01d1-7c6c-4cc2-b9d0-32011b150701
+    label: Quarter
+    default: null
+    expression: YearQuarter(Published)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 255
+  fields:
+    created: 2026-10-09 02:59:10.883599+00:00
+    modified: 2026-10-09 03:37:39.654124+00:00
+    name: quarter
+    code: 46baa630-51bf-47b3-993c-21b9bfc302d6
+    model:
+    - ae5cbe3d-19a5-429a-bfbb-a0c937f08735
+    label: Quarter
+    default: null
+    expression: YearQuarter(Released)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 258
+  fields:
+    created: 2026-10-09 03:37:22.690385+00:00
+    modified: 2026-10-09 03:37:39.662615+00:00
+    name: age
+    code: eb86dcb4-966e-4d89-ae43-a664fae4c871
+    model:
+    - ae5cbe3d-19a5-429a-bfbb-a0c937f08735
+    label: Age
+    default: 0
+    expression: AgeInYears(Released)
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+- model: reportcraft.datafield
+  pk: 260
+  fields:
+    created: 2026-10-09 04:52:59.636406+00:00
+    modified: 2026-10-09 04:52:59.636416+00:00
+    name: topic
+    code: fef0f864-3487-475a-ad11-06552e64510b
+    model:
+    - c13b917b-3fa9-495f-a07e-f94d6eea1bbb
+    label: Topic
+    default: null
+    expression: Area.Name
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 8a0a3785-c886-439f-bbce-b9575cc74e21
+- model: reportcraft.datafield
+  pk: 263
+  fields:
+    created: 2026-10-09 04:52:59.660596+00:00
+    modified: 2026-10-09 04:52:59.660605+00:00
+    name: score
+    code: 27debfaa-33d5-4230-9e60-7b9299da2b62
+    model:
+    - c13b917b-3fa9-495f-a07e-f94d6eea1bbb
+    label: Score
+    default: 0
+    expression: Avg(Rating)
+    precision: 1
+    position: 2
+    ordering: null
+    source:
+    - 8a0a3785-c886-439f-bbce-b9575cc74e21
+- model: reportcraft.datafield
+  pk: 264
+  fields:
+    created: 2026-10-09 04:52:59.668899+00:00
+    modified: 2026-10-09 04:52:59.668908+00:00
+    name: scale
+    code: 0a61d391-7aa5-4021-90d0-c9b079d748c5
+    model:
+    - c13b917b-3fa9-495f-a07e-f94d6eea1bbb
+    label: Scale
+    default: null
+    expression: Area.Scale
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 8a0a3785-c886-439f-bbce-b9575cc74e21
+- model: reportcraft.datafield
+  pk: 266
+  fields:
+    created: 2026-10-09 05:16:22.342080+00:00
+    modified: 2026-10-09 05:17:25.618032+00:00
+    name: beamline
+    code: 482bc75b-0d38-49c4-8165-8751fed9640c
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Beamline
+    default: null
+    expression: Feedback.Session.Beamline.Acronym
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 267
+  fields:
+    created: 2026-10-09 05:19:01.265630+00:00
+    modified: 2026-10-09 05:19:01.265643+00:00
+    name: simulated
+    code: 8aab4431-4a0c-4d58-8534-d28643f88a47
+    model:
+    - d32686a7-0fc8-4050-8269-383acf5e8a3a
+    label: Simulated
+    default: null
+    expression: Feedback.Session.Beamline.Simulated
+    precision: null
+    position: 7
+    ordering: null
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+- model: reportcraft.datafield
+  pk: 268
+  fields:
+    created: 2026-10-09 15:12:31.789854+00:00
+    modified: 2026-10-09 17:28:48.157667+00:00
+    name: score
+    code: a5670317-c413-4006-968b-72b6628ad3d3
+    model:
+    - 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    label: Rating
+    default: 0
+    expression: Avg(Areas.Rating)
+    precision: 2
+    position: 3
+    ordering: null
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datafield
+  pk: 269
+  fields:
+    created: 2026-10-09 15:13:09.854703+00:00
+    modified: 2026-10-09 17:28:24.544462+00:00
+    name: comments
+    code: a282f19a-4a3e-4ffe-8eb7-d895bedea15b
+    model:
+    - 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    label: Comments
+    default: ''
+    expression: ''
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datafield
+  pk: 270
+  fields:
+    created: 2026-10-09 15:21:11.986426+00:00
+    modified: 2026-10-09 15:21:11.986438+00:00
+    name: contact_user
+    code: f8099cef-25e4-4349-8a9b-befd4a2158cf
+    model:
+    - 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    label: Reply Needed?
+    default: null
+    expression: BoolMap(Contact, "No", "Yes", "")
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datafield
+  pk: 271
+  fields:
+    created: 2026-10-09 15:26:37.511613+00:00
+    modified: 2026-10-09 17:30:12.196145+00:00
+    name: quarter
+    code: a2e022ce-d86b-449b-98ce-b94811397297
+    model:
+    - 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    label: Quarter Submitted
+    default: null
+    expression: YearQuarter(Created)
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datafield
+  pk: 272
+  fields:
+    created: 2026-10-09 15:27:49.747761+00:00
+    modified: 2026-10-09 15:38:25.170811+00:00
+    name: age
+    code: 0e109859-4df8-434a-93f3-497b17c45ecc
+    model:
+    - 78b907b5-ea1f-4ded-a767-33c52ea9b4eb
+    label: Months From Now
+    default: 0
+    expression: -AgeInMonths(Created)
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+- model: reportcraft.datafield
+  pk: 273
+  fields:
+    created: 2026-10-09 16:33:28.438120+00:00
+    modified: 2026-10-09 16:37:46.267759+00:00
+    name: year
+    code: 0d69bb50-1dca-44c8-936e-328bd56ded3e
+    model:
+    - 05d6e633-a578-41d0-849b-760e43537a8b
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 275
+  fields:
+    created: 2026-10-09 16:34:03.826111+00:00
+    modified: 2026-10-09 16:35:54.744186+00:00
+    name: year
+    code: e975f3bb-fcf2-4166-af7b-61acd300afea
+    model:
+    - 6e8c9558-705b-4a5f-b6ed-aed54dc41538
+    label: Year
+    default: null
+    expression: Created.Year
+    precision: null
+    position: 0
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 277
+  fields:
+    created: 2026-10-09 16:36:44.768682+00:00
+    modified: 2026-10-09 16:36:44.768694+00:00
+    name: beamline_name
+    code: ab9edebc-9835-4008-ac78-e62aa05b9ac7
+    model:
+    - 6e8c9558-705b-4a5f-b6ed-aed54dc41538
+    label: Beamline Name
+    default: null
+    expression: Beamline.Acronym
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 278
+  fields:
+    created: 2026-10-09 16:37:46.277496+00:00
+    modified: 2026-10-09 16:37:46.284968+00:00
+    name: beamline_name
+    code: b0e194ae-ddea-4aa9-b66c-6ee3deb0c4db
+    model:
+    - 05d6e633-a578-41d0-849b-760e43537a8b
+    label: Beamline_Name
+    default: null
+    expression: Session.Beamline.Acronym
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 279
+  fields:
+    created: 2026-10-09 16:39:04.913733+00:00
+    modified: 2026-10-09 16:39:04.913750+00:00
+    name: responses
+    code: 9367a2e3-a4ce-4005-831f-7a270d702c70
+    model:
+    - 05d6e633-a578-41d0-849b-760e43537a8b
+    label: Responses
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 280
+  fields:
+    created: 2026-10-09 16:39:47.403460+00:00
+    modified: 2026-10-09 16:39:47.403478+00:00
+    name: num_sessions
+    code: 78a0b2cb-b68f-4b65-b55d-4d1d31776d1a
+    model:
+    - 6e8c9558-705b-4a5f-b6ed-aed54dc41538
+    label: Sessions
+    default: 0
+    expression: Count(this, distinct=True)
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 281
+  fields:
+    created: 2026-10-09 16:43:41.224513+00:00
+    modified: 2026-10-09 16:49:59.865759+00:00
+    name: sim
+    code: 0c5aacdc-59dc-429c-92a4-52be617c505e
+    model:
+    - 05d6e633-a578-41d0-849b-760e43537a8b
+    label: Simulated
+    default: null
+    expression: Session.Beamline.Simulated
+    precision: null
+    position: 6
+    ordering: null
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+- model: reportcraft.datafield
+  pk: 283
+  fields:
+    created: 2026-10-09 17:32:07.041835+00:00
+    modified: 2026-10-09 17:32:07.041844+00:00
+    name: score
+    code: 14f25f7b-ba2b-4e5e-b6c5-c7b35a4ed606
+    model:
+    - 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    label: Score
+    default: 0
+    expression: Avg(Rating)
+    precision: 1
+    position: 2
+    ordering: null
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.datafield
+  pk: 285
+  fields:
+    created: 2026-10-09 17:32:50.719746+00:00
+    modified: 2026-10-09 17:39:53.366441+00:00
+    name: year
+    code: b5ffef9f-13b1-4beb-b5f5-6ab257d08439
+    model:
+    - 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    label: Year
+    default: null
+    expression: Feedback.Created.Year
+    precision: null
+    position: 1
+    ordering: null
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.datafield
+  pk: 286
+  fields:
+    created: 2026-10-09 17:37:06.649042+00:00
+    modified: 2026-10-09 17:37:06.649053+00:00
+    name: responses
+    code: 6db5efd8-72ac-4b01-a4d4-47166ca128e7
+    model:
+    - 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    label: Responses
+    default: 0
+    expression: Count(Feedback, distinct=True)
+    precision: null
+    position: 4
+    ordering: null
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.datafield
+  pk: 287
+  fields:
+    created: 2026-10-09 17:39:53.374137+00:00
+    modified: 2026-10-09 17:39:53.381658+00:00
+    name: beamline
+    code: abc3cf33-9653-486e-af06-0de4e622ff50
+    model:
+    - 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    label: Beamline
+    default: null
+    expression: Feedback.Session.Beamline.Acronym
+    precision: null
+    position: 2
+    ordering: null
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.datafield
+  pk: 288
+  fields:
+    created: 2026-10-09 17:40:45.479336+00:00
+    modified: 2026-10-09 17:40:45.479346+00:00
+    name: sim
+    code: a3382b16-757a-4e04-bb16-20ddb8ce7ca0
+    model:
+    - 280ecfac-44f9-4ab4-9688-3868826c9a7e
+    label: Simulated
+    default: null
+    expression: Feedback.Session.Beamline.Simulated
+    precision: null
+    position: 5
+    ordering: null
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+- model: reportcraft.report
+  pk: 1
+  fields:
+    created: 2026-09-30 17:04:51.167000+00:00
+    modified: 2026-09-30 18:36:29.675566+00:00
+    slug: usage-by-year
+    code: 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    title: Yearly Usage
+    description: Usage statistics by Year
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 2
+  fields:
+    created: 2026-10-02 03:39:51.837446+00:00
+    modified: 2026-10-02 03:39:51.837458+00:00
+    slug: dataset-parameter
+    code: 24892217-7638-4283-b2df-e4b20363d93a
+    title: Dataset Parameter Statistics
+    description: Distribution of dataset parameters
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 3
+  fields:
+    created: 2026-10-02 20:55:27.680448+00:00
+    modified: 2026-10-02 20:57:51.495114+00:00
+    slug: yearly-dataset-types
+    code: 43ac593f-30ba-43a0-8a78-09993129a504
+    title: Yearly Dataset Types
+    description: Breakdown of dataset types acquired by year.
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 4
+  fields:
+    created: 2026-10-03 03:43:33.950855+00:00
+    modified: 2026-10-03 03:43:33.950868+00:00
+    slug: project-leader-boards
+    code: 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    title: Project Leader Boards
+    description: Various rankings of Projects
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 5
+  fields:
+    created: 2026-10-03 05:46:44.847199+00:00
+    modified: 2026-10-03 18:25:57.004106+00:00
+    slug: yearly-scheduled-beam-time
+    code: 506c4745-f590-48dd-b589-beb6982726d1
+    title: Yearly Scheduled Beam Time
+    description: Beam time schedule for each project type by year
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 6
+  fields:
+    created: 2026-10-04 05:28:31.963915+00:00
+    modified: 2026-10-04 05:28:31.963925+00:00
+    slug: beamline-kpi-statistics
+    code: 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    title: Beamline KPI Statistics
+    description: Beamline KPIs based on User Support records.
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 7
+  fields:
+    created: 2026-10-06 19:46:35.221518+00:00
+    modified: 2026-10-06 19:56:55.403658+00:00
+    slug: global-distribution-of-users
+    code: 82f694df-4ddc-4ab5-89bb-677ab0d941db
+    title: Global Distribution of Users
+    description: Distribution of users across the globe.
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 8
+  fields:
+    created: 2026-10-06 21:00:48.337311+00:00
+    modified: 2026-10-06 21:01:11.264842+00:00
+    slug: national-distribution-of-users
+    code: 0def7ca4-cb09-45f5-9872-6bd0de1b4571
+    title: National Distribution of Users
+    description: Distribution of users across the country.
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 9
+  fields:
+    created: 2026-10-07 04:50:05.272999+00:00
+    modified: 2026-10-09 18:03:00.470617+00:00
+    slug: user-feedback-report
+    code: 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    title: User Feedback Report
+    description: Statistics of User Satisfaction based on end-of-session questionaires
+    theme: sketch
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 10
+  fields:
+    created: 2026-10-07 22:36:44.540599+00:00
+    modified: 2026-10-09 03:27:28.509997+00:00
+    slug: yearly-publicationi-metrics
+    code: d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    title: Yearly Publication Metrics
+    description: Summary of publication metrics statistics
+    theme: default
+    notes: ''
+    section: null
+- model: reportcraft.report
+  pk: 11
+  fields:
+    created: 2026-10-09 03:28:06.454538+00:00
+    modified: 2026-10-09 03:47:11.761638+00:00
+    slug: quarterly-publicationi-metrics
+    code: 285a9032-5981-440d-94a2-7023add522a1
+    title: Quarterly Publication Metrics
+    description: Summary of publication metrics by quarter
+    theme: sketch
+    notes: ''
+    section: null
+- model: reportcraft.entry
+  pk: 1
+  fields:
+    created: 2026-09-30 17:05:39.492628+00:00
+    modified: 2026-10-01 13:57:15.938933+00:00
+    code: 0c045b1e-9f7a-454a-9efe-baeda3b26874
+    title: Overview
+    description: Summary of usage by year based on beamline session records
+    notes: >-
+      - Hours Used is based on when an active session was running on the beamline.
+
+      - All datasets are considered irrespective of dataset type.
+    style: col-md-12
+    kind: table
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 0
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      rows:
+      - num_samples
+      - num_sessions
+      - num_data
+      - hours_used
+      - distinct_projects
+      - shifts_used
+      - reports
+      columns: year
+      total_row: true
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 2
+  fields:
+    created: 2026-09-30 17:22:20.964863+00:00
+    modified: 2026-09-30 20:48:30.818629+00:00
+    code: dd8ad466-c0f7-4145-9b2a-8f8eb5064ed5
+    title: Throughput Per Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 1
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - num_samples
+      - num_data
+      - hours_used
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 2
+- model: reportcraft.entry
+  pk: 3
+  fields:
+    created: 2026-09-30 17:33:04.580865+00:00
+    modified: 2026-09-30 21:53:33.687133+00:00
+    code: 746ad575-11bd-4168-8740-a0cfba352df0
+    title: Samples by Project Type
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: donut
+    source:
+    - 706574bd-3009-4dd9-b8ae-bbe2ad37fc6e
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      label: type
+      value: samples
+      colors: Live8
+- model: reportcraft.entry
+  pk: 4
+  fields:
+    created: 2026-09-30 17:41:05.709127+00:00
+    modified: 2026-09-30 20:51:52.716090+00:00
+    code: 03443d8c-5ac6-4e04-8ac1-0eb290df0c4d
+    title: Unique Projects Each Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 5
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - distinct_projects
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 2
+- model: reportcraft.entry
+  pk: 6
+  fields:
+    created: 2026-09-30 18:28:35.019341+00:00
+    modified: 2026-09-30 21:50:10.075914+00:00
+    code: 010a5dfa-9b18-4b6c-9477-0a4d60f81b09
+    title: New Projects by Year
+    description: ''
+    notes: New projects correspond to projects created within a given year
+    style: col-md-6
+    kind: columns
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 3
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - num_projects
+      grouped: false
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 7
+  fields:
+    created: 2026-09-30 18:37:23.331727+00:00
+    modified: 2026-10-02 20:45:28.272931+00:00
+    code: e68437c2-19e9-44aa-b91a-9a483cf7e515
+    title: Total Projects Over Time
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: plot
+    source:
+    - 86eee73d-1064-456c-bc8f-4eae2e393b5c
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 4
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      groups:
+      - y: num_projects
+        z: type
+        type: cumarea
+      scheme: Live8
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+      group_by: type
+- model: reportcraft.entry
+  pk: 8
+  fields:
+    created: 2026-09-30 20:50:39.096273+00:00
+    modified: 2026-09-30 20:51:25.028663+00:00
+    code: f5c4ddc3-8b19-47fa-abab-18469544ff59
+    title: Sessions Each Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 2c0e380b-8b14-4d2f-9102-6affc39f188b
+    report:
+    - 3b62f5aa-6ce1-41c7-b82b-1aec2f607981
+    position: 5
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - num_sessions
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 2
+- model: reportcraft.entry
+  pk: 9
+  fields:
+    created: 2026-10-02 03:41:25.757927+00:00
+    modified: 2026-10-02 04:36:46.767006+00:00
+    code: 5e9d2970-acc2-4a94-8f2c-629bbb25172f
+    title: Average Beam Size By Technique and Beamline (µm)
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 1
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - avg_aperture
+      grouped: true
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: instrument
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 10
+  fields:
+    created: 2026-10-02 04:15:53.068031+00:00
+    modified: 2026-10-02 20:34:19.607446+00:00
+    code: 7979d08b-64b4-4c97-95f6-86a51b261512
+    title: Average Exposure By Technique and Beamline (sec)
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: sqrt
+      scheme: Live8
+      values:
+      - avg_exposure
+      grouped: true
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: instrument
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 11
+  fields:
+    created: 2026-10-02 04:28:52.003326+00:00
+    modified: 2026-10-02 13:50:14.949685+00:00
+    code: 12ecdb2d-942f-48ff-aadf-160ee14ca7cf
+    title: Data Parameter Summary
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: table
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 0
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      rows:
+      - avg_exposure
+      - avg_energy
+      - avg_frames
+      - avg_duration
+      - avg_aperture
+      - max_exposure
+      - min_exposure
+      - min_energy
+      - max_energy
+      columns: type
+      total_row: false
+      transpose: true
+      flip_headers: false
+      total_column: false
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 12
+  fields:
+    created: 2026-10-02 04:37:40.980514+00:00
+    modified: 2026-10-02 05:27:36.880459+00:00
+    code: 50276135-9ad1-4bf6-99b4-5a0394676e25
+    title: Duration of Experiments (sec)
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: bars
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 3
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - avg_duration
+      grouped: true
+      color_by: instrument
+      normalize: false
+      sort_desc: false
+      categories: type
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 13
+  fields:
+    created: 2026-10-02 05:28:42.483727+00:00
+    modified: 2026-10-02 05:30:48.575467+00:00
+    code: e69bec9e-ec4a-4b67-a77a-044423cd4949
+    title: Average Number of Frames
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: bars
+    source:
+    - 66f7c332-c34d-4b66-96d7-adee2f547efb
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 4
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - avg_frames
+      grouped: true
+      color_by: instrument
+      normalize: false
+      sort_desc: false
+      categories: type
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 14
+  fields:
+    created: 2026-10-02 05:42:43.028137+00:00
+    modified: 2026-10-02 18:58:34.969485+00:00
+    code: be5ee5cc-cdfd-44fa-81f5-83eff57f337d
+    title: Data Processing Scores
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: histogram
+    source:
+    - 7e3d14b7-8de5-4b12-8d30-f06c9a918687
+    report:
+    - 24892217-7638-4283-b2df-e4b20363d93a
+    position: 5
+    aspect_ratio: 3.0
+    filters: ''
+    attrs:
+      bins: 20
+      scale: linear
+      stack: false
+      scheme: Live8
+      values: avg_score
+      binning: manual
+      x_facet: type
+      group_by: beamline
+- model: reportcraft.entry
+  pk: 16
+  fields:
+    created: 2026-10-02 20:59:24.764889+00:00
+    modified: 2026-10-02 20:59:57.012190+00:00
+    code: 479d2142-19c3-49eb-b919-c1a509da0326
+    title: Dataset Summary by Year
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: table
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+    report:
+    - 43ac593f-30ba-43a0-8a78-09993129a504
+    position: 0
+    aspect_ratio: 1.8
+    filters: simulated = False
+    attrs:
+      rows:
+      - type
+      values: counts
+      columns: year
+      total_row: true
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 17
+  fields:
+    created: 2026-10-02 21:01:33.995538+00:00
+    modified: 2026-10-03 05:37:11.541465+00:00
+    code: a241a040-16ab-4c11-b8a7-0f32146e3409
+    title: Dataset totals by year
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: columns
+    source:
+    - db5d45a6-e821-4f0c-b28d-b2b2ab65655a
+    report:
+    - 43ac593f-30ba-43a0-8a78-09993129a504
+    position: 1
+    aspect_ratio: 1.8
+    filters: simulated = False
+    attrs:
+      scale: linear
+      facets: instrument
+      scheme: Live8
+      values:
+      - counts
+      grouped: false
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 18
+  fields:
+    created: 2026-10-03 03:45:06.654315+00:00
+    modified: 2026-10-05 04:31:04.479562+00:00
+    code: 71658a87-fb35-45dd-8775-b10d4d1206c7
+    title: Top Project by Samples
+    description: ''
+    notes: Sample counts represent all samples shipped not considering if a dataset
+      was acquired from it.
+    style: col-md-3
+    kind: bars
+    source:
+    - b156c5d6-cf2d-432a-86c0-51fef1f316ad
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 0
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - num_items
+      grouped: false
+      sort_by: num_items
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: name
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 19
+  fields:
+    created: 2026-10-03 03:46:19.932524+00:00
+    modified: 2026-10-05 04:31:04.479568+00:00
+    code: 5b09676b-bf5f-4f23-a087-1a020d4f0ba1
+    title: Top Project by Datasets
+    description: ''
+    notes: Dataset counts include all dataset types
+    style: col-md-3
+    kind: bars
+    source:
+    - 8ee673a3-67c2-414b-8060-bd61a74bf813
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 1
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - num_items
+      grouped: false
+      sort_by: num_items
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: name
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 20
+  fields:
+    created: 2026-10-03 03:47:32.589112+00:00
+    modified: 2026-10-05 04:31:04.479570+00:00
+    code: 7322c6cd-0900-4883-9f72-31d49510a5b1
+    title: Top Project by Visits
+    description: ''
+    notes: A visit is a unique session that may span multiple days
+    style: col-md-3
+    kind: bars
+    source:
+    - 7ee48797-0e7b-4232-ae9d-a58a276d98d2
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 2
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - num_items
+      grouped: false
+      sort_by: num_items
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: name
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 22
+  fields:
+    created: 2026-10-03 05:16:36.106342+00:00
+    modified: 2026-10-05 04:31:04.479572+00:00
+    code: cc885670-e16e-43b8-ab32-b2e42dcdf799
+    title: Top Project by time used (Hrs)
+    description: ''
+    notes: based on stretches of time during which the user had control over the beamline.
+    style: col-md-3
+    kind: bars
+    source:
+    - 05f902bd-abfd-45ae-91c3-913a9e7b5755
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 4
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - total
+      grouped: false
+      sort_by: total
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: project
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 23
+  fields:
+    created: 2026-10-03 05:47:30.798297+00:00
+    modified: 2026-10-04 04:21:52.558283+00:00
+    code: 6b82de32-d6b0-42ca-8060-e7f2acb0eeb9
+    title: Scheduled Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: table
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 0
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      rows:
+      - type
+      values: num_shifts
+      columns: year
+      total_row: true
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 24
+  fields:
+    created: 2026-10-03 05:54:06.725818+00:00
+    modified: 2026-10-04 04:21:52.558289+00:00
+    code: 15d5619c-e32d-4feb-9190-552f27439273
+    title: Scheduled Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 1
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - num_shifts
+      grouped: false
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 25
+  fields:
+    created: 2026-10-03 05:55:59.548507+00:00
+    modified: 2026-10-04 04:21:52.558291+00:00
+    code: 094ad4dd-6608-4e13-aa41-0998d25c020e
+    title: Total Scheduled Shifts by Project Type
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: donut
+    source:
+    - 17d19a6f-390c-4e7b-8994-90b4378800a7
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 2
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      label: type
+      value: num_shifts
+      colors: Live8
+- model: reportcraft.entry
+  pk: 26
+  fields:
+    created: 2026-10-03 06:11:10.890898+00:00
+    modified: 2026-10-04 04:21:52.558292+00:00
+    code: 4ebf4653-73d3-42dc-a782-de7841fbb793
+    title: Access Type Scheduled Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: table
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 3
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      rows:
+      - type
+      values: num_shifts
+      columns: year
+      total_row: true
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 27
+  fields:
+    created: 2026-10-03 06:12:46.057372+00:00
+    modified: 2026-10-04 04:21:52.558294+00:00
+    code: f5a0a142-b9da-414d-a1ce-bc9b9b250cd4
+    title: Access Type Scheduled Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 4
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      scale: linear
+      values:
+      - num_shifts
+      grouped: false
+      color_by: type
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 28
+  fields:
+    created: 2026-10-03 06:13:40.499545+00:00
+    modified: 2026-10-04 04:21:52.558295+00:00
+    code: a6bfc43f-0fda-4992-96e7-84f2a7de846c
+    title: Total Scheduled Shifts by Access Type
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: donut
+    source:
+    - 8bfc6fb7-d4d1-4084-9d56-3347ea30687d
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 5
+    aspect_ratio: 1.8
+    filters: type isnull False
+    attrs:
+      label: type
+      value: num_shifts
+- model: reportcraft.entry
+  pk: 29
+  fields:
+    created: 2026-10-04 03:56:10.284342+00:00
+    modified: 2026-10-04 04:21:52.558296+00:00
+    code: 37e57015-557c-41ee-a968-dc56dbebc587
+    title: Downtime Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: table
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 6
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      rows:
+      - category
+      values: shifts
+      columns: year
+      total_row: true
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 31
+  fields:
+    created: 2026-10-04 04:11:58.138596+00:00
+    modified: 2026-10-04 04:21:52.558297+00:00
+    code: a27183cd-4921-4229-9430-5ac545e853ad
+    title: Downtime Shifts by Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 7
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live16
+      values:
+      - shifts
+      grouped: false
+      color_by: category
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 32
+  fields:
+    created: 2026-10-04 04:21:49.475257+00:00
+    modified: 2026-10-04 04:22:51.800253+00:00
+    code: 7ecbee7f-d090-47fe-bc79-554768726382
+    title: Downtime Shifts by Reason
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: donut
+    source:
+    - 68a7aed7-8d4d-4fe4-9f43-404d82953b27
+    report:
+    - 506c4745-f590-48dd-b589-beb6982726d1
+    position: 8
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      label: category
+      value: shifts
+      scheme: Live16
+- model: reportcraft.entry
+  pk: 33
+  fields:
+    created: 2026-10-04 05:29:04.498116+00:00
+    modified: 2026-10-05 04:15:07.358809+00:00
+    code: e39c7aae-44e4-4033-9e38-e1a7d43e7343
+    title: Indicators for Beamline Failures / Problems
+    description: ''
+    notes: >-
+      - MTBF: Mean Time Between Failures
+
+      - MRT: Mean Recover Time
+    style: col-md-6
+    kind: table
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 0
+    aspect_ratio: 1.8
+    filters: (type = "Problem") and (external = False)
+    attrs:
+      rows:
+      - mrt
+      - totals
+      - lost_hours
+      - mtbf
+      columns: category
+      total_row: false
+      transpose: true
+      flip_headers: false
+      total_column: false
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 34
+  fields:
+    created: 2026-10-04 16:02:46.476263+00:00
+    modified: 2026-10-05 04:15:07.358812+00:00
+    code: e4c73531-cb3b-41e4-b62e-74ddbcedf6f0
+    title: Indicators for Other Beamline Records
+    description: ''
+    notes: '- MTBF: Mean Time Between Events for non-failure / informational records.'
+    style: col-md-6
+    kind: table
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 1
+    aspect_ratio: 1.8
+    filters: (type = "Info") and (external = False)
+    attrs:
+      rows:
+      - totals
+      - mtbf
+      columns: category
+      total_row: false
+      transpose: true
+      flip_headers: false
+      total_column: false
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 35
+  fields:
+    created: 2026-10-04 19:29:40.364512+00:00
+    modified: 2026-10-05 04:15:07.358814+00:00
+    code: 4f03926f-fc28-4f8b-a125-c197206b890f
+    title: Indicators for Facility Failures / Problems
+    description: ''
+    notes: >-
+      - MTBF: Mean Time Between Failures
+
+      - MRT: Mean Recover Time
+    style: col-md-12
+    kind: table
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 2
+    aspect_ratio: 1.8
+    filters: (external = True)
+    attrs:
+      rows:
+      - mrt
+      - totals
+      - lost_hours
+      - mtbf
+      columns: category
+      total_row: false
+      transpose: true
+      flip_headers: false
+      total_column: false
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 36
+  fields:
+    created: 2026-10-04 19:38:16.908549+00:00
+    modified: 2026-10-07 04:21:23.670663+00:00
+    code: 74c49163-2088-4c2b-93b6-500d8c477ef1
+    title: User Support Interactions and Lost Time
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: bars
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 3
+    aspect_ratio: 3.0
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - lost_hours
+      grouped: false
+      sort_by: lost_hours
+      color_by: system
+      normalize: false
+      sort_desc: true
+      categories: category
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 37
+  fields:
+    created: 2026-10-04 20:01:32.903201+00:00
+    modified: 2026-10-07 04:21:18.194735+00:00
+    code: ac9772b1-b096-4eca-832b-8a932d72d01b
+    title: User Support Problem Prevalence
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: bars
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 4
+    aspect_ratio: 3.0
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - totals
+      grouped: false
+      sort_by: lost_hours
+      color_by: system
+      normalize: false
+      sort_desc: true
+      categories: category
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 38
+  fields:
+    created: 2026-10-04 20:13:19.130545+00:00
+    modified: 2026-10-07 04:21:30.326914+00:00
+    code: bfb6d4b5-650d-4ec5-9571-195278f3e7a6
+    title: User Support Recovery Time
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: bars
+    source:
+    - 38745991-dd1d-4d8d-bad3-6af7e714078d
+    report:
+    - 1eaf2d6d-3fc5-4748-8f26-9603de99b8e9
+    position: 5
+    aspect_ratio: 3.0
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - mrt
+      grouped: false
+      sort_by: lost_hours
+      color_by: system
+      normalize: false
+      sort_desc: true
+      categories: category
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 39
+  fields:
+    created: 2026-10-05 04:31:00.219207+00:00
+    modified: 2026-10-05 04:39:20.498302+00:00
+    code: cb7a4d1c-716c-4d57-8a92-00638accc93b
+    title: Top Project by Problems Encountered
+    description: ''
+    notes: Number of support records reporting failures when the project was using
+      the beamline.
+    style: col-md-6
+    kind: bars
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 5
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - num_failures
+      grouped: false
+      sort_by: num_failures
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: project_name
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 40
+  fields:
+    created: 2026-10-05 04:31:47.357411+00:00
+    modified: 2026-10-05 04:39:13.585472+00:00
+    code: 299baa7c-010e-4b0f-afb6-603f06219fe5
+    title: Top Project by Lost time
+    description: ''
+    notes: Average recover time of failures reported while the project was using the
+      beamline.
+    style: col-md-6
+    kind: bars
+    source:
+    - 619039a4-e127-4d69-8bb8-9d3568af899d
+    report:
+    - 90fcc7a2-415e-4fca-9efa-0c22290c63f9
+    position: 5
+    aspect_ratio: 1.4
+    filters: ''
+    attrs:
+      limit: 20
+      scale: linear
+      scheme: Live8
+      values:
+      - time_lost
+      grouped: false
+      sort_by: time_lost
+      color_by: type
+      normalize: false
+      sort_desc: true
+      categories: project_name
+      ticks_every: 1
+- model: reportcraft.entry
+  pk: 41
+  fields:
+    created: 2026-10-06 19:47:32.462352+00:00
+    modified: 2026-10-09 22:41:35.886217+00:00
+    code: 46be0227-3a92-4cf6-8fc3-5a5d56920182
+    title: Distribution of users globally
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: map
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+    report:
+    - 82f694df-4ddc-4ab5-89bb-677ab0d941db
+    position: 0
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      map: '001'
+      groups:
+      - type: area
+        value: num_items
+      - type: markers
+        value: country_name
+      - type: markers
+        value: num_items
+      scheme: Cool
+      location: country_code
+- model: reportcraft.entry
+  pk: 42
+  fields:
+    created: 2026-10-06 20:34:47.626834+00:00
+    modified: 2026-10-06 20:35:09.643058+00:00
+    code: 9a83360a-4b68-4210-8176-39a3bbb2a554
+    title: Users by Country
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: list
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+    report:
+    - 82f694df-4ddc-4ab5-89bb-677ab0d941db
+    position: 1
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 20
+      columns:
+      - num_items
+      - country_name
+      order_by: num_items
+      order_desc: true
+- model: reportcraft.entry
+  pk: 43
+  fields:
+    created: 2026-10-06 20:42:39.156431+00:00
+    modified: 2026-10-06 20:43:46.668472+00:00
+    code: 6ad112ec-ac2a-43a1-8831-aac704a882fe
+    title: Unique Institutions by Country
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: list
+    source:
+    - 43434713-097d-4094-8a95-b510c3f215d7
+    report:
+    - 82f694df-4ddc-4ab5-89bb-677ab0d941db
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 20
+      columns:
+      - country_name
+      - institutions
+      order_by: institutions
+      order_desc: true
+- model: reportcraft.entry
+  pk: 44
+  fields:
+    created: 2026-10-06 21:00:48.355274+00:00
+    modified: 2026-10-09 18:37:08.127896+00:00
+    code: 13ba0057-2f45-4ee7-b2b8-13d0badc3704
+    title: Distribution of users in Canada
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: map
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+    report:
+    - 0def7ca4-cb09-45f5-9872-6bd0de1b4571
+    position: 0
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      map: CAN
+      groups:
+      - type: area
+        value: num_items
+      - type: markers
+        value: region_name
+      - type: markers
+        value: num_items
+      scheme: Purples
+      latitude: lat
+      location: province
+      longitude: lon
+- model: reportcraft.entry
+  pk: 45
+  fields:
+    created: 2026-10-06 21:00:48.363548+00:00
+    modified: 2026-10-06 21:04:15.501984+00:00
+    code: a4aef119-87ff-4931-825e-9ec7f9e4f75a
+    title: Users by Province
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: list
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+    report:
+    - 0def7ca4-cb09-45f5-9872-6bd0de1b4571
+    position: 1
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 20
+      columns:
+      - num_items
+      - region_name
+      order_by: num_items
+      order_desc: true
+- model: reportcraft.entry
+  pk: 46
+  fields:
+    created: 2026-10-06 21:00:48.371117+00:00
+    modified: 2026-10-06 21:04:08.044844+00:00
+    code: 368922af-d74a-470c-85d8-a348e96860ef
+    title: Unique Institutions by Province
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: list
+    source:
+    - d65aab86-36f6-4904-94e2-8a52c0a7c662
+    report:
+    - 0def7ca4-cb09-45f5-9872-6bd0de1b4571
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 20
+      columns:
+      - institutions
+      - region_name
+      order_by: institutions
+      order_desc: true
+- model: reportcraft.entry
+  pk: 47
+  fields:
+    created: 2026-10-06 21:13:30.586492+00:00
+    modified: 2026-10-06 21:17:57.702198+00:00
+    code: 0caee846-00fc-4417-97d4-9f446e512143
+    title: Top 20 Users by Institution
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: list
+    source:
+    - 88240967-a39a-443c-9b9e-5d167ff01987
+    report:
+    - 0def7ca4-cb09-45f5-9872-6bd0de1b4571
+    position: 3
+    aspect_ratio: 1.8
+    filters: institution isnull False
+    attrs:
+      limit: 20
+      columns:
+      - institution
+      - num_users
+      - num_projects
+      order_by: num_users
+      order_desc: true
+- model: reportcraft.entry
+  pk: 48
+  fields:
+    created: 2026-10-07 04:51:32.471565+00:00
+    modified: 2026-10-09 15:32:37.682645+00:00
+    code: 96e21cea-94f2-4ef8-90aa-6262d234fbdb
+    title: Average Feedback Score
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: likert
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 0
+    aspect_ratio: 2.0
+    filters: scale = 1
+    attrs:
+      counts: freq
+      scheme: PiYG
+      scores: score
+      answers: answer
+      x_facet: beamline
+      questions: topic
+- model: reportcraft.entry
+  pk: 49
+  fields:
+    created: 2026-10-07 22:37:09.189450+00:00
+    modified: 2026-10-09 00:22:15.299491+00:00
+    code: 347361f3-c4d6-48c3-a628-e0c7fd55d3d8
+    title: Metrics Summary
+    description: ''
+    notes: >-
+      Mentions represent the number of news stories, and social media mentions the
+      reference the publication.
+
+      The Average Impact Factor is the ratio of citations to the number of citable
+      documents for the journal over the previous two years. This value is calculated
+      based on citations in the SCOPUS database and may be different from the Web
+      Of Science values from the Thomson Reuters database.
+
+      SJR is the SCIMAGO Journal Rank Metric: https://www.scimagojr.com/. A Journal
+      with an SJR quartile of 1 is in the top 25% of journals in the field when ranked
+      by SJR, and a quartile of 2 is ranked higher than 50% but lower than 25% of
+      journals in the field.
+    style: col-md-12
+    kind: table
+    source:
+    - 34315e78-48af-4d42-81f3-fc1f370d2862
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      rows:
+      - publications
+      - num_citations
+      - mentions
+      - avg_impact_factor
+      - num_pdbs
+      - avg_sjr
+      - avg_hindex
+      - avg_quartile
+      - cites_per_article
+      - mentions_per_article
+      columns: year
+      max_cols: 12
+      total_row: false
+      transpose: false
+      flip_headers: false
+      total_column: true
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 50
+  fields:
+    created: 2026-10-07 22:57:39.336631+00:00
+    modified: 2026-10-08 21:53:06.631038+00:00
+    code: 89371c5c-f2bc-44fa-8b43-d02c290ed4b8
+    title: Research Output
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - de2d1db2-dfe3-4ca3-b37d-b7455812cfd2
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 0
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - publications
+      - num_pdbs
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 2
+- model: reportcraft.entry
+  pk: 51
+  fields:
+    created: 2026-10-07 23:09:03.383147+00:00
+    modified: 2026-10-08 21:53:06.631040+00:00
+    code: e4a0ea67-112a-44c0-9f72-9bb827723b4f
+    title: PDB Publication Lag
+    description: ''
+    notes: The average time between data collection and PDB Release in Months
+    style: col-md-6
+    kind: plot
+    source:
+    - f0259ffe-7c22-4ff1-ba4a-2a7052225ed2
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 1
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      groups:
+      - y: publish_lag
+        type: line-points
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 52
+  fields:
+    created: 2026-10-07 23:36:30.657862+00:00
+    modified: 2026-10-08 21:53:06.631044+00:00
+    code: d0aa9518-5358-4f55-b243-9522908c91c4
+    title: Top 10 Most Cited Articles
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: list
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 7
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 10
+      columns:
+      - cite_text
+      - num_citations
+      order_by: num_citations
+      order_desc: true
+- model: reportcraft.entry
+  pk: 54
+  fields:
+    created: 2026-10-08 21:33:21.978545+00:00
+    modified: 2026-10-08 23:00:28.295927+00:00
+    code: cdfe2027-2845-4952-ab74-cb16c2b61a04
+    title: Journal Metric Trends
+    description: ''
+    notes: Averages are based on metrics of Journals at the time of publication.
+    style: col-md-6
+    kind: plot
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 4
+    aspect_ratio: 1.8
+    filters: year > 2005
+    attrs:
+      groups:
+      - y: avg_impact_factor
+        type: line-points
+      - y: avg_sjr
+        type: line-points
+      scheme: Live8
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 55
+  fields:
+    created: 2026-10-08 21:36:07.992476+00:00
+    modified: 2026-10-08 23:00:34.657443+00:00
+    code: 5986bd4c-2a75-4c47-bb73-4fa447eea0a6
+    title: Journal H-Index Trends
+    description: ''
+    notes: Averages are based on metrics of Journals at the time of publication.
+    style: col-md-6
+    kind: plot
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 3
+    aspect_ratio: 1.8
+    filters: year > 2005
+    attrs:
+      groups:
+      - y: avg_hindex
+        type: line-points
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 56
+  fields:
+    created: 2026-10-08 21:47:28.862193+00:00
+    modified: 2026-10-08 21:53:06.631042+00:00
+    code: 3401c7eb-3089-4fb3-bfca-39874e2f299b
+    title: Total Citations per Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: plot
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 5
+    aspect_ratio: 1.8
+    filters: year > 2005
+    attrs:
+      groups:
+      - y: num_cites
+        type: line-points
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 57
+  fields:
+    created: 2026-10-08 21:50:40.337641+00:00
+    modified: 2026-10-08 21:53:06.631043+00:00
+    code: 6e4385b9-be01-4035-a727-6d6aeb5fdef4
+    title: Yearly Citations Per Article
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: plot
+    source:
+    - 48dcdb52-bea0-4c1c-a7c6-e77e15bc942d
+    report:
+    - d4cb4445-b0e2-4e40-8cf7-63693b82af79
+    position: 6
+    aspect_ratio: 1.8
+    filters: year > 2005
+    attrs:
+      groups:
+      - y: cites_per_article
+        type: line-points
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 58
+  fields:
+    created: 2026-10-09 03:28:06.465195+00:00
+    modified: 2026-10-09 03:40:31.073445+00:00
+    code: fa29c8b8-4ee5-4ac8-9ea4-48fb78885058
+    title: Research Output
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: columns
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 0
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      scale: linear
+      scheme: Live8
+      values:
+      - publications
+      - num_pdbs
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: quarter
+      ticks_every: 2
+- model: reportcraft.entry
+  pk: 60
+  fields:
+    created: 2026-10-09 03:28:06.478833+00:00
+    modified: 2026-10-09 04:20:58.295466+00:00
+    code: 33ab7706-5844-4898-9836-bf7dceb48420
+    title: Metrics Summary
+    description: ''
+    notes: >-
+      The Average Impact Factor is the ratio of citations to the number of citable
+      documents for the journal over the previous two years. This value is calculated
+      based on citations in the SCOPUS database and may be different from the Web
+      Of Science values from the Thomson Reuters database.
+
+      SJR is the SCIMAGO Journal Rank Metric: https://www.scimagojr.com/. A Journal
+      with an SJR quartile of 1 is in the top 25% of journals in the field when ranked
+      by SJR, and a quartile of 2 is ranked higher than 50% but lower than 25% of
+      journals in the field.
+    style: col-md-6
+    kind: table
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 1
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      rows:
+      - publications
+      - num_citations
+      - avg_impact_factor
+      - num_pdbs
+      - avg_sjr
+      - avg_hindex
+      - avg_quartile
+      columns: quarter
+      max_cols: 12
+      total_row: false
+      transpose: false
+      flip_headers: false
+      total_column: false
+      wrap_headers: false
+      force_strings: false
+- model: reportcraft.entry
+  pk: 61
+  fields:
+    created: 2026-10-09 03:28:06.485087+00:00
+    modified: 2026-10-09 03:42:00.815500+00:00
+    code: 04b298b3-833d-46f9-8271-6ef79c9fa50f
+    title: Journal H-Index Trends
+    description: ''
+    notes: Averages are based on metrics of Journals at the time of publication.
+    style: col-md-6
+    kind: plot
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 2
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      groups:
+      - y: avg_hindex
+        type: line-points
+      x_scale: linear
+      x_value: quarter
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 62
+  fields:
+    created: 2026-10-09 03:28:06.495448+00:00
+    modified: 2026-10-09 03:42:08.699321+00:00
+    code: e8b32105-c883-48f4-a43a-8d26447243da
+    title: Journal Metric Trends
+    description: ''
+    notes: Averages are based on metrics of Journals at the time of publication.
+    style: col-md-6
+    kind: plot
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 3
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      groups:
+      - y: avg_impact_factor
+        type: line-points
+      - y: avg_sjr
+        type: line-points
+      scheme: Live8
+      x_scale: linear
+      x_value: quarter
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 63
+  fields:
+    created: 2026-10-09 03:28:06.501539+00:00
+    modified: 2026-10-09 03:45:09.098163+00:00
+    code: 3cece5d0-8873-4f77-8ee3-1464d164def6
+    title: Total Citations per Year
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: plot
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 4
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      groups:
+      - y: num_citations
+        type: points
+      x_scale: linear
+      x_value: quarter
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 64
+  fields:
+    created: 2026-10-09 03:28:06.507624+00:00
+    modified: 2026-10-09 03:45:42.342150+00:00
+    code: 5f549871-d4ae-43c4-94a6-56c2b5317f8d
+    title: Yearly Citations Per Article
+    description: ''
+    notes: ''
+    style: col-md-6
+    kind: plot
+    source:
+    - 35188c6a-667e-4e35-8cc1-8a081feaf84f
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 5
+    aspect_ratio: 1.8
+    filters: age < 1
+    attrs:
+      groups:
+      - y: cites_per_article
+        type: line-points
+      x_scale: linear
+      x_value: age
+      y_scale: linear
+- model: reportcraft.entry
+  pk: 65
+  fields:
+    created: 2026-10-09 03:28:06.513694+00:00
+    modified: 2026-10-09 03:32:50.305616+00:00
+    code: aefffe5c-09b6-413e-9fbf-6c75bda8bed6
+    title: Top 10 Most Cited Articles
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: list
+    source:
+    - 10f0b29b-c5d4-4ef9-8f4d-a3df5c09b4b1
+    report:
+    - 285a9032-5981-440d-94a2-7023add522a1
+    position: 6
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 10
+      columns:
+      - cite_text
+      - num_citations
+      order_by: num_citations
+      order_desc: true
+- model: reportcraft.entry
+  pk: 66
+  fields:
+    created: 2026-10-09 04:49:38.959054+00:00
+    modified: 2026-10-09 15:32:37.682649+00:00
+    code: 3926f45b-46c2-4c80-90ee-538fb8763b2a
+    title: Average Feedback Score
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: likert
+    source:
+    - ea2c60c0-5b77-4c54-9ffd-1effd32f824b
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 1
+    aspect_ratio: 1.0
+    filters: scale = 2
+    attrs:
+      counts: freq
+      scheme: PiYG
+      scores: score
+      answers: answer
+      x_facet: beamline
+      questions: topic
+- model: reportcraft.entry
+  pk: 67
+  fields:
+    created: 2026-10-09 04:56:48.003947+00:00
+    modified: 2026-10-09 15:32:37.682650+00:00
+    code: 26716597-ba18-4bb1-8ba7-c2e3b92ce667
+    title: Average Feedback Ratings
+    description: ''
+    notes: ''
+    style: col-md-4
+    kind: list
+    source:
+    - 8a0a3785-c886-439f-bbce-b9575cc74e21
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 2
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      columns:
+      - topic
+      - score
+      order_by: score
+      order_desc: true
+- model: reportcraft.entry
+  pk: 68
+  fields:
+    created: 2026-10-09 15:22:55.127792+00:00
+    modified: 2026-10-09 15:33:45.387366+00:00
+    code: c787af62-7854-4204-8dc0-22dbed4fdb7a
+    title: Worst Ratings with Comments
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: list
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 5
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 10
+      columns:
+      - comments
+      - score
+      - quarter
+      order_by: score
+      order_desc: false
+- model: reportcraft.entry
+  pk: 69
+  fields:
+    created: 2026-10-09 15:32:03.602856+00:00
+    modified: 2026-10-09 17:48:33.260318+00:00
+    code: 514dc545-6859-4cbc-9856-73de06c961dc
+    title: Average Ratings over Time
+    description: ''
+    notes: ''
+    style: col-md-8
+    kind: plot
+    source:
+    - 67540142-2127-45c5-b191-b88f1079b5af
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 3
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      groups:
+      - y: score
+        z: responses
+        type: line-points
+      scheme: Live16
+      x_scale: linear
+      x_value: year
+      y_scale: linear
+      group_by: beamline
+- model: reportcraft.entry
+  pk: 70
+  fields:
+    created: 2026-10-09 15:33:02.785561+00:00
+    modified: 2026-10-09 15:33:35.996264+00:00
+    code: 4917c1c4-06c0-4ff0-9d91-fedcbbffea4c
+    title: Best Ratings with Comments
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: list
+    source:
+    - b700f9f5-e6aa-4433-9a75-cb3935bab464
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 4
+    aspect_ratio: 1.8
+    filters: ''
+    attrs:
+      limit: 10
+      columns:
+      - comments
+      - score
+      - quarter
+      order_by: score
+      order_desc: true
+- model: reportcraft.entry
+  pk: 71
+  fields:
+    created: 2026-10-09 16:41:13.071847+00:00
+    modified: 2026-10-09 17:26:50.152099+00:00
+    code: 8fc04c22-4490-4cfe-80e2-188f6f70ac01
+    title: Response Rates
+    description: ''
+    notes: ''
+    style: col-md-12
+    kind: columns
+    source:
+    - 79f7a0e1-035b-41e7-8016-bdcb777ec4d9
+    report:
+    - 1e2d2a89-97df-43eb-9b64-2af0c1648a4e
+    position: 6
+    aspect_ratio: 3.6
+    filters: ''
+    attrs:
+      scale: linear
+      facets: beamline_name
+      scheme: Live8
+      values:
+      - responses
+      - num_sessions
+      grouped: true
+      normalize: false
+      sort_desc: false
+      categories: year
+      ticks_every: 1

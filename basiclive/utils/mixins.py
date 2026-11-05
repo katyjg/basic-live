@@ -1,22 +1,19 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import JsonResponse, HttpResponse
-from django.template.loader import get_template
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.utils.text import slugify
-
-import os
-import shutil
-import subprocess
-from tempfile import mkdtemp
+import warnings
 from urllib import parse
 
+from crisp_modals.views import AjaxFormMixin
+from django import http
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpRequest
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+from basiclive.utils.conf import settings
 from ..utils.stats import generic_stats
 
-
-TEMP_PREFIX = getattr(settings, 'PDF_TEMP_PREFIX', 'render_pdf-')
-CACHE_PREFIX = getattr(settings, 'PDF_CACHE_PREFIX', 'render-pdf')
-CACHE_TIMEOUT = getattr(settings, 'PDF_CACHE_TIMEOUT', 30), # 86400)  # 1 day
+TEMP_PREFIX = settings.PDF_TEMP_PREFIX
+CACHE_PREFIX = settings.PDF_CACHE_PREFIX
+CACHE_TIMEOUT = settings.PDF_CACHE_TIMEOUT
 
 
 def is_ajax(request: HttpRequest) -> bool:
@@ -28,6 +25,7 @@ def is_ajax(request: HttpRequest) -> bool:
         or request.accepts("application/json")
     )
 
+
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
     Mixin to allow access through a view only if the user is a superuser.
@@ -37,67 +35,43 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_superuser
 
 
-class AsyncFormMixin(object):
+class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
-    Mixin to add AJAX support to a form.
-    Must be used with an object-based FormView (e.g. CreateView)
+    Mixin to allow access through a view only if the user is a staff member.
+    Can be used with any View.
     """
-    modal_response = False
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
 
-    def form_valid(self, form):
-        # We make sure to call the parent's form_valid() method because
-        # it might do some processing (in the case of CreateView, it will
-        # call form.save() for example).
-        response = super().form_valid(form)
-        if is_ajax(self.request):
-            data = {
-                'modal': self.modal_response,
-                'url': self.get_success_url(),
-            }
-            return JsonResponse(data, safe=False)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AuthenticationRequiredMixin(object):
+    """
+    Mixin to verify that the user is logged-in without any redirects
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         else:
-            return response
+            return http.HttpResponseForbidden()
 
 
-class HTML2PdfMixin(object):
+class AsyncFormMixin(AjaxFormMixin):
     """
-    Mixin to create a .pdf file from a HTML template.
+    Deprecated: use crisp_modals.views.ModalCreateView, ModalUpdateView, ModalDeleteView, etc.
     """
-
-    def get_template_name(self):
-        return "lims/base.html"
-
-    def get(self, request, *args, **kwargs):
-        object = self.get_object()
-        name = slugify(object.name)
-        context = self.get_template_context()
-        context['request'] = request
-        template = get_template(self.get_template_name())
-
-        rendered_tpl = template.render(context).encode('utf-8')
-
-        tmp = mkdtemp(prefix=TEMP_PREFIX)
-        html_file = os.path.join(tmp, '{}.html'.format(name))
-        f = open(html_file, 'w')
-        f.write(rendered_tpl.decode())
-        f.close()
-        pdf_filename = "{}/{}.pdf".format(tmp, name)
-        try:
-            cmd = 'xvfb-run wkhtmltopdf -L 25mm -R 25mm -T 20mm -B 20mm -s Letter {0}.html {0}.pdf'.format(name)
-            subprocess.call(cmd.split(), cwd=tmp)
-            pdf = open(pdf_filename, 'rb').read()
-
-        finally:
-            shutil.rmtree(tmp)
-
-        pdf_file = ContentFile(pdf)
-        res = HttpResponse(pdf_file, "application/pdf")
-        res['Content-Length'] = pdf_file.size
-        res['Content-Disposition'] = 'attachment; filename="{}"'.format(os.path.basename(pdf_filename))
-        return res
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "AsyncFormMixin is deprecated and will be removed in a future release. "
+            "Use ModalView classes from crisp_modals.views instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
-class PlotViewMixin():
+class PlotViewMixin:
     template_name = "lims/list-plots.html"
     plot_fields = []
     date_field = None
@@ -113,10 +87,21 @@ class PlotViewMixin():
         return self.plot_fields
 
     def get_active_filters(self):
+        filter_specs, has_filters, filter_use_distinct = self.get_filters()
         qsl = self.get_query_string()
         if self.date_field:
             for part in ['year', 'month', 'day', 'quarter']:
-                qsl = qsl.replace('{}_{}'.format(self.date_field, part), '{}__{}'.format(self.date_field, part))
+                qsl = qsl.replace(f'{self.date_field}_{part}', f'{self.date_field}__{part}')
+
+            # update time range filters
+            for part in ['since', 'until', 'before', 'after']:
+                lookup_opr = {
+                    'since': 'year__gte',
+                    'until': 'year__lte',
+                    'before': 'year__lt',
+                    'after': 'year__gt'
+                }.get(part)
+                qsl = qsl.replace(f'{self.date_field}_{part}', f'{self.date_field}__{lookup_opr}')
         return dict(parse.parse_qsl(qsl.strip('?')))
 
     def get_metrics(self):

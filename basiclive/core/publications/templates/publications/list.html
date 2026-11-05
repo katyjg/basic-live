@@ -1,12 +1,17 @@
-{% extends "publications/base.html" %}
-{% load static %}
+{% extends "lims/list.html" %}
+{% load bl_icons %}
 
-{% block page_heading %}<h3>{{ view.page_title }}</h3>{% endblock %}
-
-{% block full %}
-<div class="row">
-        <div class="col">
-		{% include "itemlist/embed_list.html" %}
-        </div>
-</div>
+{% block page-tools %}
+<a href="{% url 'pub-entry-list' %}">
+    {% show_icon label='Publications' icon='journal' size='md' %}
+</a>
+<a href="{% url 'pdb-entry-list' %}">
+    {% show_icon label='PDB Entries' icon='star' size='md' %}
+</a>
+<a href="{% url 'subject-area-list' %}">
+    {% show_icon label='Subject Areas' icon='areas' size='md' %}
+</a>
+<a href="{% url 'journal-list' %}">
+    {% show_icon label='Journals' icon='book' size='md' %}
+</a>
 {% endblock %}

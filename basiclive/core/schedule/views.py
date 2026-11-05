@@ -1,27 +1,25 @@
 import logging
-from django.views.generic import TemplateView
-from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
-from django.views.generic import edit, detail
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.utils import timezone
-from django.conf import settings
-from django.db.models import Q
-from django.http import JsonResponse
-from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
-
-from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
-
-from . import models, forms, stats
-from itemlist.views import ItemListView
-from basiclive.core.lims.models import Beamline
-from basiclive.core.lims.views import ListViewMixin
-
 from datetime import datetime, timedelta
 
-MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
-MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
+from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Q
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
+from django.views.generic import TemplateView
+from django.views.generic import detail
+from itemlist.views import ItemListView
+
+from basiclive.core.lims.models import Beamline
+from basiclive.core.lims.views import ListViewMixin
+from basiclive.core.schedule.conf import settings
+from basiclive.utils.mixins import AdminRequiredMixin, LoginRequiredMixin
+from . import models, forms
+
+MIN_SUPPORT_HOUR = settings.MIN_SUPPORT_HOUR
+MAX_SUPPORT_HOUR = settings.MAX_SUPPORT_HOUR
 
 
 logger = logging.getLogger(__name__)
@@ -49,9 +47,9 @@ class CalendarView(TemplateView):
         context['year'] = year
         context['week'] = week
         context['support'] = f"{MIN_SUPPORT_HOUR:02d}:00 - {MAX_SUPPORT_HOUR:02d}:00"
-        context['beamlines'] = Beamline.objects.filter(active=True)
+        context['beamlines'] = Beamline.objects.filter(active=True, simulated=False)
         context['access_types'] = models.AccessType.objects.all()
-        context['facility_modes'] = models.FacilityMode.objects.all()
+        context['facility_modes'] = models.FacilityModeType.objects.all()
         context['scope_types'] = [(s[1].replace(' ', ''), s[1]) for s in models.Downtime.SCOPE_CHOICES]
         context['next_week'] = (now + timedelta(days=7)).isocalendar()[:2]
         context['last_week'] = (now - timedelta(days=7)).isocalendar()[:2]
@@ -81,27 +79,8 @@ class BeamtimeInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
         return self.request.user.is_superuser or self.get_object().project == self.request.user
 
 
-class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
-    model = models.Beamtime
-    list_filters = [
-        'beamline',
-        filters.YearFilter('start'),
-        filters.MonthFilter('start'),
-        filters.QuarterFilter('start'),
-        'access',
-        'project__kind',
-        filters.TimeScaleFilter()
-    ]
-    list_search = ['id', 'project__username', 'project__first_name', 'project__last_name']
-    date_field = 'start'
-
-    def get_metrics(self):
-        return stats.beamtime_stats(self.get_queryset(), self.get_active_filters())
-
-
-class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.BeamtimeForm
-    template_name = "modal/form.html"
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been created"
@@ -133,14 +112,15 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
         return initial
 
     def form_valid(self, form):
-        super().form_valid(form)
+        response = super().form_valid(form)
         obj = self.object
 
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt = models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True)
+        local_bt.filter(
             Q(start__lt=obj.start) & Q(end__gt=obj.start)).update(**{'end': obj.start})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt.filter(
             Q(start__lt=obj.end) & Q(end__gt=obj.end)).update(**{'start': obj.end})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter((
+        local_bt.filter((
             Q(start__gte=obj.start) & Q(start__lt=obj.end)) | (
             Q(end__lte=obj.end) & Q(end__gt=obj.start)) | (
             Q(start__gte=obj.start) & Q(end__lte=obj.end))).exclude(pk=obj.pk).delete()
@@ -148,13 +128,18 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
         if form.cleaned_data['notify']:
             models.EmailNotification.objects.create(beamtime=self.object)
 
-        success_url = self.get_success_url()
-        return JsonResponse({'url': success_url})
+        return response
 
 
-class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class LocalScheduleRecordRequiredMixin(AdminRequiredMixin):
+    def test_func(self):
+        if not super().test_func():
+            return False
+        return not bool(self.get_object().source_id)
+
+
+class BeamtimeEdit(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.BeamtimeForm
-    template_name = "modal/form.html"
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been updated"
@@ -169,28 +154,27 @@ class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
         return '{}?start={}'.format(success_url, datetime.strftime(self.object.start, '%Y-%m-%dT%H'))
 
     def form_valid(self, form):
-        super().form_valid(form)
+        response = super().form_valid(form)
         obj = self.object
 
         obj.notifications.filter(sent=False).delete()
         if form.cleaned_data['notify']:
             models.EmailNotification.objects.create(beamtime=obj)
 
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt = models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True)
+        local_bt.filter(
             Q(start__lt=obj.start) & Q(end__gt=obj.start)).update(**{'end': obj.start})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt.filter(
             Q(start__lt=obj.end) & Q(end__gt=obj.end)).update(**{'start': obj.end})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter((
+        local_bt.filter((
             Q(start__gte=obj.start) & Q(start__lt=obj.end)) | (
             Q(end__lte=obj.end) & Q(end__gt=obj.start)) | (
             Q(start__gte=obj.start) & Q(end__lte=obj.end))).exclude(pk=obj.pk).delete()
 
-        success_url = self.get_success_url()
-        return JsonResponse({'url': success_url})
+        return response
 
 
-class BeamtimeDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+class BeamtimeDelete(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been deleted"
@@ -204,11 +188,6 @@ class BeamtimeDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
         success_url = super().get_success_url()
         return '{}?start={}'.format(success_url, datetime.strftime(self.object.start, '%Y-%m-%dT%H'))
 
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
-        success_url = self.get_success_url()
-        return JsonResponse({'url': success_url})
-
 
 class SupportDetail(LoginRequiredMixin, detail.DetailView):
     model = models.BeamlineSupport
@@ -220,9 +199,8 @@ class SupportDetail(LoginRequiredMixin, detail.DetailView):
         return ctx
 
 
-class SupportCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class SupportCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.BeamlineSupportForm
-    template_name = "modal/form.html"
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been created"
@@ -236,16 +214,14 @@ class SupportCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
         return initial
 
 
-class SupportEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SupportEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.BeamlineSupportForm
-    template_name = "modal/form.html"
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been updated"
 
 
-class SupportDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+class SupportDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been deleted"
@@ -255,41 +231,39 @@ class SupportDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
         context['form_action'] = reverse_lazy('support-delete', kwargs={'pk': self.object.pk})
         return context
 
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
-        success_url = self.get_success_url()
-        return JsonResponse({'url': success_url})
-
 
 def split_visits(obj, start, end):
+    local_beamtimes = models.Beamtime.objects.filter(
+        beamline=obj.beamline, source_id__isnull=True
+    )
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter((Q(end__lte=end) & Q(end__gt=start))).filter(start__lt=start)
+    originals = local_beamtimes.filter((Q(end__lte=end) & Q(end__gt=start))).filter(start__lt=start)
     for bt in originals:
         clone_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone_info.update({'id': None, 'start': start})
+        clone_info.update({'id': None, 'start': start, 'source_id': None})
         clone = models.Beamtime(**clone_info)
         clone.save()
         bt.end = start
         bt.save()
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter((Q(start__lt=end) & Q(start__gte=start))).filter(end__gt=end)
+    originals = local_beamtimes.filter((Q(start__lt=end) & Q(start__gte=start))).filter(end__gt=end)
     for bt in originals:
         clone_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone_info.update({'id': None, 'end': end})
+        clone_info.update({'id': None, 'end': end, 'source_id': None})
         clone = models.Beamtime(**clone_info)
         clone.save()
         bt.start = end
         bt.save()
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter(start__lt=start).filter(end__gt=end)
+    originals = local_beamtimes.filter(start__lt=start).filter(end__gt=end)
     for bt in originals:
         clone1_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone1_info.update({'id': None, 'end': end})
+        clone1_info.update({'id': None, 'end': end, 'source_id': None})
         clone1 = models.Beamtime(**clone1_info)
         clone1.save()
 
         clone2_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone2_info.update({'id': None, 'start': end})
+        clone2_info.update({'id': None, 'start': end, 'source_id': None})
         clone2 = models.Beamtime(**clone2_info)
         clone2.save()
 
@@ -298,9 +272,8 @@ def split_visits(obj, start, end):
         bt.save()
 
 
-class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.DowntimeForm
-    template_name = "modal/form.html"
     model = models.Downtime
     success_url = reverse_lazy('schedule')
     success_message = "Downtime has been created"
@@ -320,20 +293,18 @@ class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
         return initial
 
     def form_valid(self, form):
-        super().form_valid(form)
+        response = super().form_valid(form)
         obj = self.object
 
         split_visits(obj, obj.start, obj.end)
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
             (Q(start__gte=obj.start) & Q(end__lte=obj.end))).update(cancelled=True)
 
-        success_url = self.get_success_url()
-        return JsonResponse({'url': success_url})
+        return response
 
 
-class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class DowntimeEdit(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.DowntimeForm
-    template_name = "modal/form.html"
     model = models.Downtime
     success_url = reverse_lazy('schedule')
     success_message = "Downtime has been updated"
@@ -343,7 +314,9 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
         obj = form.instance
 
         if form.data.get('submit') == 'Delete':
-            models.Beamtime.objects.filter(beamline=obj.beamline, start__gte=obj.start, end__lte=obj.end).update(cancelled=False)
+            models.Beamtime.objects.filter(
+                beamline=obj.beamline, source_id__isnull=True, start__gte=obj.start, end__lte=obj.end
+            ).update(cancelled=False)
             obj.delete()
             self.success_message = "Downtime has been deleted"
         else:
@@ -352,14 +325,14 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
                 end = form.initial['start']
 
                 split_visits(obj, start, end)
-                models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+                models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
                     (Q(start__gte=start) & Q(end__lte=end))).update(cancelled=True)
             if obj.end > form.initial['end']:
                 start = form.initial['end']
                 end = obj.end
 
                 split_visits(obj, start, end)
-                models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+                models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
                     (Q(start__gte=start) & Q(end__lte=end))).update(cancelled=True)
 
         return fv
@@ -368,22 +341,21 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 class EmailNotificationList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.EmailNotification
     list_filters = ['send_time', 'sent']
-    list_columns = ['id', 'sent', 'unsendable', 'send_time', 'beamtime__start', 'beamtime__project__username', 'email_subject']
+    list_columns = ['id', 'sent', 'unsendable', 'send_time', 'beamtime__start', 'beamtime__project__name', 'email_subject']
     list_search = ['email_subject', 'email_body']
     link_url = 'email-edit'
     ordering = ['-send_time']
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
 
     def get_queryset(self):
         return super().get_queryset()
 
 
-class EmailNotificationEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class EmailNotificationEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.EmailNotificationForm
-    template_name = "modal/form.html"
     model = models.EmailNotification
     success_url = reverse_lazy('schedule')
     success_message = "Email Notification has been updated"

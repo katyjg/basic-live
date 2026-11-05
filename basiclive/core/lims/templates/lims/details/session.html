@@ -1,0 +1,99 @@
+{% extends "lims/base.html" %}
+
+{% load bl_icons %}
+{% load humanize %}
+{% load static %}
+{% load bl_tags %}
+
+{% block page-pre-title %}Session{% endblock %}
+{% block page-title %}
+{% if user.is_superuser %}<span class="fw-lighter">{{ object.project }} | </span>{% endif %}<strong>{{ object.name }}</strong>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">
+       {{ object.identity }} |
+       Started {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    <a href="{% url 'session-reports' object.pk %}" title="Go to Reports from this session">
+        {% show_icon label='Reports' icon='reports' size='md' badge=object.num_reports %}
+    </a>
+    <a href="{% url 'session-data' object.pk %}" title="Go to Data from this session">
+        {% show_icon label='Data' icon='data' size='md' badge=object.datasets.count %}
+    </a>
+    <a href="#!" data-modal-url="{% url 'session-history' object.pk %}">
+        {% show_icon label='History' icon='history' size='md' %}
+    </a>
+    {% if user.is_superuser %}
+        <a href="{% url 'session-statistics' pk=object.pk %}">
+            {% show_icon label='Statistics' icon='stats' size='md' %}
+        </a>
+    {% endif %}
+    {% if object.datasets.count %}
+        <a href="{% url 'files-proxy' section='archive' path=object.download_url %}">
+            {% show_icon label='Download' icon='download' size='md' %}
+        </a>
+    {% endif %}
+    {% if USE_CRM %}
+        {% if request.user|is_member:object.project %}
+            <a href="{% url 'session-feedback' project=object.project.name session=object.pk %}"
+               title="Give feedback about this session"
+            >
+                {% show_icon label='Feedback' icon='star' size='md' %}
+            </a>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    {% if object.is_active %}
+        <div>
+            <h3 class="m-0"><span class="badge text-bg-info">Active</span></h3>
+        </div>
+    {% endif %}
+    <div>
+        <small class="text-muted text-condensed">Datasets:</small><br>
+        {{ object.datasets.count }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Reports:</small><br>
+        {{ object.num_reports }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Total Time:</small><br>
+        {{ object.total_time|humanize_duration }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Start:</small><br>
+        {{ object.start|naturalday }}
+    </div>
+{% endblock %}
+
+{% block page-content %}
+<div class="row">
+    <div class="col-12">
+        {% for group in object.groups %}
+            <h4>
+                <a href="{% url 'group-detail' group.pk %}"><strong>{{ group.name }}</strong></a>
+            </h4>
+            {% include "lims/details/group-samples.html" with samples=group.samples.all %}
+            <hr />
+        {% endfor %}
+        {% with session.orphans as orphans %}
+            {% if orphans %}
+            <h4>
+                <strong>Orphaned Data/Reports</strong> |
+                <span class="text-muted text-thin">
+                    No associated sample
+                </span>
+            </h4>
+            {% include "lims/details/group-samples.html" with samples=orphans %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}

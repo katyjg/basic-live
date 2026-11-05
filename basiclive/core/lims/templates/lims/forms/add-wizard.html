@@ -1,16 +1,18 @@
-{% extends "modal/form.html" %}
+{% extends "crisp_modals/form.html" %}
 
 {% load static %}
 
 {% block modal_assets %}
     {{ block.super }}
-    <script type="text/javascript" src="{% static 'lims/js/mxlive-forms.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/basiclive-forms.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/repeatable-fields.min.js' %}"></script>
 {% endblock %}
 
 {% block modal_scripts %}
     <script>
         initShipmentWizard();
         {% if form.repeated_data %}
-            setInitial({{ form.repeated_data|safe }});{% endif %}
+            setInitial({{ form.repeated_data|safe }});
+        {% endif %}
     </script>
 {% endblock %}

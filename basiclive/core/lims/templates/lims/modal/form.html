@@ -1,0 +1,22 @@
+{% extends "crisp_modals/form.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block modal_assets %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "misc/css/select2.min.css" %}" media="screen"/>
+    <link rel="stylesheet" href="{% static "misc/css/select2-bootstrap-5-theme.min.css" %}" media="screen"/>
+    <script src="{% static "misc/js/select2.full.min.js" %}"></script>
+    <script src="{% static "misc/js/repeatable-fields.min.js" %}"></script>
+{% endblock %}
+
+{% block modal_styles %}{{ block.super }}{% endblock %}
+{% block modal_body %}
+    {% if form.layout_template %}
+        {% include form.layout_template %}
+    {% else %}
+        {% crispy form form.body %}
+    {% endif %}
+{% endblock %}
+

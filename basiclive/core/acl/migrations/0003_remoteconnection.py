@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True, verbose_name=b'date created')),
                 ('end', models.DateTimeField(verbose_name=b'date ended')),
                 ('list', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='acl.UserList')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lims.Project')),
             ],
             options={
                 'abstract': False,

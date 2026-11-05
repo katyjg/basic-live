@@ -1,15 +1,14 @@
-{% load msgs %}
-
+{% load bl_tags static %}
+<script src="{% static "lims/js/basiclive-notify.min.js" %}"></script>
 <script type="text/javascript">
-    var messages = {% prep_messages %};
-    $.each(messages, function(i, item){
-        new Noty({
-            text: item.text,
-            type: item.tags,
-            layout: 'bottomRight',
-            theme: 'sunset',
-            timeout: 4000,
-            visibilityControl: true
-        }).show()
+document.addEventListener('DOMContentLoaded', () => {
+    const messages = {% prep_messages %};
+    const notifier = new Notify({delay: 4000});
+    messages.forEach(message => {
+        notifier.show({
+            message: message.text,
+            color: message.tags,
+        });
     });
+});
 </script>

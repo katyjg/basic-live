@@ -1,7 +1,7 @@
-from django.db.models import Count
-
 import calendar
+
 import numpy
+from django.db.models import Count
 
 
 def get_histogram_points(data, range=None, bins='doane'):
@@ -10,10 +10,10 @@ def get_histogram_points(data, range=None, bins='doane'):
     return list(zip(centers, counts))
 
 
-def generic_stats(objlist, fields, date_field=None):
+def generic_stats(queryset, fields, date_field=None):
     stats = {}
-    if objlist:
-        model = objlist.first()._meta.verbose_name_plural
+    if queryset:
+        model = queryset.first()._meta.verbose_name_plural
         content = []
         data = {}
         options = {}
@@ -27,12 +27,12 @@ def generic_stats(objlist, fields, date_field=None):
                         {
                             'label': (isinstance(d[fld], int) or isinstance(d[fld], float)) and str(int(d[fld])) or str(d[fld]),
                             'value': d['count'],
-                        } for d in objlist.filter(**{'{}__isnull'.format(fld): False}).values(fld).order_by(fld).annotate(count=Count('id'))
+                        } for d in queryset.filter(**{'{}__isnull'.format(fld): False}).values(fld).order_by(fld).annotate(count=Count('id'))
                     ]
                 }
             elif kind == 'histogram':
                 histo = get_histogram_points(
-                    [ float(datum[fld]) for datum in objlist.values(fld) if datum[fld] is not None ],
+                    [float(datum[fld]) for datum in queryset.values(fld) if datum[fld] is not None],
                     range=fields.get(fld, {}).get('range'), bins=fields.get(fld, {}).get('bins', 'doane')
                 )
                 data[fld] = {
@@ -44,7 +44,7 @@ def generic_stats(objlist, fields, date_field=None):
                 if date_field:
                     period = 'year'
                     field = "{}__{}".format(date_field, period)
-                    periods = sorted(objlist.values_list(field, flat=True).order_by(field).distinct())
+                    periods = sorted(queryset.values_list(field, flat=True).order_by(field).distinct())
                     if len(periods) == 1:
                         year = periods[0]
                         period = 'month'
@@ -56,7 +56,7 @@ def generic_stats(objlist, fields, date_field=None):
                                 **{period.title(): period_dict[per]},
                                 **{str(k[fld]): k['count']
                                    for k in
-                                   objlist.filter(**{field: per}).values(fld).order_by(fld).annotate(count=Count('id'))}
+                                   queryset.filter(**{field: per}).values(fld).order_by(fld).annotate(count=Count('id'))}
                             } for per in periods
                         ]
                     options[fld] = set([k for p in period_data for k in p.keys()]).difference([period.title()])
@@ -74,7 +74,7 @@ def generic_stats(objlist, fields, date_field=None):
                         {
                             fld.replace('__', ' ').title(): str(datum[fld]),
                             "Count": datum['count'],
-                        } for datum in objlist.values(fld).order_by(fld).annotate(count=Count('id'))
+                        } for datum in queryset.values(fld).order_by(fld).annotate(count=Count('id'))
                     ]
                     data[fld] = {
                         'aspect-ratio': 2,
@@ -113,9 +113,6 @@ def make_table(data, columns: list, rows: list, total_col=True, total_row=True, 
     :param strings: convert all cells to strings
     :return: list of lists
     """
-
-    import pprint
-    pprint.pprint(data)
 
     headers = [''] + columns
     table_data = [headers] + [

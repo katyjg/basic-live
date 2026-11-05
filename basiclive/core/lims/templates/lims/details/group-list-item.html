@@ -1,0 +1,43 @@
+{% load bl_icons %}
+
+{% with num_samples=group.samples.count num_requests=group.requests.count %}
+    <li class="list-group-item px-2" id="group-{{ group.pk }}" data-highlight="group" data-reference="{{ group.pk }}"
+        data-group="{{ group.pk }}" data-requests="{% for request in group.requests.all %}{{ request.pk }} {% endfor %}">
+        <div class="d-flex flex-row justify-content-between">
+            {% if editable %}
+                <div class="box-status text-center align-middle pt-2" style="width: 50px; min-width: 50px;">
+                    <span class='cursor'>
+                        {% show_icon icon='move' size='md' tooltip='Priority' %}
+                    </span>
+                </div>
+            {% endif %}
+            <div class="flex-fill ps-3">
+                <a href="{% url 'group-detail' pk=group.pk %}"><strong>{{ group.name }}</strong></a>
+                <div>
+                {% if group.is_editable %}
+                    <span class="small text-{% if num_samples %}success{% else %}warning{% endif %}"><strong>
+                    {% if num_samples %} {{ num_samples }}{% else %}No{% endif %} sample{{ num_samples|pluralize }}
+                    </strong></span>
+                    {% if num_requests %}<span class="small"> | </span>{% endif %}
+                {% endif %}
+                {% if num_requests %}<span class="small">
+                    <strong class="text-info">{{ num_requests }} request{{ num_requests|pluralize }}</strong>
+                </span>{% endif %}
+                {% if group.comments %}<br/><span class="small text-secondary">{{ group.comments }}</span>{% endif %}
+                </div>
+            </div>
+            {% if editable %}
+                <div class="tools-box">
+                    <a href="#!" data-modal-url="{% url 'request-new' %}?groups={{ group.pk }}"
+                        title="Add a Request">
+                        {% show_icon label='Request' icon="requests" size='md' badge="+" color="primary" %}
+                    </a>
+                </div>
+            {% else %}
+                <div class="small text-info">
+                <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
+                </div>
+            {% endif %}
+        </div>
+    </li>
+{% endwith %}

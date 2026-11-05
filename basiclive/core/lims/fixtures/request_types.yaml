@@ -1,0 +1,131 @@
+- model: lims.requesttype
+  pk: 1
+  fields:
+    name: Native MX
+    description: Native MX for ligands or refinement
+    scope: ONE_GROUP
+    edit_template: lims/requests/base-edit.html
+    view_template: lims/requests/base-view.html
+    spec:
+      strategy:
+        type: string
+        label: Strategy
+        choices:
+        - - Collect Best
+          - Collect Best
+        - - Collect All
+          - Collect All
+        - - Collect One
+          - Collect One
+        required: false
+      resolution:
+        type: number
+        label: Desired Resolution (Å)
+        required: false
+    layout:
+    - - - strategy
+        - 6
+      - - resolution
+        - 6
+    active: true
+- model: lims.requesttype
+  pk: 2
+  fields:
+    name: MX SAD
+    description: Anomalous SAD MX
+    scope: ONE_GROUP
+    edit_template: lims/requests/base-edit.html
+    view_template: lims/requests/base-view.html
+    spec:
+      energy:
+        type: number
+        label: Energy (keV)
+        required: false
+      element:
+        type: string
+        label: Element
+        required: false
+      strategy:
+        type: string
+        label: Strategy
+        choices:
+        - - Collect Best
+          - Collect Best
+        - - Collect All
+          - Collect All
+        - - Collect One
+          - Collect One
+        required: false
+      resolution:
+        type: number
+        label: Desired Resolution (Å)
+        required: false
+    layout:
+    - - - strategy
+        - 6
+      - - resolution
+        - 6
+    - - - energy
+        - 6
+      - - element
+        - 6
+    active: true
+- model: lims.requesttype
+  pk: 3
+  fields:
+    name: MX MAD
+    description: Anomalous MAD MX
+    scope: ONE_GROUP
+    edit_template: lims/requests/base-edit.html
+    view_template: lims/requests/base-view.html
+    spec:
+      edge:
+        type: string
+        label: Absorption Edge (e.g Se-K)
+        required: false
+      strategy:
+        type: string
+        label: Strategy
+        choices:
+        - - Collect Best
+          - Collect Best
+        - - Collect All
+          - Collect All
+        - - Collect One
+          - Collect One
+        required: false
+      resolution:
+        type: string
+        label: Desired Resolution (Å)
+        required: false
+    layout:
+    - - - strategy
+        - 6
+      - - resolution
+        - 6
+    - - - edge
+        - 12
+    active: true
+- model: lims.requesttype
+  pk: 4
+  fields:
+    name: EXAFS
+    description: X-ray Absorption Spectroscopy
+    scope: UNLIMITED
+    edit_template: lims/requests/exafs-edit.html
+    view_template: lims/requests/exafs-view.html
+    spec:
+      edge:
+        type: string
+        label: Absorption Edge (e.g Se-K)
+        required: true
+      regions:
+        type: json
+        label: Scan Regions
+        required: true
+    layout:
+    - - - edge
+        - 12
+    - - - regions
+        - 12
+    active: true

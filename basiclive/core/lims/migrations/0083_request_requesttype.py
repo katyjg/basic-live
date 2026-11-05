@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('priority', models.IntegerField(blank=True, null=True)),
                 ('groups', models.ManyToManyField(blank=True, related_name='requests', to='lims.Group')),
                 ('kind', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='lims.requesttype')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to=settings.AUTH_USER_MODEL)),
+                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='lims.Project')),
                 ('samples', models.ManyToManyField(blank=True, related_name='requests', to='lims.Sample')),
                 ('shipment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='lims.shipment')),
             ],

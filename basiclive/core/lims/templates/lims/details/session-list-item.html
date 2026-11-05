@@ -1,0 +1,36 @@
+{% load humanize %}
+{% load bl_icons %}
+{% load bl_tags %}
+
+<div class="list-group-item p-2">
+    <div class="d-flex flex-row">
+        <div class="box-status text-center text-muted">
+            {% if session.is_recent and not session.feedback.all %}
+                <a href="{% url 'session-feedback' key=session.feedback_key %}" title="Give feedback about this session">
+                    {% show_icon label='Feedback' icon='star' size='sm' %}
+                </a>
+            {% else %}
+                {% show_icon label=session.start.date|date:"M j"|upper icon='history' size='sm' %}
+            {% endif %}
+        </div>
+        <div class="ps-3 overflow-ellipsis align-self-center">
+            <h6 class="m-0 text-condensed">
+                <a class="text-muted" href="{% url 'session-detail' session.pk %}"
+                   title='View Session "{{ session.name }}"'>
+                    <strong>{{ session.beamline.acronym }}</strong>{% if user.is_superuser %} |
+                    {{ session.project.name|upper }}{% endif %} | {{ session.name }}
+                </a>
+            </h6>
+            <small class="text-muted overflow ellipsis">Duration {{ session.total_time|humanize_duration }} / Last record {{ session.last_record_time|naturaltime }}</small>
+        </div>
+        <div class="tools-box ms-auto">
+            <a href="{% url 'session-data' session.pk %}" title="Go to Data from this session">
+                {% show_icon label='Data' icon='data' size='sm' badge=session.data_count %}
+            </a>
+            <a href="{% url 'session-reports' session.pk %}" title="Go to Reports from this session">
+                {% show_icon label='Reports' icon='reports' size='sm' badge=session.report_count %}
+            </a>
+
+        </div>
+    </div>
+</div>

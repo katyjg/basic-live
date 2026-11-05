@@ -1,34 +1,30 @@
-from django.conf import settings
 from django.utils.safestring import mark_safe
-from django.views.generic import TemplateView, list
-
+from django.views.generic import DetailView, list
 from itemlist.views import ItemListView
+
+from basiclive.core.publications.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin
-from . import models, stats
+from . import models
 
+PDB_URL_TEMPLATE = settings.PDB_URL_TEMPLATE
+PDB_IMAGE_URL_TEMPLATE = settings.PDB_IMAGE_URL_TEMPLATE
+YEAR_FILTER_START = settings.YEAR_FILTER_START
 
-PDB_URL_TEMPLATE = getattr(settings, 'PDB_URL_TEMPLATE', 'https://www.rcsb.org/structure/{}')
-YEAR_FILTER_START = getattr(settings, 'YEAR_FILTER_START', 2005)
 
 class PubEntryList(AdminRequiredMixin, ItemListView):
     template_name = 'publications/list.html'
     model = models.Publication
     list_filters = [
         'created', 'modified',
-        filters.StartYearFilter(model, 'published'),
-        filters.EndYearFilter(model, 'published'),
+        filters.StartYearFilter('published'),
+        filters.EndYearFilter('published'),
         filters.MonthFilter('published'),
         filters.QuarterFilter('published'),
         'tags'
     ]
-    list_columns = ['published', 'citation', 'cites', 'mentions', 'impact_factor']
+    list_columns = ['citation', 'published', 'journal']
     list_search = ['title', 'main_title', 'author_names', 'code', 'comments', 'journal__title', 'funders__name']
-    list_headers = {
-        'impact_factor': mark_safe("<span class='no-wrap'>Impact Factor</span>"),
-        'metrics__mentions': "Mentions",
-        'metrics__citations': "Citations",
-    }
     list_transforms = {
         'citation': lambda x, y: mark_safe(x),
         'published': lambda x, y: x.strftime('%Y/%b')
@@ -38,7 +34,7 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
 
     }
     ordering = ['-published']
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'Publication Entries'
 
 
@@ -54,16 +50,39 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     list_columns = ['id', 'code', 'released', 'title', 'resolution', 'deposited', ]
     list_search = ['title', 'authors', 'code', 'reference__title']
     list_styles = {
-        'title': 'w-75',
+        'title': 'w-65',
     }
     ordering = ['-released']
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'PDB Depositions'
     link_field = 'code'
+    link_url = 'pdb-entry-detail'
+    link_kwarg = 'code'
+    link_attr = 'data-modal-url'
 
-    def get_link_url(self, obj):
-        return PDB_URL_TEMPLATE.format(obj.code)
 
+class PDBDetail(AdminRequiredMixin, DetailView):
+    model = models.Deposition
+    template_name = 'publications/pdb-detail.html'
+    slug_field = 'code'
+    slug_url_kwarg = 'code'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+        code = self.kwargs.get(self.slug_url_kwarg)
+        if code:
+            obj = queryset.filter(code__iexact=code).first()
+            if obj:
+                return obj
+        return super().get_object(queryset=queryset)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        code = self.object.code
+        context['pdb_url'] = settings.PDB_URL_TEMPLATE.format(code)
+        context['image_url'] = settings.PDB_IMAGE_URL_TEMPLATE.format(code.lower())
+        return context
 
 
 class PDBEntryText(list.ListView):
@@ -93,42 +112,19 @@ class SubjectAreasList(AdminRequiredMixin, ItemListView):
     list_columns = ['id', 'name', 'code', 'parent__name', ]
     list_search = ['name', 'description', 'code']
     ordering = ['code']
-    paginate_by = 25
-    page_title = 'PDB Depositions'
+    paginate_by = 16
+    page_title = 'Subject Areas'
 
 
 class JournalList(AdminRequiredMixin, ItemListView):
     template_name = 'publications/list.html'
     model = models.Journal
     list_filters = ['created', 'modified']
-    list_columns = ['id', 'title', 'short_name', 'publisher', 'codes', 'metrics__impact_factor']
+    list_columns = ['id', 'title', 'short_name', 'publisher', 'codes']
     list_search = ['short_name', 'title', 'codes', 'publisher']
     list_transforms = {
         'codes': lambda codes, obj: mark_safe(f"<span class='no-wrap'>{" / ".join(codes)}</span>")
     }
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'Journals'
 
-
-
-class Statistics(AdminRequiredMixin, TemplateView):
-    template_name = "publications/statistics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        tag = self.kwargs.get('tag')
-        year = self.kwargs.get('year')
-        period = 'month' if year else 'year'
-
-        context['year'] = year
-        context['tag'] = tag
-        context['tags'] = models.Tag.objects.values_list('name', flat=True)
-        context['years'] = stats.get_publications_periods(period='year')
-        context['report'] = stats.publication_stats(period=period, year=year, tag=tag)
-        return context
-
-    def page_title(self):
-        if self.kwargs.get('year'):
-            return f'{self.kwargs["year"]} Publication Metrics'
-        else:
-            return 'Publication Metrics'

@@ -1,0 +1,167 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load humanize %}
+{% load bl_icons %}
+{% load bl_tags bl_themes %}
+
+{% block page-pre-title %}User Profile{% endblock %}
+{% block page-title %}{{ object|upper }}{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">Member since {{ object.date_joined|naturalday }}</span>
+{% endblock %}
+
+{% block page-tools %}
+    <a href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}" title="Add SSH Key">
+        {% show_icon label='Add SSH Key' icon='key' size='md' %}
+    </a>
+    <a href="#!" data-modal-url="{% url 'user-edit' object.username %}" title="Edit Profile">
+        {% show_icon label="Edit" icon="edit" size='md' %}
+    </a>
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% status_theme object.is_active info=True secondary=False %}">
+        <span class="fw-lighter">{{ object.get_status }} | </span>{% if object.is_active %}Active{% else %}Inactive{% endif %}
+    </span>
+    <div class="col-3 float-end text-end">
+        <small class="text-muted text-condensed">Projects:</small><br>
+        {{ projects.count }}
+    </div>
+    <div class="col-2 float-end text-end">
+        <small class="text-muted text-condensed">Last Login:</small><br>
+        {{ object.last_login|naturaltime }}
+    </div>
+{% endblock %}
+
+
+{% block page-content %}
+<div class="row">
+    <div class="col-md-7 col-12 mb-4">
+        <div class="card">
+            <div class="card-header p-2 text-wide text-muted">
+                ACCOUNT DETAILS
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted text-condensed" style="width: 35%;">Username:</td>
+                            <td><strong>{{ object.username }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-condensed">Full Name:</td>
+                            <td>{{ object.get_full_name|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-condensed">Email:</td>
+                            <td>{{ object.email|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-condensed">Phone:</td>
+                            <td>{{ object.phone|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted text-condensed">Default Project:</td>
+                            <td>
+                                {% if object.default_project %}
+                                    <a href="{% url 'project-profile' object.default_project.name %}">
+                                        <strong>{{ object.default_project.name.upper }}</strong>
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header p-2 text-wide text-muted">
+                PROJECTS
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for proj in projects %}
+                        <a href="{% url 'project-profile' proj.name %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>{{ proj.name.upper }}</strong>
+                                {% if proj.alias %} <span class="text-muted"> ~ {{ proj.alias }}</span>{% endif %}
+                            </span>
+                            <span class="badge bg-secondary">{{ proj.kind|default:"Project" }}</span>
+                        </a>
+                    {% empty %}
+                        <p class="text-muted small">No projects assigned.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 col-12 mb-4 d-flex flex-column justify-content-between">
+        <div class="card">
+            <div class="card-header p-2 text-wide text-muted d-flex justify-content-between align-items-center">
+                SSH KEYS
+            </div>
+            <div class="card-body p-0">
+                {% if sshkeys %}
+                    <div class="list-group list-group-flush">
+                        {% for key in sshkeys %}
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-1 text-condensed text-muted">
+                                        <strong>{% show_icon icon="key" size='sm' %} {{ key.name }}</strong>
+                                    </h6>
+                                    <div>
+                                        <a href="#!" data-modal-url="{% url 'sshkey-delete' username=user.username pk=key.pk %}"
+                                           class="text-danger small" title="Delete Key">
+                                            {% show_icon icon="delete" size='sm' %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block">Added {{ key.created|naturalday }}</small>
+                                <p class="mb-0 mt-1 font-monospace small text-break">{{ key.fingerprint }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <p class="mb-2">No SSH keys registered.</p>
+                        <a href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}"
+                           class="my-3 btn btn-outline-primary">
+                            Add Key
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card  bg-cat-5 mt-3">
+            <div class="card-header p-2 text-wide text-muted d-flex justify-content-between align-items-center">
+                RECENT ACTIVITY
+            </div>
+            <div class="card-body p-0">
+                {% if activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in activities %}
+                            <div
+                               class="list-group-item">
+                                <span>
+                                    {% include "lims/components/activity.html" with activity=activity %}
+                                </span>
+                                <span class="text-muted small">{{ session.created|naturaltime }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <p class="mb-2">No activity</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

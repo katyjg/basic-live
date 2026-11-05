@@ -1,5 +1,8 @@
-<div class="icon-stack" {% if tooltip %}title="{{ tooltip }}"{% endif %}>
-    <i class="{{ icon }}"></i>
-    {% if badge is not None %}<span class="badge badge-pill badge-{% if color %}{{ color }}{% else %}info{% endif %}">{{ badge }}</span>{% endif %}
+{% spaceless %}
+<div class="d-inline-flex flex-column align-items-center justify-content-center" {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+    <i class="{{ icon_class|default:icon }} position-relative">
+        {% if badge is not None %}<span class="icon-badge position-absolute top-0 start-100 translate-middle badge rounded-pill text-condensed {% if color %}text-bg-{{ color }}{% else %}text-bg-info{% endif %}">{{ badge }}</span>{% endif %}
+    </i>
+    {% if label %}<div class="icon-label d-none d-md-inline-block">{{label}}</div>{% endif %}
 </div>
-{% if label %}<div class="icon-label d-none d-md-inline-block">{{label}}</div>{% endif %}
+{% endspaceless %}

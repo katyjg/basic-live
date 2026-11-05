@@ -1,0 +1,70 @@
+{% extends "lims/base.html" %}
+
+{% load bl_icons %}
+{% load bl_themes %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page-styles %}
+    <link rel="stylesheet" href="{% static "misc/css/select2.min.css" %}" media="screen"/>
+    <link rel="stylesheet" href="{% static "misc/css/select2-bootstrap-5-theme.min.css" %}" media="screen"/>
+    <script src="{% static "jquery/js/jquery.form.min.js" %}"></script>
+    <script src="{% static "jquery/js/jquery-ui.min.js" %}"></script>
+    <script src="{% static "misc/js/select2.full.min.js" %}"></script>
+    <script src="{% static "misc/js/repeatable-fields.min.js" %}"></script>
+{% endblock %}
+
+{% block page-pre-title %}Request Type{% endblock %}
+{% block page-title %}
+    <span class="fw-lighter">{{ object.name }} </span>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">{{ object.description }}</span>
+{% endblock %}
+
+{% block page-tools %}
+    <a href="#!" data-modal-url="{% url 'request-type-layout' object.pk %}">
+        {% show_icon label='Layout' icon='settings' size='md' %}
+    </a>
+    <span class="separator"></span>
+    <a href="#!" data-modal-url="{{ handler }}edit/">
+        {% show_icon label='Edit' icon='edit' size='md' %}
+    </a>
+    <a href="#!" data-modal-url="{{ handler }}delete/">
+        {% show_icon label='Delete' icon='trash' size='md' %}
+    </a>
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% status_theme object.active warning=False success=True default='primary' %} text-condensed">
+        {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">Template:</small><br>
+        {{ object.template }}
+    </div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="card col-10 border p-0 col-md-8 col-lg-7 mx-auto my-5">
+            <div class="card-header text-bg-primary">
+                <span class="fs-3 card-title fw-light">Request Details</span>
+            </div>
+            <div class="card-body">
+                <div class="card-body">
+<!--                    {% crispy form form.body %}-->
+                    {% include object.edit_template with object=object %}
+                </div>
+            </div>
+            <div class="card-footer text-end py-3 ">
+                <button class="btn btn-secondary">Revert</button>
+                <button class="btn btn-primary ms-2">Save</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

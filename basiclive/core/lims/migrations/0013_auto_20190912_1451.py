@@ -16,13 +16,13 @@ class Migration(migrations.Migration):
             model_name='analysisreport',
             name='project',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
-                                    to=settings.AUTH_USER_MODEL),
+                                    to='lims.Project'),
         ),
         migrations.AlterField(
             model_name='container',
             name='project',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='containers',
-                                    to=settings.AUTH_USER_MODEL),
+                                    to='lims.Project'),
         ),
         migrations.AlterField(
             model_name='container',
@@ -40,6 +40,6 @@ class Migration(migrations.Migration):
             model_name='shipment',
             name='project',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='shipments',
-                                    to=settings.AUTH_USER_MODEL),
+                                    to='lims.Project'),
         ),
     ]

@@ -1,0 +1,62 @@
+{% load bl_notebooks %}
+{% load bl_icons %}
+
+<div class="card notebook-entry entry-{{ entry.kind.name }} mb-3"
+    data-page-url=""
+    data-entry-pk="{{ entry.pk }}"
+    data-entry-date="{{ entry.created|date:'Y-m-d' }}"
+    data-annotate-url="{% url 'notebooks:entry-annotations' book=notebook.id pk=entry.id %}"
+    id="entry-{{ entry.pk }}"
+>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="entry-date text-muted">
+            @<strong>{{ entry.author }}</strong>&nbsp;|&nbsp;{{ entry.created|date:"M d, Y H:i" }}
+        </div>
+        <div class="entry-tools d-flex flex-row align-items-center gap-3 justify-content-end">
+            {% if entry.is_editable and user == entry.author %}
+            <a href="#!" class="edit-button" data-modal-url="{% url 'notebooks:edit-entry' book=entry.notebook.pk pk=entry.pk %}" title="Edit">
+                {% show_icon icon="edit" size='md' %}
+            </a>
+            <a href="#!" class="tag-button" data-modal-url="{% url 'notebooks:edit-tags' book=entry.notebook.pk pk=entry.pk %}" title="Tags">
+                {% show_icon icon="tag" size='md' %}
+            </a>
+            <a href="#!" class="delete-button" data-modal-url="{% url 'notebooks:delete-entry' book=entry.notebook.pk pk=entry.pk %}" title="Delete">
+                {% show_icon icon="trash" size='md' %}
+            </a>
+            {% endif %}
+            {% if entry.annotations.count %}
+            <button
+                type="button"
+                class="btn btn-sm btn-link text-muted p-0 entry-comment-badge comment-count d-inline-flex align-items-center gap-1 text-decoration-none"
+                title="Comments"
+                data-entry-pk="{{ entry.pk }}"
+            >
+                {% show_icon icon="comments" badge=entry.annotations.count size='md' %}
+            </button>
+            {% endif %}
+        </div>
+
+    </div>
+    <div class="card-body">
+    {% block entry_content %}{% endblock %}
+    </div>
+<div class="card-footer">
+    <div class="tag-cloud w-100 text-end">
+        <ul class="list-unstyled mb-0">
+        {% for tag in entry.tags %}
+        <li data-search-prefix="tag"><a href="?search={{tag}}">{{ tag }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+    {% for annotation in entry.annotations.all %}
+    {% if forloop.first %}<div class="annotations-data" hidden>{% endif %}
+        <script id="annotation-{{ annotation.id }}" type="application/json"
+                data-pk="{{ annotation.id }}"
+                data-isauthor="{% if user == annotation.author or user.is_superuser %}true{% else %}false{% endif %}"
+        >
+            {{ annotation.json | json }}
+        </script>
+    {% if forloop.last %}</div>{% endif %}
+    {% endfor %}
+</div>

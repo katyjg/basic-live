@@ -1,0 +1,43 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load bl_notebooks %}
+{% load bl_icons %}
+
+
+{% block page-styles %}
+    <link href="{% static 'notebooks/notebooks.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block page-pre-title %}List of{% endblock %}
+{% block page-title %}Notebooks{% endblock %}
+
+{% block page-tools %}
+{% if user.is_authenticated %}
+    <a href="#!" data-modal-url="{% url 'notebooks:create-notebook' %}" title="Create Notebook">
+        {% show_icon label="Notebook" icon="plus" size='md' %}
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row my-4">
+        {% for notebook in notebooks %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+            <a class="card notebook-card bg-cat-{{ forloop.counter0 }} h-100" href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}">
+              <img src="{% static 'notebooks/notebook.jpeg' %}" class="card-img-top" alt="{{ notebook.title }}">
+              <div class="card-body">
+               <h5 class="card-title">{{ notebook.title }}</h5>
+                <p class="card-text">{{ notebook.description }}</p>
+
+
+              </div>
+              <div class="card-footer">
+                <strong>{{ notebook.entries.count }}</strong> Entries
+                <hr/>
+                <small class="text-body-secondary">Created,  {{ notebook.created | timeish }}</small>
+              </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -24,7 +24,7 @@ class FetchReport(LoginRequiredMixin, View):
         except models.AnalysisReport.DoesNotExist:
             raise http.Http404("Report does not exist.")
 
-        if report.project != request.user and not request.user.is_superuser:
+        if not request.user.can_access_project(report.project):
             raise http.Http404()
 
         return JsonResponse({'details': report.details}, safe=False)
@@ -39,7 +39,7 @@ class FetchRequest(LoginRequiredMixin, View):
         except models.Request.DoesNotExist:
             raise http.Http404("Request does not exist.")
 
-        if experiment_request.project != request.user and not request.user.is_superuser:
+        if not request.user.can_access_project(experiment_request.project):
             raise http.Http404()
 
         return JsonResponse(experiment_request.json_dict(), safe=False)
@@ -55,7 +55,7 @@ class UpdatePriority(LoginRequiredMixin, View):
         except models.Group.DoesNotExist:
             raise http.Http404("Group does not exist.")
 
-        if group.project != request.user:
+        if not request.user.can_access_project(group.project):
             raise http.Http404()
 
         pks = [int(u) for u in request.POST.getlist('samples[]') if u]
@@ -86,7 +86,7 @@ class UpdateRequestPriority(LoginRequiredMixin, View):
         except models.Shipment.DoesNotExist:
             raise http.Http404("Shipment does not exist.")
 
-        if shipment.project != request.user:
+        if not request.user.can_access_project(shipment.project):
             raise http.Http404()
 
         pks = [int(u) for u in request.POST.getlist('priorities[]') if u]
@@ -117,7 +117,7 @@ class UpdateGroupPriority(LoginRequiredMixin, View):
         except models.Shipment.DoesNotExist:
             raise http.Http404("Shipment does not exist.")
 
-        if shipment.project != request.user:
+        if not request.user.can_access_project(shipment.project):
             raise http.Http404()
 
         pks = [int(u) for u in request.POST.getlist('priorities[]') if u]
@@ -146,7 +146,13 @@ class BulkSampleEdit(LoginRequiredMixin, View):
         errors = []
 
         group = request.POST.get('group')
-        if models.Group.objects.get(pk=group).project.username != self.request.user.username:
+        try:
+            group_obj = models.Group.objects.get(pk=group)
+        except models.Group.DoesNotExist:
+            errors.append('Group does not exist.')
+            return JsonResponse(errors, safe=False)
+
+        if not self.request.user.can_access_project(group_obj.project):
             errors.append('You do not have permission to modify these samples.')
             return JsonResponse(errors, safe=False)
 
@@ -188,9 +194,12 @@ class UpdateLocations(AdminRequiredMixin, View):
 class FetchContainerLayout(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            qs = models.Container.objects.filter()
+            qs = models.Container.objects.all()
         else:
-            qs = models.Container.objects.filter(project=self.request.user)
+            if not getattr(request, 'project', None):
+                qs = models.Container.objects.none()
+            else:
+                qs = models.Container.objects.filter(project=request.project)
 
         try:
             container = qs.get(pk=self.kwargs['pk'])
@@ -220,9 +229,12 @@ class CreateShipmentSamples(LoginRequiredMixin, View):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            qs = models.Shipment.objects.filter()
+            qs = models.Shipment.objects.all()
         else:
-            qs = models.Shipment.objects.filter(project=self.request.user)
+            if not getattr(request, 'project', None):
+                qs = models.Shipment.objects.none()
+            else:
+                qs = models.Shipment.objects.filter(project=request.project)
         try:
             shipment = qs.get(pk=self.kwargs['pk'])
             samples = json.loads(request.POST.get('samples', '[]'))
@@ -258,9 +270,12 @@ class SaveContainerSamples(LoginRequiredMixin, View):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            qs = models.Container.objects.filter()
+            qs = models.Container.objects.all()
         else:
-            qs = models.Container.objects.filter(project=self.request.user)
+            if not getattr(request, 'project', None):
+                qs = models.Container.objects.none()
+            else:
+                qs = models.Container.objects.filter(project=request.project)
         try:
             container = qs.get(pk=self.kwargs['pk'])
             samples = json.loads(request.POST.get('samples', '[]'))
@@ -299,3 +314,36 @@ class SaveContainerSamples(LoginRequiredMixin, View):
             return JsonResponse({'url': container.get_absolute_url()}, safe=False)
         except models.Container.DoesNotExist:
             raise http.Http404('Container Not Found!')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RegionLookup(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        country_param = request.GET.get('country')
+        if not country_param:
+            return JsonResponse([], safe=False)
+
+        country = None
+        if str(country_param).isdigit():
+            country = models.Country.objects.filter(pk=int(country_param)).first()
+        if not country:
+            country = (
+                models.Country.objects.filter(alpha2__iexact=country_param).first()
+                or models.Country.objects.filter(alpha3__iexact=country_param).first()
+            )
+
+        if not country:
+            return JsonResponse([], safe=False)
+
+        regions = country.regions.order_by('name')
+        data = [
+            {
+                'id': r.pk,
+                'name': r.name,
+                'code': r.code.split('-', 1)[1] if '-' in r.code else r.code
+            }
+            for r in regions
+        ]
+        return JsonResponse(data, safe=False)
+

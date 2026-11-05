@@ -1,25 +1,33 @@
-from django.core.management.base import BaseCommand, CommandError
+import json
+from datetime import datetime, timedelta
+
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils.timezone import make_aware
 
 from basiclive.core.lims.models import Project, Beamline
 from basiclive.core.schedule.models import Beamtime, BeamlineSupport, AccessType, Downtime
 
-import json
-from datetime import datetime, timedelta
-
-
 SHIFT_MAP = ["08", "16", "00"]
 
-def get_project_by_name(name):
-    return Project.objects.filter((Q(last_name=name['last_name']) & Q(first_name=name['first_name'])) | (
+
+def get_user_by_name(name):
+    User = get_user_model()
+    return User.objects.filter((Q(last_name=name['last_name']) & Q(first_name=name['first_name'])) | (
                 Q(username__iexact=name['last_name']) | Q(username__iexact=name['first_name']))).first()
+
+
+def get_project_by_name(name):
+    return Project.objects.filter(name__icontains=name['last_name']).first()
+
 
 def get_project_by_account(account):
     try:
-        return Project.objects.filter(username__iexact=account.split(',')[0].strip()).first()
+        return Project.objects.filter(name__iexact=account.split(',')[0].strip()).first()
     except:
         return None
+
 
 def get_date(dt, shift, end=False):
     dt = datetime.strptime("{}T{}".format(dt, SHIFT_MAP[shift]), "%Y-%m-%dT%H")
@@ -29,7 +37,7 @@ def get_date(dt, shift, end=False):
 
 
 class Command(BaseCommand):
-    help = 'Imports beamtime from the Django 2 website.'
+    help = 'Imports beamtime from the Django.'
 
     def add_arguments(self, parser):
         parser.add_argument('--file', type=str)
@@ -43,7 +51,7 @@ class Command(BaseCommand):
             beamtime = [p for p in data if p['model'] == 'scheduler.visit']
             downtime = [p for p in data if p['model'] == 'scheduler.stat' and p['fields']['mode'] == 'FacilityRepair']
             support = [p for p in data if p['model'] == 'scheduler.oncall']
-            contact_map = { p['pk']: get_project_by_name(p['fields'])
+            contact_map = { p['pk']: get_user_by_name(p['fields'])
                          for p in data if p['model'] == 'scheduler.supportperson' }
             beamline_map = {1: 2, 2: 1}
             project_map = {}
@@ -55,16 +63,16 @@ class Command(BaseCommand):
                     'email': p['fields']['email'],
                 }
                 try:
-                    if not mxproject.email and p['fields']['email']:
-                        mxproject.email = p['fields']['email']
+                    if not mxproject.contact_email and p['fields']['email']:
+                        mxproject.contact_email = p['fields']['email']
                         mxproject.save()
-                        print("Updating email '{}' for '{}'".format(mxproject.email, mxproject.username))
+                        print("Updating email '{}' for '{}'".format(mxproject.contact_email, mxproject.name))
                 except:
                     pass
                 try:
                     mxproject.alias = int(p['fields']['last_name'])
                     mxproject.save()
-                    print('Updating alias "{}" for "{}"'.format(mxproject.alias, mxproject.username))
+                    print('Updating alias "{}" for "{}"'.format(mxproject.alias, mxproject.name))
                 except:
                     pass
             print({p: k for p, k in project_map.items() if k['account'] == None})
@@ -85,7 +93,7 @@ class Command(BaseCommand):
                 bt = Beamtime.objects.create(**info)
 
             for p in downtime:
-                for bl in Beamline.objects.exclude(simulated=True):
+                for bl in Beamline.objects.filter(active=True, simulated=False):
                     info = {
                         'start': get_date(p['fields']['start_date'], p['fields']['first_shift']),
                         'end': get_date(p['fields']['end_date'], p['fields']['last_shift'], True),

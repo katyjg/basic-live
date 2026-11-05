@@ -42,7 +42,7 @@ class FetchBeamtime(View):
                 "comments": bt.comments,
                 "beamline": bt.beamline.acronym,
                 "url": '',
-                "css_class": "{} {}".format(bt.access and bt.access.name or "", bt.cancelled and 'cancelled' or ''),
+                "css_class": f"{bt.access and bt.access.name or ''} {bt.cancelled and 'cancelled' or ''}",
                 "starts": bt.start_times,
                 "end": bt.end_time
             }
@@ -63,10 +63,11 @@ class FetchDowntime(View):
         queryset = Downtime.objects.filter()
         if start and end:
             queryset = queryset.filter((
-                Q(start__gte=start) & Q(start__lt=end)) | (
-                Q(end__lte=end) & Q(end__gt=start)) | (
-                Q(start__gte=start) & Q(end__lte=end)) | (
-                Q(start__lte=start) & Q(end__gte=end)
+                # Q(start__gte=start) & Q(start__lt=end)) | (
+                # Q(end__lte=end) & Q(end__gt=start)) | (
+                # Q(start__gte=start) & Q(end__lte=end)) | (
+                # Q(start__lte=start) & Q(end__gte=end)
+                Q(end__gte=start) & Q(start__lte=end)
             ))
         elif start:
             queryset = queryset.filter(start__gte=start)

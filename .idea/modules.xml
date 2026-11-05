@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/basic-live.iml" filepath="$PROJECT_DIR$/.idea/basic-live.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../mxlive-ng/.idea/mxlive-ng.iml" filepath="$PROJECT_DIR$/../mxlive-ng/.idea/mxlive-ng.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/basiclive.iml" filepath="$PROJECT_DIR$/.idea/basiclive.iml" />
     </modules>
   </component>
 </project>

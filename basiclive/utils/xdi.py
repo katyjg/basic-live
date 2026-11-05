@@ -1,8 +1,5 @@
-# coding=utf-8
-
 import gzip
 import re
-import sys
 import textwrap
 from collections import namedtuple
 from collections.abc import Mapping
@@ -10,6 +7,7 @@ from datetime import datetime, tzinfo, timedelta
 from io import StringIO
 
 import numpy
+import sys
 
 VERSION = 1.0  # Specification version
 NAMESPACES = [
@@ -368,4 +366,3 @@ def read_xdi_data(data):
     obj = XDIData()
     obj.load(data)
     return obj
-

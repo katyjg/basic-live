@@ -1,0 +1,39 @@
+{% load bl_icons %}
+
+{% with request.num_samples as num_samples %}
+    <li class="list-group-item ps-2" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
+         data-reference="{% for s in request.sample_list %}{{ s.pk }} {% endfor %}">
+        <div class="d-flex flex-row justify-content-between">
+            {% if editable %}
+                <div class="box-status text-center" style="width: 50px; min-width: 50px;">
+                    <span class='cursor'>
+                        {% show_icon icon='move' size='sm' tooltip='Priority' %}
+                    </span>
+                </div>
+            {% endif %}
+            <div class="text-start flex-fill ps-3 d-flex flex-column justify-content-center overflow-ellipsis">
+                <div>
+                    <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                    <span class="text-condensed">{{ request.kind.name }}</span>
+                </div>
+                {% if request.comments %}
+                    <div class="small text-muted overflow-ellipsis">
+                        {{ request.comments }}
+                    </div>
+                {% endif %}
+            </div>
+            {% if editable %}
+                <div class="tools-box">
+                    <a href="#!" data-modal-url="{% url 'request-edit' request.pk %}"
+                        title="Edit Request Parameters">
+                        {% show_icon icon="edit" size='sm' color="primary" %}
+                    </a>
+                </div>
+            {% else %}
+                <div class="small text-info">
+                <strong>{{ num_samples }} sample{{ num_samples|pluralize }}</strong>
+                </div>
+            {% endif %}
+        </div>
+    </li>
+{% endwith %}

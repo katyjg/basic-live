@@ -270,7 +270,6 @@ function ev2k(energy) {
                     let value = d.key == 'kspace' ? cell.text().strip() === 'true' : parseFloat(cell.text());
                     if ([NaN, undefined].includes(value)) {
                         value = d.value;
-                        console.log(value, d.value);
                         cell.text(value);
                     }
                     edit_data(d.index, d.key, value);
@@ -297,9 +296,6 @@ function ev2k(energy) {
 (function ( $ ) {
     $.fn.showRegions = function (data) {
         let target = d3.select($(this)[0]);
-
-        console.log(target, data, $(this));
-
         // create a row for each object in the data
         let table = target.append('table').attr('class', 'table table-sm regions');
         let thead = table.append('thead');

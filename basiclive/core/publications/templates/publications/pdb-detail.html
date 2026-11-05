@@ -1,0 +1,67 @@
+{% extends "crisp_modals/modal.html" %}
+{% load bl_icons %}
+
+{% block modal_styles %}modal-lg{% endblock %}
+
+{% block modal_title %}PDB | <strong>{{ object.code }}</strong>{% endblock %}
+
+{% block modal_subtitle %}<div class="text-wrap lh-1">{{ object.title }}</div>{% endblock %}
+
+{% block modal_body %}
+    <div class="row">
+        <div class="col-md-6 text-center mb-3 mb-md-0">
+            <figure class="figure m-0">
+                <img src="{{ image_url }}"
+                     class="figure-img img-fluid"
+                     alt="PDB structure {{ object.code }}"
+                     loading="lazy"
+                     onerror="this.onerror=null; this.classList.add('d-none'); document.getElementById('pdb-image-fallback-{{ object.code }}').classList.remove('d-none');">
+                <div id="pdb-image-fallback-{{ object.code }}" class="alert alert-light border d-none p-3 text-center text-muted">
+                    {% show_icon icon="image" size="lg" %}
+                    <div class="small mt-1">Structure preview unavailable</div>
+                </div>
+            </figure>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <strong>Authors:</strong> {{ object.authors|default:"&mdash;" }}
+            </div>
+            <div>
+                <strong>Resolution:</strong>
+                {% if object.resolution %}
+                    {{ object.resolution|floatformat:2 }} &Aring;
+                {% else %}
+                    &mdash;
+                {% endif %}
+            </div>
+            <div><strong>Released:</strong> {{ object.released|date:"Y-m-d"|default:"&mdash;" }}</div>
+            <div><strong>Deposited:</strong> {{ object.deposited|date:"Y-m-d"|default:"&mdash;" }}</div>
+            {% if object.collected %}
+            <div><strong>Collected:</strong> {{ object.collected|date:"Y-m-d" }}</div>
+            {% endif %}
+
+            {% if object.doi %}
+            <div><strong>DOI:</strong>
+                <a href="https://doi.org/{{ object.doi }}" target="_blank" rel="noopener noreferrer">
+                    {{ object.doi }}
+                </a>
+            </div>
+            {% endif %}
+
+            {% if object.reference %}
+            <div class="my-3"><strong>Publication:</strong> {{ object.reference.title }}
+            {% if object.reference.code %}
+                <br/>
+                <span class="text-muted">{{ object.reference.code }}</span>
+            {% endif %}
+            </div>
+            {% elif object.citation %}
+            <div><strong>Citation:</strong> {{ object.citation }}</div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+{% endblock %}

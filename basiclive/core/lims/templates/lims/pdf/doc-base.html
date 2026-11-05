@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1063, initial-scale=1">
+    <title>Shipping Labels</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'lims/img/favicon.svg' %}" />
+    <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "lims/css/basiclive.min.css" %}" rel="stylesheet">
+    <link href="{% static "lims/css/print.min.css" %}" rel="stylesheet">
+    <link href="{% static "lims/css/pdfs.min.css" %}" rel="stylesheet">
+
+</head>
+<body>
+    {% block full %}{% endblock %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        window.print();
+    });
+</script>
+</body>
+</html>

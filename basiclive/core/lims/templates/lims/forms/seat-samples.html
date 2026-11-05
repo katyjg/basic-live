@@ -1,16 +1,16 @@
-{% extends "modal/form.html" %}
-{% load layout %}
+{% extends "crisp_modals/form.html" %}
+{% load bl_layouts bl_icons %}
 {% load static %}
 
 {% block modal_assets %}
     {{ block.super }}
     <script src="{% static 'd3/js/d3.min.js' %}"></script>
     <script src="{% static 'd3/js/d3-selection-multi.v1.min.js' %}"></script>
-    <script src="{% static "lims/js/mxlive-layouts.min.js" %}"></script>
-    <script src="{% static "lims/js/mxlive-seater.min.js" %}"></script>
+    <script src="{% static "lims/js/basiclive-layouts.min.js" %}"></script>
+    <script src="{% static "lims/js/basiclive-seater.min.js" %}"></script>
 {% endblock %}
 {% block modal_styles %}modal-lg{% endblock %}
-{% block modal_title %}<i class="ti ti-paint-bucket text-muted"></i> &nbsp; <strong>{{ shipment }}</strong> | Sample Seat Selection{% endblock %}
+{% block modal_title %}{% show_icon icon="samples" size='md' %} &nbsp; <strong>{{ shipment }}</strong> | Sample Seat Selection{% endblock %}
 {% block modal_body %}
     <div id="sample-seater" class="row" >
         <div class="col-9">
@@ -18,7 +18,7 @@
                 {% for container in shipment.containers.all %}
                     <div class="{% container_col container %} seater text-center" id="seater-{{ container.pk }}">
                         <h4 class="">
-                            <a href="#!" class="badge badge-secondary text-condensed text-thin" title="Toggle All"
+                            <a href="#!" class="badge text-bg-secondary text-condensed text-thin" title="Toggle All"
                                data-pk="{{ container.pk }}"><strong>{{ container.name }}</strong>
                             </a>
                         </h4>
@@ -72,17 +72,16 @@
 {% endblock %}
 
 {% block modal_footer %}
-    <div class="col-9">
+    <div class="d-flex flex-row gap-3 align-items-center justify-content-between">
         <div class="alert alert-info m-0 p-2 small" id="seater-instructions">
-            <i class="ti ti-md ti-info-alt float-left pr-2"></i>
+            <span class="float-start pe-2">{% show_icon icon="info" size='md' %}</span>
             Click on a group to select it, then click the locations of the corresponding samples in each container.
             Click previously selected samples to remove them.
         </div>
-    </div>
-    <div class="col-3 my-auto text-right">
+
         <button id='save-seats' class="btn btn btn-primary" name="save" type="button"
                 data-post-action="{% url 'create-samples' pk=shipment.pk %}"
-        >Save Samples</button>
+        >Save</button>
     </div>
 {% endblock %}
 

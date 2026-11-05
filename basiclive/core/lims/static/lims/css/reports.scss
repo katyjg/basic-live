@@ -2,7 +2,7 @@
 caption, figcaption {
 	padding-top: .75rem;
 	padding-bottom: .75rem;
-	color: #6c757d;
+	color: var(--bs-secondary-color);
 	text-align: left;
 	caption-side: bottom;
 }
@@ -30,14 +30,12 @@ caption, figcaption {
 
 	h3 {
 		font-weight: 200;
-		border-left: 0.25rem solid rgba(0,0,0,0.2);
-		margin-left: 0.25rem;
 		margin-bottom: 1rem;
 	}
 
 	.description {
 		display: block;
-		width: 100%
+		width: 100%;
 	}
 	.table {
 		counter-increment: tables;
@@ -45,8 +43,8 @@ caption, figcaption {
 			td {
 				text-align: right;
 			}
-			border-bottom: 1px solid #bbb;
-			border-top: 1px solid #bbb;
+			border-bottom: 1px solid var(--bs-border-color-translucent);
+			border-top: 1px solid var(--bs-border-color-translucent);
 		}
 		thead {
 			th {
@@ -58,10 +56,8 @@ caption, figcaption {
 		}
 	}
 	.notes {
-		background: #eee;
-		background: rgba(0,0,0,0.05);
+		background: var(--bl-shaded-bg, rgba(0, 0, 0, 0.05));
 		padding: 1rem;
-		color: #333;
 		p {
 			&:last-child {
 				margin-bottom: 0;
@@ -77,25 +73,22 @@ caption, figcaption {
 g.tick {
 	text {
 		font-size: 0.9rem;
-		fill: #333;
+		fill: var(--bs-body-color);
 	}
 	line {
 		fill: none !important;
-		stroke: var(--secondary);
-		//stroke: rgba(0,0,0,0.3);
-		//stroke-width: 1pt;
+		stroke: var(--bs-body-color);
 	}
 }
 path {
 	&.domain {
 		fill: none !important;
-		stroke: var(--secondary);
+		stroke: var(--bs-secondary-color);
 		//stroke-width: 1pt;
 	}
 
 	&.line {
 		//stroke-width: 1pt;
-
 	}
 }
 
@@ -111,16 +104,16 @@ div.section-entry {
 .report-table {
 	max-width: 80%;
 	margin: auto;
-	border: 1px solid #ddd;
-	box-shadow: 2px 2px 10px #ddd;
+	border: 1px solid var(--bs-border-color);
+	box-shadow: 2px 2px 10px var(--bs-border-color);
 }
 table {
 	+ {
 		.caption {
 			max-width: 80%;
 			margin: auto;
-			border: 1px solid #ddd;
-			box-shadow: 2px 2px 10px #ddd;
+			border: 1px solid var(--bs-border-color);
+			box-shadow: 2px 2px 10px var(--bs-border-color);
 		}
 	}
 }
@@ -133,4 +126,11 @@ table {
 
 .c3-line {
     stroke-width: 1.5px;
+}
+
+.c3-legend-item, .c3-axis {
+	text {
+		font-size: 0.9rem;
+		fill: var(--bs-body-color);
+	}
 }

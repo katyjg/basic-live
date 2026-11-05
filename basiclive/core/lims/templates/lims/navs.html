@@ -1,31 +1,35 @@
-{% load settings %}
+{% load bl_icons %}
 <header>
-    <nav class="navbar navbar-expand navbar-dark fixed-top">
+    <nav class="navbar navbar-dark navbar-expand fixed-top">
         <!-- Brand and toggle get grouped for better mobile display -->
-        <a class="navbar-brand" href="{% url 'dashboard' %}">{% get_setting 'APP_NAME' %}</a>
-        <ul class="navbar-nav ml-auto">
-            {% if user.is_superuser %}
-               <li class="nav-item">
-                   <a  class="nav-link" href="/admin/" target="_blank">
-                       <i class="ti ti-unlock"></i><span class="d-none d-md-inline-block">&nbsp;Admin</span>
-                   </a>
-               </li>
-            {% endif %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'dashboard' %}">
-                    <i class="ti ti-home"></i><span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
+        <a class="navbar-brand mx-3" href="/">{{ APP_NAME }}</a>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item ">
+                <a class="nav-link me-md-2" href="/">
+                    {% show_icon icon="home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link  dropdown-toggle mr-md-2" href="#"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="search-menu">
-                    <i class="ti ti-list"></i><span class="d-none d-md-inline-block">&nbsp;Search</span>
+                <a class="nav-link  dropdown-toggle me-md-2" href="#"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="container" %}<span class="d-none d-md-inline-block">&nbsp;Samples</span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="search-menu">
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
                     <a class="dropdown-item" href='{% url "shipment-list" %}'>Shipments</a>
                     <a class="dropdown-item" href="{% url 'container-list' %}">Containers</a>
                     <a class="dropdown-item" href="{% url 'group-list' %}">Groups</a>
                     <a class="dropdown-item" href="{% url 'sample-list' %}">Samples</a>
+                    <a class="dropdown-item" href="{% url 'request-list' %}">Requests</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link  dropdown-toggle me-md-2" href="#"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="list" %}<span class="d-none d-md-inline-block">&nbsp;Experiments</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
                     <a class="dropdown-item" href="{% url 'request-list' %}">Requests</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'data-list' %}">Datasets</a>
@@ -33,29 +37,92 @@
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
                     {% if user.is_superuser %}
-                        <a class="dropdown-item" href="{% url 'requesttype-list' %}">Request Types</a>
+                        <a class="dropdown-item" href="{% url 'request-type-list' %}">Request Types</a>
                     {% endif %}
-                    <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity Log</a>
+                    <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>
             </li>
+
+            {% if user.is_superuser %}
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle mr-md-2" href="#"
-                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">
-                    <i class="ti ti-user"></i><span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
+                <a class="nav-link  dropdown-toggle me-md-2" href="#"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="lock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profile-menu">
-                    <div class="">
-                        {% include "lims/address.html" with user=user %}
-                    </div>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
+                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Report Builder</a>
+                    <a class="dropdown-item" href="{% url 'user-list' %}">Manage Users</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#!" data-form-link="{% url 'edit-profile' user.username %}">Edit Profile</a>
+                    <a class="dropdown-item" href="#0" data-modal-url="{% url 'settings-edit' %}">Site Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger-emphasis" href="{% url 'admin:index' %}">Admin Backend</a>
+                </div>
+            </li>
+            {% endif %}
+            {% if user.is_authenticated %}
+                {% with user_projects=user.get_projects %}
+                    {% if user_projects.count > 1 %}
+                        <li class="nav-item dropdown" id="project-switcher">
+                            <a class="nav-link dropdown-toggle me-md-2" href="#"
+                               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="project-menu">
+                                {% show_icon icon="projects" %}<span class="d-none d-md-inline-block">&nbsp;{% if request.project %}{{ request.project.name.upper }}{% else %}Select Project{% endif %}</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="project-menu">
+                                <h6 class="dropdown-header">Active Project</h6>
+                                {% for proj in user_projects %}
+                                    <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.project and proj.pk == request.project.pk %}active{% endif %}"
+                                       href="{% url 'switch-project' proj.pk %}"
+                                    >
+                                        <span>{{ proj.name.upper }}</span>
+                                        {% if request.project and proj.pk == request.project.pk %}
+                                            {% show_icon icon="check" %}
+                                        {% endif %}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    {% elif request.project %}
+                        <li class="nav-item d-flex align-items-center" id="project-display">
+                            <span class="navbar-text text-light me-md-2">
+                                {% show_icon icon="projects" %}<span class="d-none d-md-inline-block">&nbsp;{{ request.project.name.upper }}</span>
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle me-md-2" href="#"
+                   data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">
+                    {% show_icon icon="profile" %}<span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profile-menu">
+                    <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
+                        {% show_icon icon="light-theme" %}&nbsp;Light
+                    </button>
+                    <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
+                        {% show_icon icon="dark-theme" %}&nbsp;Dark
+                    </button>
+                    <button type="button" href="#!" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
+                        {% show_icon icon="auto-theme" %}&nbsp;Auto
+                    </button>
+                    {% if user.is_superuser %}
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'user-dashboard' %}">User Dashboard</a>
+                    {% endif %}
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'user-detail' user.username %}">Account Profile</a>
+                    <a class="dropdown-item" href="#!" data-modal-url="{% url 'user-edit' user.username %}">Edit Profile</a>
                     <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>
                 </div>
             </li>
+            {% endif %}
         </ul>
     </nav>
 </header>
+{% if user.is_authenticated %}
 <form class="d-none" id="logout-form" action="{% url 'logout' %}" method="post">{% csrf_token %}</form>
+{% endif %}
 <script>
 document.addEventListener('click', function (event) {
     if (event.target.closest('#logout-action')) {

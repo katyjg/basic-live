@@ -1,4 +1,10 @@
-{% extends "modal/form.html" %}
+{% extends "crisp_modals/form.html" %}
+{% load static %}
+
+{% block modal_assets %}
+    {{ block.super }}
+    <script src="{% static "lims/js/basiclive-spreadsheet.min.js" %}"></script>
+{% endblock %}
 
 {% block modal_scripts %}
     {{ block.super }}

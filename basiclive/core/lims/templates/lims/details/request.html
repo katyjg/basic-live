@@ -1,0 +1,96 @@
+{% extends "lims/base.html" %}
+{% load humanize %}
+{% load markup %}
+{% load bl_icons %}
+{% load bl_tags %}
+{% load bl_themes %}
+{% load static %}
+
+
+{% block page-pre-title %}Request{% endblock %}
+{% block page-title %}
+{% if user.is_superuser %}<span class="fw-lighter">{{ object.project }} | </span>{% endif %}<strong>{{ object.name }}</strong>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
+        {{ object.identity }} | {{ object.kind.name }}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    {% include "lims/tools-base.html" %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% status_theme object.status warning=object.STATES_CHOICES.DRAFT success=object.STATES_CHOICES.COMPLETE info=object.STATUS_CHOICES.PENDING default='primary' %} text-condensed">
+        {{ object.get_status_display }}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">Type:</small><br>
+        {{ object.kind.name }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Number of Samples:</small><br>
+        <strong>{{ object.num_samples }}</strong>
+    </div>
+
+{% endblock %}
+
+{% block page-content %}
+<div class="row">
+    <div class="col-md-7 bulk-edit">
+        {% if object.status == object.STATES.DRAFT %}
+            <div class="item-list sortable">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th class="">Name</th>
+                        <th class="">Group</th>
+                        <th class="">Location</th>
+                        <th class="">Container</th>
+                        <th class="">Barcode</th>
+                        <th class="">Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for sample in object.sample_list %}
+                    <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
+                        <td><a href="#!" data-modal-url="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
+                        <td>{{ sample.group }}</td>
+                        <td>{{ sample.location }}</td>
+                        <td>{{ sample.container.name }}</td>
+                        <td>{{ sample.barcode|default_if_none:"&mdash;" }}</td>
+                        <td>{{ sample.comments|default_if_none:"&mdash;" }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        {% else %}
+            {% include "lims/details/group-samples.html" with samples=object.sample_list %}
+        {% endif %}
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header p-1 text-center text-wide text-muted"><small>PARAMETERS</small></div>
+            <ul class="list-group list-group-flush">
+                {% if object.kind.view_template %}
+                <li class="list-group-item py-0">
+                    {% include object.kind.view_template with request=object %}
+                </li>
+                {% else %}
+                    {% include "lims/requests/base-view.html" with request=object %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}

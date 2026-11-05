@@ -1,0 +1,284 @@
+{% extends "lims/data/data.html" %}
+{% load bl_data_tags %}
+{% load bl_tags %}
+{% load static %}
+{% load bl_icons %}
+
+{% block modal_assets %}
+    <link rel="stylesheet" href="{% static 'lims/css/diffviewer.min.css' %}"/>
+    <script src="{% static 'jquery/js/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'jquery/js/jquery.mousewheel.min.js' %}"></script>
+    <script src="{% static 'lims/js/basiclive-diffviewer.min.js' %}"></script>
+{% endblock %}
+
+{% block data_content %}
+    <div id='data-viewer'
+         data-first-file='{{ object.first_file }}'
+         data-first-frame='{{ object.first_frame }}'
+         data-base-url='{% url "files-proxy" section="frame" path=object.url %}'
+         data-wavelength='{{ object.energy|energy_to_wavelength }}'
+         data-resolution='{{ object.meta_data.resolution|default:2 }}'
+         data-start-angle='{{ object.meta_data.start_angle|default:0 }}'
+         data-delta-angle='{{ object.meta_data.delta_angle|default:0 }}'
+         class="d-flex"
+    >
+        <div class="m-2">
+            <!-- image viewer aspect -->
+            <div class="data-image">
+                <div class="image-wrapper">
+                    <div id="diffviewer" class="viewer"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-none d-lg-flex flex-column flex-fill ms-0 m-2">
+            <!-- Display of metaData -->
+            <div class="xtal-pic">
+                <img
+                    src="{% url 'files-proxy' section='snapshot' path=object.snapshot_url %}"
+                    title="Snapshot from beamline"
+                />
+            </div>
+            <div class="mt-2">
+                <ul class="nav nav-tabs text-condensed px-2" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
+                                            href="#frames">{{ object.num_frames }}
+                        Frames</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#meta-data">Meta-Data</a></li>
+                </ul>
+            </div>
+            <div class="frame-list flex-fill">
+                <div class="tab-content">
+                    <div id="frames" class="tab-pane fade show active">
+                        <ul class="list-unstyled small">
+                            {% for frame_info in object.frame_records %}
+                                <li class="overflow ellipsis frame-list-item"
+                                    data-frame-id="{{ frame_info.frame }}"
+                                    data-frame-name="{{ frame_info.file_name }}"
+                                    data-start-angle="{{ frame_info.start }}"
+                                    data-end-angle="{{ frame_info.end }}"
+                                    title="{{ frame_info.file_name }}"
+                                >
+                                    <a href="javascript:void(0);" class="d-flex flex-row justify-content-between px-3">
+<!--                                        {{ frame_info.file_name|truncate_middle:36 }}-->
+                                        <span>Image #{{frame_info.frame}}</span><span class="ms-auto">{{ frame_info.start }}&deg;</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div id="meta-data" class="tab-pane fade">
+                        <ul class="list-unstyled">
+                            {% for k, v in object.get_meta_data.items %}
+                                <li><strong>{{ k|title }}: </strong> <span class="float-end">{{ v }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block modal_footer %}
+    <!-- image navigation -->
+    <div class="me-3">
+        <button class="btn btn-sm btn-dark btn-dk" data-brightness="dk" type="button">Dark</button>
+        <button class="btn btn-sm btn-secondary btn-nm active-brightness" data-brightness="nm" type="button">Normal</button>
+        <button class="btn btn-sm btn-light btn-lt" data-brightness="lt" type="button">Light</button>
+    </div>
+    <div class="loaded-image me-auto">
+        <strong id="curr-frame"></strong>&nbsp;of&nbsp;<strong>{{ object.num_frames }}</strong>
+    </div>
+    <div id="data-image-loading" class="mx-auto d-none justify-content-center">
+        <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <div class="ms-auto me-3">
+        <span id="osc-start"></span>&ndash;<span id="osc-end"></span>&deg;
+    </div>
+    <div class="ms-3">
+        <button id="btn-prev-frame" class="btn btn-sm btn-info" type="button" aria-label="Previous frame" title="Previous frame">
+            {% show_icon icon="arrow-left" %}
+        </button>
+        <button id="btn-next-frame" class="btn btn-sm btn-info" type="button" aria-label="Next frame" title="Next frame">
+            {% show_icon icon="arrow-right" %}
+        </button>
+    </div>
+{% endblock %}
+{% block modal_scripts %}
+    <script type="text/javascript">
+        (function ($) {
+            "use strict";
+
+            const dataViewer = (function () {
+                let wavelength = 1.0;
+                let ref_resol = 2.0;
+                let theta_m = Math.asin(0.5 * wavelength) / ref_resol;
+                const $loading = $('#data-image-loading');
+
+                return {
+                    setPars: function (w, r) {
+                        wavelength = Number(w) || 1.0;
+                        ref_resol = Number(r) || 2.0;
+                        theta_m = Math.asin(0.5 * wavelength) / ref_resol;
+                    },
+                    calcRes: function (f) {
+                        const denominator = Math.sin(f * theta_m);
+                        return denominator ? (0.5 * wavelength) / denominator : 0;
+                    },
+                    showActivity: function () {
+                        $loading.removeClass("d-none").addClass("d-flex");
+                    },
+                    hideActivity: function () {
+                        $loading.removeClass("d-flex").addClass("d-none");
+                    }
+                };
+            })();
+
+            let $viewer = null;
+            let $expanded_frame_set = [];
+            let current_frame_to_display = null;
+            let current_frame_id = null;
+            let current_brightness = 'nm';
+            let first_frame_num = 1;
+            let delta_angle = 0;
+            let start_angle = 0;
+
+            function updateFrameDetails() {
+                const $element = $('#curr-frame');
+                $element.text(`${current_frame_id}`);
+
+                // Highlight active frame in list & scroll into view
+                $('#frames li').removeClass('active text-primary fw-bold');
+                const $activeItem = $(`#frames li[data-frame-id="${current_frame_id}"]`);
+                $('#osc-start').text($activeItem.data('start-angle'));
+                $('#osc-end').text($activeItem.data('end-angle'));
+
+                if ($activeItem.length) {
+                    $activeItem.addClass('active text-primary fw-bold');
+                    const el = $activeItem[0];
+                    if (el.scrollIntoView) {
+                        el.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+            }
+
+            function updateFrame() {
+                if (!$viewer || !current_frame_to_display) return;
+                const url = `${$viewer.data('base-url')}/${current_frame_to_display}/${current_brightness}.png`;
+                $("#diffviewer").diffviewer('loadImage', url);
+                updateFrameDetails();
+            }
+
+            function changeBrightness(brightness) {
+                if (brightness === current_brightness) {
+                    return;
+                }
+                $('.active-brightness').removeClass('active-brightness');
+                $(`.btn-${brightness}`).addClass('active-brightness');
+                current_brightness = brightness;
+                updateFrame();
+            }
+
+            function stepFrame(direction) {
+                let index = $.inArray(current_frame_id, $expanded_frame_set);
+                if (index !== -1) {
+                    index += direction;
+                    if (index >= 0 && index < $expanded_frame_set.length) {
+                        current_frame_id = $expanded_frame_set[index];
+                        current_frame_to_display = $(`#frames li[data-frame-id="${current_frame_id}"]`).data('frame-name');
+                        updateFrame();
+                    }
+                }
+            }
+
+            function toFrame(frame, frame_id) {
+                const index = $.inArray(frame_id, $expanded_frame_set);
+                if (index !== -1) {
+                    current_frame_to_display = frame;
+                    current_frame_id = frame_id;
+                    updateFrame();
+                }
+            }
+
+            function initializeModal() {
+                $viewer = $('#data-viewer');
+                current_frame_to_display = $viewer.data('first-file');
+                current_frame_id = $viewer.data('first-frame');
+                first_frame_num = Number($viewer.data('first-frame')) || 1;
+                delta_angle = Number($viewer.data('delta-angle')) || 0;
+                start_angle = Number($viewer.data('start-angle')) || 0;
+                current_brightness = "nm";
+                $expanded_frame_set = $('.frame-list-item').map(function() {
+                    return parseInt($(this).data('frame-id'));
+                }).get();
+
+                dataViewer.setPars($viewer.data('wavelength'), $viewer.data('resolution'));
+                const url = `${$viewer.data('base-url')}/${current_frame_to_display}/${current_brightness}.png`;
+
+                // Delegated frame clicks
+                $('#frames').off('.data_frames').on('click.data_frames', 'li[data-frame-id]', function (e) {
+                    e.preventDefault();
+                    toFrame($(this).data('frame-name'), $(this).data('frame-id'));
+                });
+
+                // Delegated brightness buttons
+                $('[data-brightness]').off('.data_frames').on('click.data_frames', function () {
+                    changeBrightness($(this).data('brightness'));
+                });
+
+                // Next / Prev buttons
+                $('#btn-prev-frame').off('.data_frames').on('click.data_frames', function () {
+                    stepFrame(-1);
+                });
+                $('#btn-next-frame').off('.data_frames').on('click.data_frames', function () {
+                    stepFrame(1);
+                });
+
+                // Keyboard navigation: Left/Right arrow keys
+                $(document).off('.data_frames').on('keydown.data_frames', function (e) {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        stepFrame(-1);
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        stepFrame(1);
+                    }
+                });
+
+                // Initialize diffviewer widget
+                $("#diffviewer").diffviewer({
+                    src: url,
+                    zoom: 50,
+                    zoom_min: 50,
+                    onStartLoad: function () {
+                        dataViewer.showActivity();
+                    },
+                    onFinishLoad: function () {
+                        $("#diffviewer").diffviewer('setCoords', -500, -500);
+                        dataViewer.hideActivity();
+                    },
+                    resFunc: function (r) {
+                        return dataViewer.calcRes(r);
+                    }
+                });
+
+                updateFrameDetails();
+            }
+
+            $('#modal')
+                .off('.data_frames')
+                .on('shown.bs.modal.data_frames', function () {
+                    initializeModal();
+                })
+                .on('hidden.bs.modal.data_frames', function () {
+                    $(document).off('.data_frames');
+                    $('#frames').off('.data_frames');
+                    try {
+                        $("#diffviewer").diffviewer('destroy');
+                    } catch (e) {}
+                });
+        })(jQuery);
+    </script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load markup %}
+{% load bl_notebooks %}
+{% load bl_icons %}
+
+{% block page-styles %}
+    <link rel="stylesheet" href="{% static 'notebooks/icons/style.css' %}">
+    <link rel="stylesheet" href="{% static 'simplemde/css/simplemde.min.css' %}">
+    <link rel="stylesheet" href="{% static 'katex/css/katex.min.css' %}">
+    <link rel="stylesheet" href="{% static 'dropzone/css/dropzone.min.css' %}">
+    <link rel="stylesheet" href="{% static 'misc/css/vanilla-picker.csp.min.css' %}">
+    <link rel="stylesheet" href="{% static 'notebooks/calendar.min.css' %}">
+    <link rel="stylesheet" href="{% static 'notebooks/notebooks.min.css' %}">
+    {{ block.super }}
+{% endblock %}
+
+{% block page-pre-title %}Notebook{% endblock %}
+{% block page-title %}{{ notebook.title }}{% endblock %}
+
+{% block page-tools %}
+{% if notebook|is_editable_by:user %}
+    {% get_entry_types as entry_types %}
+    {% for entry_type in entry_types %}
+            <a href="#!"
+               title="Add {{ entry_type.name }} Entry"
+               data-modal-url="{% url 'notebooks:create-entry' book=notebook.pk kind=entry_type.name.lower %}"
+               data-entry-kind="{{ entry_type.name.lower }}"
+            >
+                {% show_icon label=entry_type.name icon=entry_type.icon size='md' %}
+            </a>
+    {% endfor %}
+    <div class="separator"></div>
+{% endif %}
+    <a href="#!" id="calendar-button" class="d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#calendar-offcanvas" role="button" aria-controls="calendar-offcanvas">
+        {% show_icon label="Calendar" icon="calendar" size='md' %}
+    </a>
+    {% if user.is_superuser or notebook.owner == user %}
+    <a href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}">
+        {% show_icon label="Settings" icon="settings" size='md' %}
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="col">
+            {% include "itemlist/filters.html" %}
+        </div>
+    </div>
+    <div class="row position-relative">
+        <div class="col-12 col-lg-9">
+            <div class="notebook-content" id="notebook-content">
+                {% for entry in object_list %}
+                    {% show_entry entry %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-3 d-none d-lg-block">
+            <div class="notebook-sidebar">
+                <div id="notebook-sidebar-calendar" class="calendar-container"
+                     data-dates-url="{% url 'notebooks:notebook-dates' pk=notebook.id %}"
+                     data-select-target="{% url 'notebooks:notebook-detail' pk=notebook.id %}">
+                    <div class="contents"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-lg-9">
+            {% include "itemlist/pagination.html" %}
+        </div>
+    </div>
+
+<div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="calendar-offcanvas" aria-labelledby="calendarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="calendarOffcanvasLabel">Calendar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        <div id="notebook-offcanvas-calendar" class="calendar-container"
+             data-dates-url="{% url 'notebooks:notebook-dates' pk=notebook.id %}"
+             data-select-target="{% url 'notebooks:notebook-detail' pk=notebook.id %}">
+            <div class="contents"></div>
+        </div>
+    </div>
+</div>
+
+<div class="dropdown-menu rounded-0" style="display: none;" id="finder" tabindex="-1">
+    <div class="container contents"></div>
+</div>
+{% endblock %}
+
+{% block page-scripts %}
+    <script src="{% static 'katex/js/katex.min.js' %}"></script>
+    <script src="{% static 'katex/js/auto-render.min.js' %}"></script>
+    <script src="{% static 'simplemde/js/simplemde.min.js' %}"></script>
+    <script src="{% static 'dropzone/js/dropzone.min.js' %}"></script>
+    <script src="{% static 'atrament/js/atrament.min.js' %}"></script>
+    <script src="{% static 'moment/js/moment.min.js' %}"></script>
+    <script src="{% static 'clndr/js/clndr.min.js' %}"></script>
+    <script src="{% static 'misc/js/vanilla-picker.min.js' %}"></script>
+    <script src="{% static 'papaparse/js/papaparse.min.js' %}"></script>
+    <script src="{% static 'html5sortable/js/html5sortable.min.js' %}"></script>
+    <script src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script src="{% static 'd3/js/d3-legend.min.js' %}"></script>
+    <script src="{% static 'highlight/js/highlight.min.js' %}"></script>
+    <script src="{% static 'markjs/js/jquery.mark.min.js' %}"></script>
+    <script src="{% static 'notebooks/notebooks.min.js' %}{% nocache_static %}"></script>
+
+    <script>
+        $(document).ready(function(){
+            $('.calendar-container').myelnCalendar({
+                'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
+                'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",
+                'currentMonth': "{% if selected_date %}{{ selected_date }}{% elif latest_date %}{{ latest_date }}{% endif %}",
+                'selectedDate': "{{ selected_date }}"
+            });
+            $('#notebook-content').annotate('.notebook-entry');
+            initEntries('.notebook-entry');
+        });
+    </script>
+{% endblock %}

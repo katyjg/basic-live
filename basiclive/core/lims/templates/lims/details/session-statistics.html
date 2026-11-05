@@ -1,0 +1,43 @@
+{% extends "lims/details/session.html" %}
+{% load bl_icons %}
+{% load static %}
+{% load bl_tags %}
+{% load tz %}
+
+
+
+{% block page-tools %}
+    <a href="#!" class="float-end" data-modal-url="{% url 'session-history' object.pk %}">
+        {% show_icon label='History' icon='history' size='md' %}
+    </a>
+{% endblock %}
+
+{% block page-styles %}
+    <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block page-content %}
+<div class="row">
+    <div id="data-stats" class="col-12"></div>
+</div>
+{% endblock %}
+
+
+{% block page-scripts %}
+    <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/basiclive-reports.min.js' %}"></script>
+
+    <script type="text/javascript">
+        let report = {{ report | jsonify }};
+        $(document).ready(function() {
+            $('#data-stats').liveReport({
+                data: report
+            });
+        });
+    </script>
+{% endblock %}

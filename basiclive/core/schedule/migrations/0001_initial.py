@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 ('end', models.DateTimeField(verbose_name='End')),
                 ('access', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='beamtime', to='schedule.AccessType')),
                 ('beamline', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='beamtime', to='lims.Beamline')),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='beamtime', to=settings.AUTH_USER_MODEL)),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='beamtime', to='lims.Project')),
             ],
         ),
         migrations.CreateModel(
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField()),
-                ('staff', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='support', to=settings.AUTH_USER_MODEL)),
+                ('staff', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='support', to='lims.Project')),
             ],
         ),
     ]

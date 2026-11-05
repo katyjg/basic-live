@@ -1,0 +1,3 @@
+{% extends "notebooks/entries/entry.html" %}
+{% load markup %}
+{% block entry_content %}{{ entry.text|markdown }}{% endblock %}

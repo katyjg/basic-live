@@ -1,30 +1,32 @@
-{% load icons %}
+{% load bl_icons %}
 
 {% if detailed %}
     {% if bt.notification %}
-    <div class="float-left">
+    <div class="float-start">
 
-        <a href="#!" class="d-flex" data-form-link="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
+        <a href="#!" class="d-flex" data-modal-url="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
             {% if bt.notification.sent %}
-                {% show_icon icon='ti ti-sm ti-check-box' %}
+                {% show_icon icon='check' size='sm' %}
             {% elif bt.notification.unsendable %}
-                {% show_icon icon='ti ti-sm ti-alert text-danger' %}
+                {% show_icon icon='alert' size='sm' extra_class='text-danger' %}
             {% else %}
-                {% show_icon icon='ti ti-sm ti-email' %}
+                {% show_icon icon='email' size='sm' %}
             {% endif %}
 
         </a>
     </div>
     {% endif %}
 
-    <div class="tools-box float-right pr-0 my-1">
-        <a href="#!" data-form-link="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pr-0">
-            {% show_icon icon='ti ti-sm ti-pencil' %}
+    {% if not bt.source_id %}
+    <div class="tools-box float-end pe-0 my-1">
+        <a href="#!" data-modal-url="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pe-0">
+            {% show_icon icon='edit' size='sm' %}
         </a>
-        <a href="#!" data-form-link="{% url 'beamtime-delete' bt.pk %}" title="Delete">
-            {% show_icon icon='ti ti-sm ti-trash' %}
+        <a href="#!" data-modal-url="{% url 'beamtime-delete' bt.pk %}" title="Delete">
+            {% show_icon icon='trash' size='sm' %}
         </a>
     </div>
+    {% endif %}
 {% endif %}
 
 {% if bt.project.alias %}

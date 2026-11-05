@@ -9,6 +9,9 @@ def fix_json(apps, schema_editor):
     """
     Convert NaN values to null before converting field type
     """
+    if schema_editor.connection.vendor == 'sqlite':
+        return
+
     to_fix = [
         ('AnalysisReport', 'details'),
         ('ContainerType', 'layout'),
@@ -19,9 +22,12 @@ def fix_json(apps, schema_editor):
         model_class = apps.get_model('lims', name)
         db_alias = schema_editor.connection.alias
 
-        model_class.objects.using(db_alias).filter(**{f'{field}__contains': 'NaN'}).update(
-            **{field: Replace(field, Value('NaN'), Value('null'))}
-        )
+        try:
+            model_class.objects.using(db_alias).filter(**{f'{field}__contains': 'NaN'}).update(
+                **{field: Replace(field, Value('NaN'), Value('null'))}
+            )
+        except Exception:
+            pass
 
 
 class Migration(migrations.Migration):

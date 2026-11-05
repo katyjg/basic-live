@@ -1,0 +1,14 @@
+{% extends "lims/details/shipment-base.html" %}
+
+{% load bl_icons %}
+
+{% block title %}Datasets{% endblock %}
+{% block sub_title %}Data from Shipment{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="col">
+            {% include "itemlist/embed_list.html" %}
+        </div>
+    </div>
+{% endblock %}

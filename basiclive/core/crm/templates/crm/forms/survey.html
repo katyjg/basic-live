@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block extra_css %}
+{% block page-styles %}
     {% if not request.user.username %}
         <style>
             main {
@@ -18,13 +18,13 @@
 
 {% block page_title %}{{ form.body.title }}{% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h2 class="text-condensed">
         {{ form.body.title }}
     </h2>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <form action="{{ form.body.form_action }}" method="post">
         {% if form.errors %}
             <div id="form-errors" class="alert alert-warning">

@@ -1,0 +1,3 @@
+# Identity Provider and Proposal Portal Synchronization with Local Administration Fallback
+
+Light-source facilities manage user authentication and proposal peer review through central enterprise systems (LDAP, CAS, OIDC, and User Office portals), but smaller laboratories or isolated deployments lack central portal infrastructure. We decided that BasicLIVE primarily synchronizes approved proposals and user rosters from central facility portals, while providing a modular fallback application that allows fully self-contained local project and membership administration when central systems are unavailable.

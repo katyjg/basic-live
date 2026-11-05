@@ -1,0 +1,8 @@
+{% extends "lims/list.html" %}
+{% load bl_icons %}
+{% block page-title %}Projects{% endblock %}
+{% block page-tools %}{% if user.is_superuser %}
+    <a href="#!0" data-modal-url="{% url 'new-project' %}" title="Add Project">
+        {% show_icon label="Add Project" icon="add" size='md' %}
+    </a>
+{% endif %}{% endblock %}

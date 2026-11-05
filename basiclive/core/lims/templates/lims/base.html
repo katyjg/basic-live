@@ -1,147 +1,174 @@
-{% load static %}
-{% load settings %}
-
+{% load static bl_icons %}
 <!doctype html>
 <html lang="en" class="{% block html_class %}{% endblock %}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{% block page_title %}{% get_setting 'APP_NAME' %}{% endblock %}</title>
-    <link rel="icon" href="{% static 'lims/img/icon.ico' %}">
+    <title>{% block page_title %}{{ APP_NAME }}{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'lims/img/favicon.svg' %}" />
 
     <!-- Styles -->
-    {% block site_css %}
-        <link rel="stylesheet" href="{% static 'themify-icons/css/themify-icons.css' %}">
+    {% block site-styles %}
+        {% show_icon_css %}
         <link rel="stylesheet" href="{% static 'misc/css/noty.min.css' %}" type="text/css"/>
-        <link rel="stylesheet" href="{% static 'jquery/css/jquery.scrollbar.min.css' %}"/>
-        <link rel="stylesheet" href="{% static 'lims/css/mxlive.min.css' %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'misc/css/slimselect.min.css' %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'lims/css/basiclive.min.css' %}" type="text/css"/>
+        <link rel="stylesheet" href="{% static 'lims/css/instance.min.css' %}" type="text/css">
     {% endblock %}
-    {% block extra_css %}{% endblock %}
+    {% block page-styles %}{% endblock %}
+    <script src="{% static 'lims/js/theme-switcher.min.js' %}"></script>
     <script src="{% static 'jquery/js/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'jquery/js/jquery-ui.min.js' %}"></script>
     <script src="{% static 'misc/js/noty.min.js' %}"></script>
     <script src="{% static 'misc/js/underscore-min.js' %}"></script>
     <script src="{% static 'jquery/js/jquery.cookie.min.js' %}"></script>
-    <script src="{% static 'lims/js/mxlive-modals.min.js' %}"></script>
-
-    {% block pre_js %}{% endblock %}
+    <script src="{% static 'jquery/js/jquery.form.min.js' %}"></script>
+    <script src="{% static 'crisp_modals/modals.min.js' %}"></script>
+    {% block pre-scripts %}{% endblock %}
 
 </head>
 <body class="{% block body_class %}{% endblock %}">
-
 {% block body %}
     <!-- User Profile Menu -->
-    {% if user.is_authenticated %}
-        {% include "lims/navs.html" %}
-    {% endif %}
-    <main role="main">
-        <div id="spinner">
-            <i class="fa fa-spinner fa-spin"></i>
-        </div>
-        <div class="container-fluid">
-            <div class="folio mt-3">
-                <div class="folio-header d-flex flex-row justify-content-between overflow-ellipsis">
-                    <div class="heading-box">{% block page_heading %}{% endblock %}</div>
-                    <div class="no-overflow tools-box">{% block object_tools %}{% endblock %}</div>
-                </div>
-                {% block object_status %}{% endblock %}
+    {% block navs %}
+    {% if user.is_authenticated %}{% include "lims/navs.html" %}{% endif %}
+    {% endblock %}
+    <main role="main" class="content">
+        <div class="container-fluid h-100 p-0">
+        {% block full %}
+            <div class="page {% block page-classes %}p-4{% endblock %}">
                 {% if maintenance %}
                 <div class="alert alert-warning">
-                  <strong>Warning!</strong> {% get_setting 'APP_NAME' %} is currently undergoing maintenance activities. Some features may not be available
+                  <strong>Warning!</strong> {{ APP_NAME }} is currently undergoing maintenance activities. Some features may not be available
                     and performance may be impacted. This message will be removed when full functionality is restored. Sorry for the
                     temporary inconvenience.
                 </div>
                 {% endif %}
-                <div class="folio-body">
-                    {% block full %}{% endblock %}
-                </div>
+                {% block page-no-header %}
+                    <div class="page-header">
+                        <div class="d-flex flex-row align-items-center">
+                            <div class="mb-2" style="min-width: 0;">
+                                <div class="page-pre-title">{% block page-pre-title %}{% endblock %}</div>
+                                <h3 class="page-title mb-0">{% block page-title %}{% endblock %}</h3>
+                                <div class="page-subtitle d-none d-md-block">{% block page-subtitle %}{% endblock %}</div>
+                            </div>
+                            <div class="page-tools col-auto ms-auto d-flex flex-row gap-3 mb-2 align-items-center">
+                                {% block page-tools %}{% endblock %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-status d-flex flex-row justify-content-between align-items-stretch {% block page-status-style %}border-top{% endblock %}"
+                    >{% block page-status-bar %}{% endblock %}</div>
+                {% endblock %}
+                {% block page-content %}{% block content %}{% endblock %}{% endblock %}
             </div>
+        {% endblock %}
         </div>
     </main>
 {% endblock %}
-<div id="modal-target"></div>
+
 {% if user.is_authenticated %}
-    <div class="footer text-muted">
-        <div class="footer-wrapper overflow-ellipsis">
-            <div class="footer-item"> {{ version }}</div>
-            <div class="footer-item">&#9400; 2010&ndash;{% now "Y" %}</div>
-            <div class="footer-item"><a class="text-muted" href="/">Dashboard</a></div>
+    <footer class="bl-footer bg-body-secondary">
+        <div class="container-fluid p-4 text-body-secondary">
+            <div class="row">
+                <div class="col small"><a
+                        class="d-inline-flex align-items-center text-body-emphasis text-decoration-none" href="/"
+                        aria-label="{{ APP_NAME }}">
+                    <span class="fs-6">{{ APP_NAME }} <span class="fw-light">v{{ APP_VERSION }}</span></span></a>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-1">
+                            This system is built using <a href="https://github.com/michel4j/basic-live/">BasicLIVE</a>
+                            &mdash; a framework for building laboratory information management systems.
+                        </li>
+                        <li>
+                            Code licensed <a href="https://github.com/michel4j/mxlive/blob/main/LICENSE" target="_blank"
+                                             rel="license noopener">MIT</a>, docs <a
+                                href="https://creativecommons.org/licenses/by/3.0/" target="_blank"
+                                rel="license noopener">CC BY 3.0</a> &copy; 2010&ndash;{% now "Y" %}
+                            <a href="https://www.lightsource.ca">Canadian Light Source, Inc </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col small">
+                    <div class="d-flex flex-row justify-content-end align-items-stretch h-100">
+                        <ol class="breadcrumb d-flex align-self-end">
+                            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="https://katyjg.github.io/mxlive/">Documentation</a></li>
+                            <li class="breadcrumb-item"><a href="https://github.com/michel4j/mxlive/issues">Issues</a></li>
+                            <li class="breadcrumb-item"><a href="https://github.com/michel4j/mxlive">Source Code</a></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </footer>
 {% endif %}
 
 {% include "lims/messages.html" %}
-{% block post_js %}{% endblock %}
-
+<div id="modal-target"></div>
+<script src="{% static 'misc/js/popper.min.js' %}"></script>
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'jquery/js/jquery.scrollbar.min.js' %}"></script>
-
-{% block extra_js %}{% endblock %}
+{% block page-scripts %}{% endblock %}
+<script src="{% static 'misc/js/slimselect.min.js' %}"></script>
 <script>
-    function serverHeartBeat() {
-        $.ajax({
-            url: 'misc/ping/',
-            success: function (result) {
-                console.log(result);
-            },
-            error: function (result) {
-                console.log(result);
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        // Use SlimSelect for all ".form-select"
+        const selectElements = document.querySelectorAll('select.form-select');
+        selectElements.forEach((el) => {
+            el.classList.remove('form-select');
+            new SlimSelect({
+              select: el,
+              settings: {
+                maxValuesShown: 40,
+              }
+            });
         });
-    }
 
-    $(document).ready(function () {
-        // enable tooltips
-        $("[title]").not("[data-toggle]").tooltip({
-            container: 'body',
-            viewport: {selector: 'body', padding: 5}
-            //placement: 'auto'
+        // Enable tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
         // Enable popovers
-        $("[data-toggle='popover']").popover({
-            container: 'body',
-            placement:  function(context, src) {
-                $(context).addClass($(src).data('type') || '');
-                console.log(context, src);
-                return 'auto';
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverTriggerList.forEach(function (popoverTriggerEl) {
+            new bootstrap.Popover(popoverTriggerEl);
+        });
+
+        // Remove modal content after it is hidden
+        document.querySelectorAll('.modal').forEach(function (modal) {
+            modal.addEventListener('hidden.bs.modal', function () {
+                modal.remove();
+            });
+        });
+
+        // Initialize crisp_modals
+        $('#modal-target').initModal({
+            setup: function (body) {
+                const selectElements = document.querySelectorAll('#modal-target select.form-select');
+                selectElements.forEach((el) => {
+                    el.classList.remove('form-select');
+                    new SlimSelect({
+                      select: el,
+                      settings: {
+                          maxValuesShown: 40,
+                          contentLocation: el.closest('.modal') || document.body
+                      }
+                    });
+                });
+
+                // tooltips in modal
+                const tooltipTriggerList = document.querySelectorAll('#modal-target [data-bs-toggle="tooltip"]');
+                tooltipTriggerList.forEach((tooltipTriggerEl) => {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             }
         });
-
-        // show attention popovers
-        $(".attention").popover('show');
-
-        // Handle data-link, data-form-link and data-href
-        $(document).on('click', '[data-href]', function () {
-            window.document.location = $(this).data("href");
-        });
-
-        $(document).on('click', '[data-link]', function () {
-            $('#modal-target').loadModal($(this).data('link'));
-        });
-        $(document).on('click', '[data-form-link]', function () {
-            $('#modal-target').asyncForm({url: $(this).data('form-link')});
-        });
-
-        });
-        </script>
-
-<script>
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    });
 </script>
+{% block post-scripts %}{% endblock %}
 </body>
 </html>
+

@@ -1,0 +1,81 @@
+{% extends "lims/base.html" %}
+
+{% load static humanize bl_badges bl_data_tags bl_icons bl_tags reportcraft %}
+
+{% block page-styles %}
+    <link href="{% static "reportcraft/reportcraft.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block page-pre-title %}Report{% endblock %}
+{% block page-title %}
+{% if user.is_superuser %}<span class="fw-lighter">{{ object.project }} | </span>{% endif %}<strong>{{ object.name }}</strong>
+{% endblock %}
+{% block page-subtitle %}
+    <span class="text-muted">
+        {{ object.identity }} &mdash; {{ object.kind }} Created {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    {% if object.url %}
+    <a  href="{% url 'files-proxy' section='archive' path=object.download_url %}" download="{{ object.name }}.tar.gz" title="Download all output files">
+        {% show_icon label="Download" icon="download" size='md' %}
+    </a>
+    {% else %}
+        <a class="text-muted not-allowed" title="Download Not Available">
+            {% show_icon label="Download" icon="download" size='md' %}
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <h3 class="m-0">
+        {% score_badge object.score %}
+    </h3>
+    <div>
+        <small class="text-muted text-condensed">Session:</small><br>
+        {% for session in object.sessions %}
+            <a href="{% url 'session-detail' session.pk %}">{{ session.name }}</a>
+            {% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}
+        {% empty %}
+            <span class="text-muted">Unrecorded Session</span>
+        {% endfor %}
+        {% if object.session %}
+            <a href="{% url 'session-detail' object.session.pk %}">{{ object.session.name }}</a>
+        {% endif %}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Data:</small><br>
+        {% for data in object.data.all %}<a data-modal-url="{% url 'data-detail' data.pk %}">{{ data.name }}</a>{% if not forloop.last %}<span class="text-muted"> | </span>{% endif %}{% endfor %}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Uploaded:</small><br>
+        {{ object.modified }}
+    </div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block page-content %}
+    <div id="report-entry" class="report-default p-5 m-5"></div>
+{% endblock %}
+
+{% block page-scripts %}
+    {{ report_data |json_script:"rc-report-data" }}
+    <script type="module">
+        import {showReport} from '{% static "reportcraft/reportcraft.min.js" %}';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const inlineDataEl = document.getElementById("rc-report-data");
+            if (inlineDataEl) {
+                try {
+                    const data = JSON.parse(inlineDataEl.textContent);
+                    const sections = data["sections"] || data["content"] || [];
+                    showReport("#report-entry", sections, "{% static 'reportcraft' %}");
+                } catch (error) {
+                    console.error('Error rendering inline report data:', error);
+                }
+            }
+        });
+    </script>
+{% endblock %}

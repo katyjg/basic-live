@@ -1,0 +1,55 @@
+{% load static %}
+{% load bl_tags %}
+
+<style>
+    table.regions {
+      font-size: 0.95rem;
+    }
+    table.regions thead  th:not(:first-child), tbody td:not(:first-child) {
+      text-align: right;
+    }
+    table.regions tbody  td:first-child {
+      opacity: 0.6;
+    }
+    table.regions tbody  td:not(:first-child) {
+      text-align: right;
+    }
+</style>
+
+<div id="request-{{request.pk}}" class="row">
+    <div class="col">
+    <table class="table regions table-sm">
+        <thead>
+        <tr>
+            <th colspan="6">Absorption Edge</th>
+        </tr>
+        <tr>
+            <td colspan="6" class="pb-3">{{ request.parameters.edge }}</td>
+        </tr>
+        <tr>
+            <th colspan="6">Scan Regions</th>
+        </tr>
+        <tr>
+            <th>#</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Step</th>
+            <th>Time</th>
+            <th>k-space</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for region in request.parameters.regions %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ region.start }}</td>
+                <td>{{ region.end }}</td>
+                <td>{{ region.step }}</td>
+                <td>{{ region.time }}</td>
+                <td>{{ region.kspace }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>

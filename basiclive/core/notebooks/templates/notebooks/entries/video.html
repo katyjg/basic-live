@@ -1,0 +1,16 @@
+{% extends "notebooks/entries/entry.html" %}
+{% load markup %}
+
+{% block entry_content %}
+    {% if entry.file %}
+    <video class="w-100 mb-2" controls>
+        <source src="{{ entry.file.url }}" type="{{ entry.mimetype }}">
+        Your browser does not support the video tag.
+    </video>
+    {% endif %}
+    {% if entry.text %}
+        <div class="caption">
+            {{ entry.text|markdown }}
+        </div>
+    {% endif %}
+{% endblock %}

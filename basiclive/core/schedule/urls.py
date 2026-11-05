@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views, ajax_views
 
+from . import views, ajax_views
 
 urlpatterns = [
     path('', views.ScheduleView.as_view(), name='schedule'),
@@ -10,7 +10,6 @@ urlpatterns = [
     path('beamtime/<int:pk>/edit/', views.BeamtimeEdit.as_view(), name='beamtime-edit'),
     path('beamtime/<int:pk>/delete/', views.BeamtimeDelete.as_view(), name='beamtime-delete'),
     path('beamtime/<int:pk>/info/', views.BeamtimeInfo.as_view(), name='beamtime-info'),
-    path('beamtime/stats/', views.BeamtimeStats.as_view(), name='beamtime-stats'),
 
     path('downtime/new/', views.DowntimeCreate.as_view(), name='new-downtime'),
     path('downtime/<int:pk>/edit/', views.DowntimeEdit.as_view(), name='downtime-edit'),

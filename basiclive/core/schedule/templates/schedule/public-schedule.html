@@ -1,8 +1,8 @@
 {% extends 'schedule/schedule.html' %}
 {% load i18n static %}
-{% load icons %}
+{% load bl_icons %}
 
-{% block extra_css %}
+{% block page-styles %}
     {{ block.super }}
     <style>
         .folio-header, header, .footer { display: none !important; }
@@ -16,7 +16,7 @@
     </style>
 {% endblock %}
 
-{% block pre_js %}
+{% block pre-scripts %}
     {{ block.super }}
     <script src="{% static 'misc/js/iframeResizer.contentWindow.min.js' %}"></script>
 {% endblock %}

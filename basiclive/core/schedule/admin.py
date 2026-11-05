@@ -4,4 +4,5 @@ from basiclive.core.schedule import models
 
 admin.site.register(models.Beamtime)
 admin.site.register(models.AccessType)
+admin.site.register(models.FacilityModeType)
 admin.site.register(models.FacilityMode)

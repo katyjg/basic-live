@@ -1,0 +1,56 @@
+{% load bl_badges %}
+{% load bl_icons %}
+{% load bl_tags %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-5">
+            <div class="card-header py-1">
+                <div class="d-flex flex-row py-2">
+                    <div class="box-status text-center me-3 align-middle">
+                        {% if user.is_superuser%}
+                            <a href="#!" data-modal-url="{% url 'request-admin-edit' request.pk %}"
+                               title="Update Status">
+                                {% show_icon label=request.get_status_display icon='comment' size='md' %}
+                            </a>
+                        {% else %}
+                            {% if request.status == request.STATUS_CHOICES.COMPLETE %}
+                                {% show_icon label=request.get_status_display icon='check' size='md' tooltip=request.get_status_display %}
+                            {% else %}
+                                {% show_icon label=request.get_status_display icon='hourglass' size='md' tooltip=request.get_status_display %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="flex-fill">
+                        <h4><a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                        <span title="{{ request.comments }}" class="text-condensed">{{ request.kind.name }}</span></h4>
+                        {% if request.comments %}<div class="small"><strong>Comments: </strong>{{ request.comments }}</div>{% endif %}
+                        {% if request.staff_comments %}<div class="small"><strong>Staff Comments: </strong>{{ request.staff_comments }}</div>{% endif %}
+                    </div>
+                    <div class="tools-box">
+                        <span class="large">
+                            <h4 class="text-secondary text-bold" title="Requested samples">{{ request.num_samples }}</h4>
+                            samples
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-header p-1 text-center text-wide text-muted"><small>PARAMETERS</small></div>
+            <ul class="list-group list-group-flush">
+            {% if request.kind.view_template %}
+                <li class="list-group-item py-0">
+                {% include request.kind.view_template %}
+                </li>
+            {% else %}
+                {% include "lims/requests/base-view.html" %}
+            {% endif %}
+            </ul>
+            <div class="card-header p-1 text-center text-wide text-muted"><small>SAMPLES</small></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item p-0">
+                    {% include "lims/details/group-samples.html" with samples=request.sample_list %}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

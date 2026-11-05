@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class CASAuthConfig(AppConfig):
-    name = 'auth.cas'
+    name = 'basiclive.auth.cas'
     verbose_name = 'CAS Authentication'

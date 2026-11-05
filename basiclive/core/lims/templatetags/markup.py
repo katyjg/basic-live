@@ -17,6 +17,8 @@ from django.utils.encoding import smart_bytes, force_str
 from django.utils.safestring import mark_safe
 from django.template.defaultfilters import stringfilter
 
+from basiclive.core.lims.conf import settings as lims_settings
+
 register = template.Library()
 
 @register.filter()
@@ -71,6 +73,6 @@ def restructuredtext(value):
             raise template.TemplateSyntaxError("Error in {% restructuredtext %} filter: The Python docutils library isn't installed.")
         return force_str(value)
     else:
-        docutils_settings = getattr(settings, "RESTRUCTUREDTEXT_FILTER_SETTINGS", {})
+        docutils_settings = lims_settings.RESTRUCTUREDTEXT_FILTER_SETTINGS
         parts = publish_parts(source=smart_bytes(value), writer_name="html4css1", settings_overrides=docutils_settings)
         return mark_safe(force_str(parts["fragment"]))

@@ -1,280 +1,39 @@
 import json
-from datetime import timedelta
-import requests
+import uuid
+from typing import Any
 
+import httpx2
+from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
 from django import http
-from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
-from django.forms.models import model_to_dict
-from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
+from django.http import JsonResponse, Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
+from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
-from proxy.views import proxy_view
 
-
+from basiclive.core.lims.conf import settings
 from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, HTML2PdfMixin, PlotViewMixin
+from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
+from .icons import render_icon
+from ...utils.reporting import translate_report
 
-DOWNLOAD_PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', "http://basiclive.core-data/download")
-LIMS_USE_SCHEDULE = getattr(settings, 'LIMS_USE_SCHEDULE', False)
-LIMS_USE_ACL = getattr(settings, 'LIMS_USE_ACL', False)
-
-if LIMS_USE_SCHEDULE:
-    from basiclive.core.schedule.models import AccessType, BeamlineSupport, Beamtime
-
-    MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
-    MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
-
-if LIMS_USE_ACL:
-    from basiclive.core.acl.models import Access, AccessList
-
-
-class ProjectDetail(UserPassesTestMixin, detail.DetailView):
-    """
-    This is the "Dashboard" view. Basic information about the Project is displayed:
-
-    :For superusers, direct to StaffDashboard
-
-    :For Users, direct to project.html, with context:
-       - shipments: All Shipments that are Draft, Sent, or On-site, plus Returned shipments to bring the
-                    total displayed up to seven.
-       - sessions: Any recent Session from any beamline
-    """
-    model = models.Project
-    template_name = "lims/project.html"
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
-
-    def test_func(self):
-        # Allow access to admin or owner
-        return self.request.user.is_superuser or self.get_object() == self.request.user
-
-    def get_object(self, *args, **kwargs):
-        # inject username in to kwargs if not already present
-        if not self.kwargs.get('username'):
-            self.kwargs['username'] = self.request.user.username
-        return super(ProjectDetail, self).get_object(*args, **kwargs)
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.request.user.is_superuser:
-            return HttpResponseRedirect(reverse_lazy('staff-dashboard'))
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super(ProjectDetail, self).get_context_data(**kwargs)
-        now = timezone.now()
-        one_year_ago = now - timedelta(days=365)
-        project = self.request.user
-        shipments = project.shipments.filter(
-            Q(status__lt=models.Shipment.STATES.RETURNED)
-            | Q(status=models.Shipment.STATES.RETURNED, date_returned__gt=one_year_ago)
-        ).annotate(
-            data_count=Count('containers__samples__datasets', distinct=True),
-            report_count=Count('containers__samples__datasets__reports', distinct=True),
-            sample_count=Count('containers__samples', distinct=True),
-            group_count=Count('groups', distinct=True),
-            container_count=Count('containers', distinct=True),
-        ).order_by('status', '-date_shipped', '-created').prefetch_related('project')
-
-        if LIMS_USE_SCHEDULE:
-            access_types = AccessType.objects.all()
-            beamtimes = project.beamtime.filter(end__gte=now, cancelled=False).with_duration().annotate(
-                current=Case(When(start__lte=now, then=Value(True)), default=Value(False), output_field=BooleanField())
-            ).order_by('-current', 'start')
-            context.update(beamtimes=beamtimes, access_types=access_types)
-
-        sessions = project.sessions.filter(
-            created__gt=one_year_ago
-        ).annotate(
-            data_count=Count('datasets', distinct=True),
-            report_count=Count('datasets__reports', distinct=True),
-            last_record=Max('datasets__end_time'),
-            end=Max('stretches__end')
-        ).order_by('-end', 'last_record', '-created').with_duration().prefetch_related('project', 'beamline')[:7]
-
-        context.update(shipments=shipments, sessions=sessions)
-        return context
-
-
-class StaffDashboard(AdminRequiredMixin, detail.DetailView):
-    """
-    This is the "Dashboard" view for superusers only. Basic information is displayed:
-       - shipments: Any Shipments that are Sent or On-site
-       - automounters: Any active Automounter objects (Beamline/Automounter)
-       - adaptors: Any adaptors for loading Containers into a Automounter
-       - connections: Any project currently scheduled, connected to a remote access list, or with an active session
-       - local contact: Displayed if there is a local contact scheduled
-       - user guide: All items, for users and marked staff only
-    """
-
-    model = models.Project
-    template_name = "lims/staff-dashboard.html"
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
-
-    def get_object(self, *args, **kwargs):
-        # inject username in to kwargs if not already present
-        if not self.kwargs.get('username'):
-            self.kwargs['username'] = self.request.user.username
-        return super().get_object(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        now = timezone.now()
-        shipments = models.Shipment.objects.filter(
-            status__in=(models.Shipment.STATES.SENT, models.Shipment.STATES.ON_SITE)
-        ).annotate(
-            data_count=Count('containers__samples__datasets', distinct=True),
-            report_count=Count('containers__samples__datasets__reports', distinct=True),
-            sample_count=Count('containers__samples', distinct=True),
-            group_count=Count('groups', distinct=True),
-            container_count=Count('containers', distinct=True),
-        ).order_by('status', 'project__kind__name', 'project__username', '-date_shipped').prefetch_related('project')
-
-        adaptors = models.Container.objects.filter(
-            project__is_superuser=True,
-            kind__locations__accepts__isnull=False,
-            beamlines__isnull=True,
-            status__gt=models.Container.STATES.DRAFT
-        ).distinct().order_by('name').select_related('parent')
-
-        beamlines = models.Beamline.objects.all().order_by('name')
-
-        active_sessions = models.Session.objects.filter(stretches__end__isnull=True).annotate(
-            data_count=Count('datasets', distinct=True),
-            report_count=Count('datasets__reports', distinct=True)).with_duration()
-
-        access_info = []
-        connections = Access.objects.none()
-        sessions = models.Session.objects.none()
-        active_access = Access.objects.none() if not LIMS_USE_ACL else Access.objects.filter(status__iexact=Access.STATES.CONNECTED)
-        if LIMS_USE_SCHEDULE:
-            context.update(
-                access_types=AccessType.objects.all(),
-                support=BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
-            )
-            # Find out who is scheduled to use the beamline
-            for bt in Beamtime.objects.filter(start__lte=now, end__gte=now).with_duration():
-                bt_sessions = models.Session.objects.filter(
-                    project=bt.project, beamline=bt.beamline
-                ).filter(
-                    Q(stretches__end__isnull=True) | Q(stretches__end__gte=bt.start), distinct=True
-                )
-                sessions |= bt_sessions
-                # Check if the scheduled project is currently connected
-                if LIMS_USE_SCHEDULE and LIMS_USE_ACL:
-                    bt_conns = LIMS_USE_ACL and active_access.filter(
-                        user=bt.project, userlist__pk__in=bt.beamline.access_lists.values_list('pk', flat=True)
-                    )
-                    connections |= bt_conns
-                else:
-                    bt_conns = access_access.none()
-
-                access_info.append({
-                    'user': bt.project,
-                    'beamline': bt.beamline.acronym,
-                    'beamtime': bt,
-                    'sessions': bt_sessions,
-                    'connections': bt_conns
-                })
-
-        # Check who has an active session
-        for session in active_sessions.exclude(pk__in=[s.pk for s in sessions]):
-            if LIMS_USE_ACL:
-                ss_conns = active_access.filter(
-                    user=session.project, userlist__pk__in=session.beamline.access_lists.values_list('pk', flat=True)
-                )
-            else:
-                ss_conns = active_access.none()
-
-            connections |= ss_conns
-            access_info.append({
-                'user': session.project,
-                'beamline': session.beamline.acronym,
-                'sessions': [session],
-                'connections': ss_conns
-            })
-
-        # Users remotely connected, but not scheduled and without an active session
-        if LIMS_USE_ACL:
-            for user in active_access.exclude(pk__in=[c.pk for c in connections]).values_list('user', flat=True).distinct():
-                user_conns = active_access.exclude(pk__in=[c.pk for c in connections]).filter(user__pk=user)
-                access_info.append({
-                    'user': models.Project.objects.get(pk=user),
-                    'beamline': '/'.join(
-                        [bl for bl in user_conns.values_list('userlist__beamline__acronym', flat=True).distinct() if bl]
-                    ),
-                    'connections': user_conns
-                })
-
-        for i, conn in enumerate(access_info):
-            access_info[i]['shipments'] = shipments.filter(project=conn['user']).count()
-            if LIMS_USE_ACL:
-                connections = Access.objects.filter(pk__in=access_info[i]['connections'])
-                access_info[i]['connections'] = ({
-                    access.name: access_info[i]['connections'].filter(userlist=access)
-                    for access in AccessList.objects.filter(
-                        pk__in=access_info[i]['connections'].values_list('userlist__pk', flat=True)
-                    ).distinct()
-                })
-
-        context.update(connections=access_info, adaptors=adaptors, shipments=shipments, beamlines=beamlines)
-        return context
-
-
-class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    template_name = "lims/forms/project-reset.html"
-    model = models.Project
-    success_message = "Account API key reset"
-    fields = ("key", )
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
-
-    def get_object(self, *kwargs):
-        obj = self.model.objects.get(username=self.kwargs.get('username'))
-        return obj
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('project-reset', kwargs={'username': self.object.username})
-        return context
-
-
-class ProjectProfile(UserPassesTestMixin, detail.DetailView):
-    model = models.Project
-    template_name = "lims/entries/project-profile.html"
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
-
-    def test_func(self):
-        # Allow access to admin or owner
-        return self.request.user.is_superuser or self.get_object() == self.request.user
-
-    def get_object(self, *args, **kwargs):
-        # inject username in to kwargs if not already present
-        if not self.kwargs.get('username'):
-            self.kwargs['username'] = self.request.user
-        return super().get_object(*args, **kwargs)
-
-
-class ProjectStatistics(ProjectProfile):
-    template_name = "lims/entries/project-statistics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['report'] = stats.project_stats(self.object)
-        return context
+if settings.USE_SCHEDULE:
+    from basiclive.core.schedule.models import BeamlineSupport
 
 
 class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -285,21 +44,36 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     owner_field = 'project'
 
     def test_func(self):
-        return self.request.user.is_superuser or getattr(self.get_object(), self.owner_field) == self.request.user
+        if not self.request.user.is_authenticated:
+            return False
+        if self.request.user.is_superuser:
+            return True
+        obj = self.get_object()
+        target = getattr(obj, self.owner_field, None) if self.owner_field else obj
+        if target is None and isinstance(obj, models.Project):
+            target = obj
+        if isinstance(target, models.Project):
+            return self.request.user.can_access_project(target)
+        return target == self.request.user
 
 
-class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ProjectForm
-    template_name = "modal/form.html"
     model = models.Project
     success_message = "Profile has been updated."
 
-    def get_object(self):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username') or self.kwargs.get('name')
+        return models.Project.objects.filter(
+            models.Q(name=username)
+        ).first() or models.Project.objects.get(name=username)
 
     def test_func(self):
-        """Allow access to admin or owner"""
-        return self.request.user.is_superuser or self.get_object() == self.request.user
+        """Allow access to admin or project members"""
+        try:
+            return self.request.user.can_access_project(self.get_object())
+        except models.Project.DoesNotExist:
+            return False
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -307,30 +81,34 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit
         return kwargs
 
     def get_success_url(self):
-        return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
+        kwarg_val = self.kwargs.get('name') or self.kwargs.get('username')
+        return reverse_lazy('project-profile', kwargs={'name': kwarg_val})
 
 
-class ProjectLabels(AdminRequiredMixin, HTML2PdfMixin, detail.DetailView):
-    template_name = "lims/pdf/return_labels.html"
+class ProjectLabels(AdminRequiredMixin, detail.DetailView):
+    template_name = "lims/pdf/return-labels.html"
     model = models.Project
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
+    slug_field = 'name'
+    slug_url_kwarg = 'name'
 
-    def get_template_name(self):
-        return self.template_name
-
-    def get_template_context(self):
-        object = self.get_object()
-        context = {
-            'project': object,
-            'shipment': object,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first()
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sender = self.request.user
+        if settings.USE_SCHEDULE:
+            support = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+            if support:
+                sender = support.staff
+        context.update({
+            'project': self.get_object(),
+            'shipment': None,
+            'system': models.SystemSettings.load(),
+            'sender': sender
+        })
         return context
 
 
 class ListViewMixin(LoginRequiredMixin):
-    paginate_by = 25
+    paginate_by = 16
     template_name = "lims/list.html"
     link_data = False
     show_project = True
@@ -344,7 +122,9 @@ class ListViewMixin(LoginRequiredMixin):
     def get_queryset(self):
         selector = {}
         if not self.request.user.is_superuser:
-            selector = {'project': self.request.user}
+            if not self.request.project:
+                return super().get_queryset().none()
+            selector = {'project': self.request.project}
         return super().get_queryset().filter(**selector)
 
     def page_title(self):
@@ -355,7 +135,7 @@ class DetailListMixin(OwnerRequiredMixin):
     extra_model = None
     add_url = None
     list_filters = []
-    paginate_by = 25
+    paginate_by = 16
 
     def get_context_data(self, **kwargs):
         c = super(DetailListMixin, self).get_context_data(**kwargs)
@@ -373,13 +153,12 @@ class DetailListMixin(OwnerRequiredMixin):
 
 class ShipmentList(ListViewMixin, ItemListView):
     model = models.Shipment
-    list_filters = ['created', 'status']
+    list_filters = [filters.YearFilter('created'), 'status']
     list_columns = ['id', 'name', 'date_shipped', 'carrier', 'num_containers', 'status']
-    list_search = ['project__username', 'project__name', 'name', 'comments', 'status']
+    list_search = ['project__name', 'name', 'comments', 'status']
     link_url = 'shipment-detail'
     link_data = False
     ordering = ['status', '-modified']
-    paginate_by = 25
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -390,7 +169,7 @@ class ShipmentList(ListViewMixin, ItemListView):
 
 class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Shipment
-    template_name = "lims/entries/shipment.html"
+    template_name = "lims/details/shipment.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -400,81 +179,67 @@ class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
         return ctx
 
 
-class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
-    template_name = "lims/pdf/send_labels.html"
+class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
+    model = models.Shipment
+    template_name = "lims/pdf/return-labels.html"
 
     def get_template_name(self):
         if self.request.user.is_superuser:
-            template = 'lims/pdf/return_labels.html'
+            template = 'lims/pdf/return-labels.html'
         else:
-            template = 'lims/pdf/send_labels.html'
+            template = 'lims/pdf/send-labels.html'
         return template
 
-    def get_template_context(self):
-        object = self.get_object()
-        context = {
-            'project': object.project,
-            'shipment': object,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first()
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        shipment = self.get_object()
+        context.update({
+            'project': shipment.project,
+            'shipment': shipment,
+            'system': models.SystemSettings.load(),
+            'sender': shipment.project.pi
+        })
         return context
 
 
-class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ShipmentForm
-    template_name = "modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been updated."
 
-    def get_success_url(self):
-        return reverse_lazy('shipment-detail', kwargs={'pk': self.object.pk})
-
     def get_initial(self):
         initial = super(ShipmentEdit, self).get_initial()
-        initial.update(project=self.request.user)
+        initial.update(project=self.request.project)
         return initial
 
 
-class ShipmentRevise(AdminRequiredMixin, ShipmentDetail):
-    template_name = 'lims/entries/shipment-edit.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.status != obj.STATES.ON_SITE:
-            return HttpResponseNotAllowed
-        return super().dispatch(request, *args, **kwargs)
-
-
-class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ShipmentCommentsForm
-    template_name = "modal/form.html"
     model = models.Shipment
     success_message = "Shipment has been edited by staff."
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
 
     def form_valid(self, form):
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unreceive()
-            message = "Shipment un-received by staff"
+            message = "Shipment recalled by staff"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ShipmentComments, self).form_valid(form)
 
 
-class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Shipment
     success_message = "Shipment has been deleted."
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('shipment-list')
 
-    def delete(self, request, *args, **kwargs):
-        super(ShipmentDelete, self).delete(request, *args, **kwargs)
-        success_url = self.get_success_url()
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
-        return JsonResponse({'url': success_url})
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        message = f"Shipment {self.object} deleted."
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE,
+            message
+        )
+        return response
 
 
 class SendShipment(ShipmentEdit):
@@ -494,21 +259,17 @@ class SendShipment(ShipmentEdit):
             models.Component.objects.create(shipment=self.object, kind=component)
 
         form.instance.send()
-        message = "Shipment sent"
+        message = f"Shipment {self.object} sent"
         models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.MODIFY, message)
         return super().form_valid(form)
 
 
 class ReturnShipment(ShipmentEdit):
     form_class = forms.ShipmentReturnForm
-    success_url = reverse_lazy('dashboard')
-
-    def get_success_url(self):
-        return self.success_url
 
     def form_valid(self, form):
         obj = form.instance.returned()
-        message = "Shipment returned"
+        message = f"Shipment {self.object} returned"
         models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ReturnShipment, self).form_valid(form)
 
@@ -532,7 +293,7 @@ class RecallSendShipment(ShipmentEdit):
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unsend()
-            message = "Shipping recalled"
+            message = f"Shipping {obj} recalled"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(RecallSendShipment, self).form_valid(form)
 
@@ -544,7 +305,7 @@ class RecallReturnShipment(ShipmentEdit):
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unreturn()
-            message = "Shipping recalled by staff"
+            message = f"Shipping {obj} recalled by staff"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(RecallReturnShipment, self).form_valid(form)
 
@@ -563,18 +324,18 @@ class ReceiveShipment(ShipmentEdit):
     def form_valid(self, form):
         obj = form.instance
         obj.receive()
-        message = "Shipment received on-site"
+        message = f"Shipment {obj} received on-site"
         models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ReceiveShipment, self).form_valid(form)
 
 
 class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.RequestType
-    template_name = "lims/requesttype-list.html"
+    template_name = "lims/details/request-type-list.html"
     list_columns = ['id', 'name', 'description']
     list_search = ['name', 'spec', 'description']
     link_field = 'name'
-    link_url = 'requesttype-detail'
+    link_url = 'request-type-detail'
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
@@ -582,7 +343,7 @@ class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
 
 class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
     model = models.RequestType
-    template_name = "lims/entries/requesttype.html"
+    template_name = "lims/details/request-type.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -590,39 +351,23 @@ class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
         return ctx
 
 
-class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.RequestTypeForm
     template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
-    success_url = reverse_lazy('requesttype-list')
     success_message = "Request Type has been created."
 
 
-class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.RequestTypeForm
     template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
     success_message = "Request Type has been updated."
 
-    def get_success_url(self):
-        return reverse_lazy('requesttype-detail', kwargs={'pk': self.object.pk})
-
 
 class RequestTypeLayout(RequestTypeEdit):
     form_class = forms.RequestTypeLayoutForm
     template_name = "lims/forms/add-wizard.html"
-
-
-
-class RequestTypeView(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
-    form_class = forms.RequestParameterForm
-    template_name = "modal/form.html"
-    model = models.Request
-    success_message = "Request has been updated."
-    success_url = reverse_lazy('request-list')
-
-    def get_success_url(self):
-        return reverse_lazy('shipment-detail', kwargs={'pk': self.object.shipment().pk})
 
 
 class SampleList(ListViewMixin, ItemListView):
@@ -643,36 +388,29 @@ class SampleStats(AdminRequiredMixin, PlotViewMixin, SampleList):
     list_url = reverse_lazy("sample-list")
 
 
-class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, detail.DetailView):
     model = models.Sample
-    form_class = forms.SampleForm
-    template_name = "lims/entries/sample.html"
-    success_url = reverse_lazy('sample-list')
-    success_message = "Sample has been updated"
+    template_name = "lims/details/sample.html"
 
 
-class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SampleForm
-    template_name = "modal/form.html"
     model = models.Sample
-    success_url = reverse_lazy('sample-list')
     success_message = "Sample has been updated."
 
-    def get_success_url(self):
-        return ""
 
-
-class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+    success_url = reverse_lazy('sample-list')
     model = models.Sample
     success_message = "Sample has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        super(SampleDelete, self).delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
-        return JsonResponse({'url': self.success_url})
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        message = f"Sample {self.object} deleted"
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
+        )
+        return response
 
     def get_context_data(self, **kwargs):
         context = super(SampleDelete, self).get_context_data(**kwargs)
@@ -689,11 +427,12 @@ class ContainerList(ListViewMixin, ItemListView):
     ordering = ['-created']
     ordering_proxies = {}
     list_transforms = {}
+    paginate_by = 16
 
 
 class ContainerDetail(DetailListMixin, SampleList):
     extra_model = models.Container
-    template_name = "lims/entries/container.html"
+    template_name = "lims/details/container.html"
     list_columns = ['name', 'barcode', 'group', 'location', 'comments']
     link_url = 'sample-detail'
     show_project = False
@@ -703,15 +442,14 @@ class ContainerDetail(DetailListMixin, SampleList):
         return 'Samples in {}'.format(obj.name)
 
 
-class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ContainerForm
-    template_name = "modal/form.html"
     model = models.Container
     success_message = "Container has been updated."
 
     def get_initial(self):
         initial = super(ContainerEdit, self).get_initial()
-        initial.update(project=self.request.user)
+        initial.update(project=self.request.project)
         return initial
 
     def get_success_url(self):
@@ -720,7 +458,6 @@ class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class ContainerLoad(AdminRequiredMixin, ContainerEdit):
     form_class = forms.ContainerLoadForm
-    template_name = "modal/form.html"
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
@@ -779,10 +516,9 @@ class LocationLoad(AdminRequiredMixin, ContainerEdit):
 
 class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
     form_class = forms.EmptyContainers
-    template_name = "modal/form.html"
     model = models.Project
-    success_message = "Containers have been removed for {username}."
-    success_url = reverse_lazy('dashboard')
+    success_message = "Containers have been removed for {name}."
+    success_url = reverse_lazy('container-list')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -793,7 +529,7 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+        return models.Project.objects.get(name=self.kwargs.get('project'))
 
     def get_initial(self):
         initial = super(EmptyContainers, self).get_initial()
@@ -808,17 +544,18 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
         return JsonResponse(self.root.get_layout(), safe=False)
 
 
-class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+    success_url = reverse_lazy('container-list')
     model = models.Container
     success_message = "Container has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        super(ContainerDelete, self).delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
-        return JsonResponse({'url': self.success_url})
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        message = f"Container {self.object} deleted"
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
+        )
+        return response
 
 
 class GroupList(ListViewMixin, ItemListView):
@@ -833,12 +570,12 @@ class GroupList(ListViewMixin, ItemListView):
 
 
 def movable(val, record):
-    return "<span class='cursor'><i class='movable ti ti-move'></i> {}</span>".format(val or "")
+    return f"<span class='cursor'>{render_icon('move', extra_class='movable')} {val or ''}</span>"
 
 
 class GroupDetail(DetailListMixin, SampleList):
     extra_model = models.Group
-    template_name = "lims/entries/group.html"
+    template_name = "lims/details/group.html"
     list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
     list_transforms = {
         'priority': movable,
@@ -859,7 +596,7 @@ class GroupDetail(DetailListMixin, SampleList):
         return obj
 
 
-class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.GroupForm
     template_name = "lims/forms/group-edit.html"
     model = models.Group
@@ -871,25 +608,28 @@ class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.Up
         return super(GroupEdit, self).get_initial()
 
     def form_valid(self, form):
-        super(GroupEdit, self).form_valid(form)
+        response = super(GroupEdit, self).form_valid(form)
         for s in self.object.samples.all():
             if self.original_name in s.name:
                 models.Sample.objects.filter(pk=s.pk).update(name=s.name.replace(self.original_name, self.object.name))
-        return JsonResponse({})
+        return response
 
 
-class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+    success_url = reverse_lazy('group-list')
     model = models.Group
     success_message = "Group has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        group = self.get_object()
-        super(GroupDelete, self).delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, group, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
-        return JsonResponse({'url': group.shipment and group.shipment.get_absolute_url() or reverse_lazy('group-list')})
+    def get_success_url(self):
+        return self.object.shipment and self.object.shipment.get_absolute_url() or reverse_lazy('group-list')
+
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        message = f"Group {self.object} deleted"
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
+        )
+        return response
 
 
 class DataList(ListViewMixin, ItemListView):
@@ -904,70 +644,29 @@ class DataList(ListViewMixin, ItemListView):
     list_search = ['id', 'name', 'beamline__name', 'sample__name', 'frames', 'project__name', 'modified']
     link_url = 'data-detail'
     link_field = 'name'
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
     ordering = ['-modified']
     list_transforms = {}
     plot_url = reverse_lazy("data-stats")
 
-    def get_queryset(self):
-        return super(DataList, self).get_queryset().defer('meta_data', 'url')
-
-
-class DataStats(PlotViewMixin, DataList):
-    plot_fields = { 'beam_size': {'kind': 'pie'},
-                    'kind__name': {'kind': 'columnchart'},
-                    'reports__score': {'kind': 'histogram', 'range': (0.01, 1)},
-                    'energy': {'kind': 'histogram', 'range': (4., 18.), 'bins': 8},
-                    'exposure_time': {'kind': 'histogram', 'range': (0.01, 20)},
-                    'attenuation': {'kind': 'histogram'},
-                    'num_frames': {'kind': 'histogram'},
-                    }
-    date_field = 'modified'
-    list_url = reverse_lazy("data-list")
-
-    def get_metrics(self):
-        return stats.parameter_summary(**self.get_active_filters())
-
-
-class UsageSummary(PlotViewMixin, DataList):
-    date_field = 'modified'
-    list_url = reverse_lazy("data-list")
-    list_filters = [
-        'beamline',
-        'kind',
-        filters.YearFilter('modified'),
-        filters.MonthFilter('modified'),
-        filters.QuarterFilter('modified'),
-        filters.TimeScaleFilter()
-    ]
-
-    def get_metrics(self):
-        return stats.usage_summary(period='year', **self.get_active_filters())
-
-    def page_title(self):
-        if self.kwargs.get('year'):
-            return '{} Usage Metrics'.format(self.kwargs['year'])
-        else:
-            return 'Usage Metrics'
-
 
 class DataDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Data
-    template_name = "lims/entries/data.html"
+    template_name = "lims/data/data.html"
 
     def get_template_names(self):
         return [self.object.kind.template, self.template_name]
 
 
 def format_score(val, record):
-    return "{:.2f}".format(val)
+    return f"{val:.2f}"
 
 
 class ReportList(ListViewMixin, ItemListView):
     model = models.AnalysisReport
     list_filters = ['modified', 'kind']
     list_columns = ['id', 'name', 'kind', 'score', 'modified']
-    list_search = ['project__username', 'name', 'data__name']
+    list_search = ['project__name', 'name', 'data__name']
     link_field = 'name'
     link_url = 'report-detail'
     ordering = ['-modified']
@@ -976,17 +675,23 @@ class ReportList(ListViewMixin, ItemListView):
         'score': format_score
     }
 
-    def get_queryset(self):
-        return super().get_queryset().defer('details', 'url')
-
 
 class ReportDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.AnalysisReport
-    template_name = "lims/entries/report.html"
+    template_name = "lims/details/report.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        if isinstance(self.object.details, list) and self.object.details:
+            report_data = translate_report(self.object.details)
+        else:
+            report_data = self.object.details
+        context['report_data'] = report_data
+        return context
 
 
 class ShipmentDataList(DataList):
-    template_name = "lims/entries/shipment-data.html"
+    template_name = "lims/details/shipment-data.html"
     lookup = 'group__shipment__pk'
     detail_model = models.Shipment
 
@@ -1009,7 +714,7 @@ class ShipmentDataList(DataList):
 
 
 class ShipmentReportList(ReportList):
-    template_name = "lims/entries/shipment-reports.html"
+    template_name = "lims/details/shipment-reports.html"
     lookup = 'data__group__shipment__pk'
     detail_model = models.Shipment
 
@@ -1052,25 +757,24 @@ class RequestList(ListViewMixin, ItemListView):
 
 class RequestDetail(DetailListMixin, SampleList):
     extra_model = models.Request
-    template_name = "lims/entries/request.html"
+    template_name = "lims/details/request.html"
     list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
     list_transforms = {
         'priority': movable,
     }
     link_url = 'sample-edit'
-    link_attr = 'data-form-link'
+    link_attr = 'data-modal-url'
     detail_target = '#modal-target'
 
     def page_title(self):
         obj = self.get_object()
         if 'project' in self.list_columns:
             self.list_columns.pop(0)
-        return 'Samples in {}'.format(obj.name)
+        return f'Samples in {obj.name}'
 
     def get_object(self):
         obj = super().get_object()
         if obj.status != self.extra_model.STATES.DRAFT:
-            self.detail_ajax = False
             self.detail_target = None
         return obj
 
@@ -1081,8 +785,10 @@ class RequestDetail(DetailListMixin, SampleList):
 
 
 class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
-    form_list = [('start', forms.RequestForm),
-                 ('parameters', forms.RequestParameterForm)]
+    form_list = [
+        ('start', forms.RequestForm),
+        ('parameters', forms.RequestParameterForm)
+    ]
     template_name = "lims/forms/add-request.html"
 
     def get_context_data(self, form, **kwargs):
@@ -1091,12 +797,29 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
         return ctx
 
     def get_form_initial(self, step):
-        project = self.request.user
+        project = self.request.project
+        group_ids = list(self.request.GET.getlist('groups'))
+        sample_ids = list(self.request.GET.getlist('samples'))
+        extras = {'groups': [], 'samples': [], 'name': ''}
+        if project:
+            if 'group' in self.kwargs or group_ids:
+                group_ids = [self.kwargs.get('group')] if self.kwargs.get('group') else group_ids
+                groups = project.sample_groups.filter(pk__in=group_ids)
+                names = '/'.join(groups.values_list('name', flat=True))
+                extras['groups'] = groups
+                extras['name'] = f'{names} - '
+
+            if 'sample' in self.kwargs or sample_ids:
+                sample_ids = [self.kwargs.get('sample')] if self.kwargs.get('sample') else sample_ids
+                samples = project.samples.filter(pk__in=sample_ids)
+                names = '/'.join(samples.values_list('name', flat=True))
+                extras['samples'] = samples
+                extras['name'] = f'{names} - '
+
         if step == 'start':
             return self.initial_dict.get(step, {
                 'project': project,
-                'groups': project.sample_groups.filter(pk__in=self.request.GET.getlist('groups')),
-                'samples': project.samples.filter(pk__in=self.request.GET.getlist('samples'))
+                **extras
             })
         elif step == 'parameters':
             start_data = self.storage.get_step_data('start')
@@ -1108,8 +831,8 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                     'request': start_data.get('start-request'),
                     'comments': start_data.get('start-comments'),
                     'name': start_data.get('start-name'),
-                    'samples': project.samples.filter(pk__in=start_data.getlist('start-samples')),
-                    'groups': project.sample_groups.filter(pk__in=start_data.getlist('start-groups')),
+                    'samples': project.samples.filter(pk__in=start_data.getlist('start-samples')) if project else models.Sample.objects.none(),
+                    'groups': project.sample_groups.filter(pk__in=start_data.getlist('start-groups')) if project else models.SampleGroup.objects.none(),
                 })
         return self.initial_dict.get(step, {})
 
@@ -1123,9 +846,9 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 for field in ['groups', 'samples']:
                     related[field] = info.pop(field)
                 info.pop('template')
-                info.update({'project': models.Project.objects.get(username=self.request.user.username),})
+                info.update({'project': self.request.project})
             elif label == 'parameters':
-                request = info.pop('request')
+                request = info.pop('request', None)
                 if not request:
                     for field in ['parameters']:
                         info[field] = form.cleaned_data.get(field)
@@ -1136,13 +859,16 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
 
 
 class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
-    form_list = [('start', forms.RequestForm),
-                 ('parameters', forms.RequestParameterForm)]
+    form_list = [
+        ('start', forms.RequestForm),
+        ('parameters', forms.RequestParameterForm)
+    ]
     template_name = "lims/forms/add-request.html"
 
     def test_func(self):
         try:
-            return models.Request.objects.get(**self.kwargs).project.username == self.request.user.username
+            req = models.Request.objects.get(**self.kwargs)
+            return self.request.user.can_access_project(req.project)
         except models.Request.DoesNotExist:
             return False
 
@@ -1172,7 +898,6 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
                 for field in ['groups', 'samples']:
                     related[field] = info.pop(field)
                 info.pop('template')
-                info.pop('request')
             elif label == 'parameters':
                 for field in ['parameters']:
                     info[field] = form.cleaned_data.get(field)
@@ -1184,9 +909,8 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
         return JsonResponse({})
 
 
-class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.RequestAdminForm
-    template_name = "modal/form.html"
     model = models.Request
     success_message = "Request has been updated."
     success_url = reverse_lazy('request-list')
@@ -1195,28 +919,30 @@ class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
         return reverse_lazy('shipment-requests', kwargs={'pk': self.object.shipment().pk})
 
 
-class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    success_url = reverse_lazy('dashboard')
-    template_name = "modal/delete.html"
+class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+    success_url = reverse_lazy('request-list')
     model = models.Request
     success_message = "Request has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        obj = self.get_object()
-        super().delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
-        return JsonResponse({'url': obj.shipment() and obj.shipment().get_absolute_url() or reverse_lazy('request-list')})
+    def get_success_url(self):
+        return self.object.shipment() and self.object.shipment().get_absolute_url() or reverse_lazy('request-list')
+
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, f"Request {self.object} deleted"
+        )
+        return response
 
 
 class SessionDataList(ShipmentDataList):
-    template_name = "lims/entries/session-data.html"
+    template_name = "lims/details/session-data.html"
     lookup = 'session__pk'
     detail_model = models.Session
 
 
 class SessionReportList(ShipmentReportList):
-    template_name = "lims/entries/session-reports.html"
+    template_name = "lims/details/session-reports.html"
     lookup = 'data__session__pk'
     detail_model = models.Session
 
@@ -1224,14 +950,11 @@ class SessionReportList(ShipmentReportList):
 class ActivityLogList(ListViewMixin, ItemListView):
     model = models.ActivityLog
     list_filters = ['created', 'action_type']
-    list_columns = ['created', 'action_type', 'user_description', 'ip_number', 'object_repr', 'description']
+    list_columns = ['created', 'action_type', 'user', 'ip_number', 'object_repr', 'description']
     list_search = ['description', 'ip_number', 'content_type__name', 'action_type']
     ordering = ['-created']
     ordering_proxies = {}
     list_transforms = {}
-    link_url = 'activitylog-detail'
-    link_attr = 'data-link'
-    detail_target = '#modal-target'
 
 
 def format_total_time(val, record):
@@ -1250,7 +973,7 @@ class SessionList(ListViewMixin, ItemListView):
         filters.NewEntryFilter(field_label="First Session")
     ]
     list_columns = ['name', 'created', 'beamline', 'total_time', 'num_datasets', 'num_reports']
-    list_search = ['beamline__acronym', 'project__username', 'name']
+    list_search = ['beamline__acronym', 'project__name', 'name']
     link_field = 'name'
     ordering = ['-created']
     list_transforms = {
@@ -1261,12 +984,12 @@ class SessionList(ListViewMixin, ItemListView):
 
 class SessionDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "lims/entries/session.html"
+    template_name = "lims/details/session.html"
 
 
 class SessionStatistics(AdminRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "lims/entries/session-statistics.html"
+    template_name = "lims/details/session-statistics.html"
     page_title = "Session Statistics"
 
     def get_context_data(self, **kwargs):
@@ -1277,37 +1000,52 @@ class SessionStatistics(AdminRequiredMixin, detail.DetailView):
 
 class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Beamline
-    template_name = "lims/entries/beamline.html"
+    template_name = "lims/details/beamline.html"
 
 
-class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.AutomounterForm
-    template_name = "modal/form.html"
     model = models.Automounter
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "Comments have been updated."
 
 
 class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
-    form_list = [('shipment', forms.AddShipmentForm),
-                 ('containers', forms.ShipmentContainerForm),
-                 ('groups', forms.ShipmentGroupForm)]
-    template_name = "modal/wizard.html"
+    form_list = [
+        ('shipment', forms.AddShipmentForm),
+        ('containers', forms.ShipmentContainerForm),
+        ('groups', forms.ShipmentGroupForm)
+    ]
+    template_name = "lims/modal/wizard.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_superuser:
+            project = getattr(request, 'project', None)
+            if not project or project.is_expired:
+                raise PermissionDenied("Cannot create a shipment for an expired project.")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, form, **kwargs):
         ctx = super().get_context_data(form, **kwargs)
         ctx['form_title'] = "Create a Shipment"
         return ctx
 
+    def get_form_kwargs(self, step=None):
+        kwargs = super().get_form_kwargs(step)
+        if step == 'shipment':
+            kwargs.update({'user': self.request.user})
+        return kwargs
+
     def get_form_initial(self, step):
         if step == 'shipment':
             today = timezone.now()
-            day_count = self.request.user.shipments.filter(
+            project = self.request.project
+            day_count = project.shipments.filter(
                 created__year=today.year, created__month=today.month, created__day=today.day
-            ).count()
+            ).count() if project else 0
             return self.initial_dict.get(step, {
-                'project': self.request.user,
-                'name': '{} #{}'.format(timezone.now().strftime('%Y-%b%d'), day_count + 1)
+                'project': project,
+                'name': f'{timezone.now().strftime("%Y-%b%d")} #{day_count + 1}'
             })
         elif step == 'groups':
             containers_data = self.storage.get_step_data('containers')
@@ -1331,7 +1069,7 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                     })
                 else:
                     data.update({
-                        'project': self.request.user
+                        'project': self.request.project
                     })
                 project = data['project']
                 self.shipment, created = models.Shipment.objects.get_or_create(**data)
@@ -1371,14 +1109,14 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                             })
                             models.Group.objects.get_or_create(**data)
 
-        # Staff created shipments should be sent and received automatically.
-        if self.request.user.is_superuser:
+        # Staff created shipments for other projects should be sent and received automatically
+        if self.request.user.is_superuser and (not self.request.project or self.shipment.project != self.request.project):
             self.shipment.send()
             self.shipment.receive()
         return JsonResponse({'url': reverse('shipment-detail', kwargs={'pk': self.shipment.pk})})
 
 
-class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.FormView):
+class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, ModalFormView):
     form_class = forms.ShipmentContainerForm
     template_name = "lims/forms/add-wizard.html"
     success_message = "Shipment updated"
@@ -1407,7 +1145,7 @@ class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMix
         return HttpResponseRedirect(reverse('shipment-add-groups', kwargs={'pk': self.kwargs.get('pk')}))
 
 
-class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, ModalCreateView):
     model = models.Group
     form_class = forms.ShipmentGroupForm
     template_name = "lims/forms/add-wizard.html"
@@ -1448,21 +1186,24 @@ class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
         return JsonResponse({})
 
 
-class SeatSamples(OwnerRequiredMixin, AsyncFormMixin, detail.DetailView):
+class SeatSamples(OwnerRequiredMixin, detail.DetailView):
     template_name = "lims/forms/seat-samples.html"
     model = models.Shipment
 
 
-class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView):
+class ContainerSpreadsheet(LoginRequiredMixin, detail.DetailView):
     template_name = "lims/forms/container-spreadsheet.html"
     model = models.Container
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            qs = models.Container.objects.filter()
+            qs = models.Container.objects.all()
         else:
-            qs = models.Container.objects.filter(project=self.request.user)
+            if not self.request.project:
+                qs = models.Container.objects.none()
+            else:
+                qs = models.Container.objects.filter(project=self.request.project)
         try:
             container = qs.get(pk=self.kwargs['pk'])
             samples = json.loads(request.POST.get('samples', '[]'))
@@ -1503,53 +1244,73 @@ class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView
             raise http.Http404('Container Not Found!')
 
 
-class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class SSHKeyCreate(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SSHKeyForm
-    template_name = "modal/form.html"
     model = models.SSHKey
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "SSH key has been created"
 
     def test_func(self):
-        # Allow access to admin or owner
-        return self.request.user.is_superuser or self.kwargs['username'] == self.request.user.username
+        # Allow access to self or superusers
+        target_user = self.get_target_user()
+        if not target_user:
+            return False
+        return self.request.user == target_user or self.request.user.is_superuser
+
+    def get_target_user(self):
+        username = self.kwargs.get('username')
+        if not username:
+            return self.request.user
+        return models.User.objects.filter(username=username).first()
 
     def get_success_url(self):
-        return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
+        if hasattr(self, 'object') and self.object and self.object.user:
+            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
+        return self.success_url
 
     def get_initial(self):
         initial = super().get_initial()
-        try:
-            initial['project'] = models.Project.objects.get(username=self.kwargs['username'])
-        except models.Project.DoesNotExist:
-            return http.Http404
-
+        target_user = self.get_target_user()
+        if not target_user:
+            raise http.Http404('User not found')
+        initial['user'] = target_user
         return initial
 
 
-class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SSHKeyEdit(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SSHKeyForm
-    template_name = "modal/form.html"
     model = models.SSHKey
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "SSH key has been updated"
 
+    def test_func(self):
+        obj = self.get_object()
+        return self.request.user == obj.user or self.request.user.is_superuser
 
-class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    def get_success_url(self):
+        if hasattr(self, 'object') and self.object and self.object.user:
+            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
+        return self.success_url
+
+
+class SSHKeyDelete(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.SSHKey
-    success_url = reverse_lazy('dashboard')
     success_message = "SSH key has been deleted"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('sshkey-delete', kwargs={'pk': self.object.pk})
-        return context
+    def test_func(self):
+        username = self.kwargs.get('username')
+        obj = self.get_object()
+
+        if self.request.user.is_superuser:
+            return True
+        elif obj.user.username == username:
+            return True
+        return False
 
 
 class GuideView(detail.DetailView):
     model = models.Guide
-    template_name = "lims/components/guide-youtube.html"
+    template_name = "lims/modal/guide-youtube.html"
 
     def get_object(self, queryset=None):
         if self.request.user.is_superuser:
@@ -1564,26 +1325,23 @@ class GuideView(detail.DetailView):
         return context
 
 
-class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.GuideForm
-    template_name = "modal/form.html"
     model = models.Guide
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "Guide has been created"
 
 
-class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.GuideForm
-    template_name = "modal/form.html"
     model = models.Guide
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "Guide has been updated"
 
 
-class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Guide
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "Guide has been deleted"
 
     def get_context_data(self, **kwargs):
@@ -1592,55 +1350,153 @@ class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
         return context
 
 
+def stream_httpx_response(client, response, chunk_size=8192):
+    try:
+        for chunk in response.iter_bytes(chunk_size=chunk_size):
+            yield chunk
+    finally:
+        response.close()
+        client.close()
+
+
 class ProxyView(View):
     def get(self, request, *args, **kwargs):
-        remote_url = DOWNLOAD_PROXY_URL + request.path
+        remote_url = settings.DOWNLOAD_PROXY_URL + request.path
         if kwargs.get('section') == 'archive':
             return fetch_archive(request, remote_url)
-        return proxy_view(request, remote_url)
+        client = httpx2.Client()
+        req = client.build_request('GET', remote_url, params=request.GET)
+        r = client.send(req, stream=True)
+        if r.status_code == 200:
+            resp = http.StreamingHttpResponse(
+                stream_httpx_response(client, r, chunk_size=8192),
+                content_type=r.headers.get('Content-Type')
+            )
+            if 'Content-Disposition' in r.headers:
+                resp['Content-Disposition'] = r.headers['Content-Disposition']
+            return resp
+        try:
+            content = r.read()
+        finally:
+            r.close()
+            client.close()
+        return http.HttpResponse(content, status=r.status_code, content_type=r.headers.get('Content-Type'))
 
 
 def fetch_archive(request, url):
-    r = requests.get(url, stream=True)
+    client = httpx2.Client()
+    req = client.build_request('GET', url)
+    r = client.send(req, stream=True)
     if r.status_code == 200:
-        resp = http.StreamingHttpResponse(r, content_type='application/x-gzip')
+        resp = http.StreamingHttpResponse(
+            stream_httpx_response(client, r, chunk_size=8192),
+            content_type='application/x-gzip'
+        )
         resp['Content-Disposition'] = r.headers.get('Content-Disposition', 'attachment; filename=archive.tar.gz')
         return resp
     else:
+        r.close()
+        client.close()
         return http.HttpResponseNotFound()
 
 
 class ProjectList(AdminRequiredMixin, ItemListView):
     model = models.Project
-    paginate_by = 25
-    template_name = "lims/user-list.html"
+    paginate_by = 16
+    template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
-    list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']
+    list_columns = ['name', 'pi', 'kind', 'contact_person', 'contact_phone', 'contact_email']
     list_search = [
-        'username', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
+        'name', 'pi__username', 'pi__first_name', 'pi__last_name',
+        'contact_person', 'contact_phone', 'contact_email', 'city',
+        'region__name', 'region__code', 'country__name', 'country__alpha2', 'country__alpha3',
         'department', 'organisation'
     ]
-    link_url = 'user-detail'
-    link_kwarg = 'username'
+    link_url = 'project-profile'
+    link_kwarg = 'name'
     add_url = 'new-project'
     add_ajax = True
     ordering = ['name']
 
 
-class UserDetail(AdminRequiredMixin, detail.DetailView):
+class UserList(AdminRequiredMixin, ItemListView):
+    model = models.User
+    paginate_by = 16
+    template_name = "lims/list.html"
+    list_filters = ['is_active', 'is_superuser']
+    list_columns = ['username', 'first_name', 'last_name', 'email', 'is_active', 'is_superuser']
+    list_search = ['username', 'first_name', 'last_name', 'email']
+    link_url = 'user-detail'
+    link_kwarg = 'username'
+    page_title = _("Users")
+    add_url = 'new-user'
+    add_ajax = True
+    ordering = ['username']
+
+
+class AutomounterHistory(AdminRequiredMixin, ListViewMixin, ItemListView):
+    model = models.LoadHistory
+    template_name = "lims/list.html"
+    show_project = False
+    list_filters = ['start', 'end']
+    list_columns = ['child', 'location', 'start', 'end', ]
+    list_search = ['child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    page_title = "Load History"
+
+    def get_queryset(self):
+        automounter_id = self.kwargs.get('pk')
+        automounter = get_object_or_404(models.Automounter, pk=automounter_id)
+        self.page_title = f"Load History | {automounter.container.name}"
+        return super().get_queryset().filter(parent_id=automounter_id).order_by('-start')
+
+
+class ContainerHistory(UserPassesTestMixin, ListViewMixin, ItemListView):
+    model = models.LoadHistory
+    template_name = "lims/list.html"
+    show_project = False
+    list_filters = ['start', 'end']
+    list_columns = ['parent', 'location', 'start', 'end', ]
+    list_search = ['parent__name', 'child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    page_title = "Load History"
+
+    def test_func(self) -> bool | None:
+        container_id = self.kwargs.get('pk')
+        obj = get_object_or_404(models.Container, pk=container_id)
+
+        if obj:
+            self.page_title = f"Load History | {obj.name}"
+            return self.request.user.can_access_project(obj.project)
+
+        return False
+
+    def get_queryset(self):
+        container_id = self.kwargs.get('pk')
+        return super().get_queryset().filter(child_id=container_id).order_by('-start')
+
+
+class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     model = models.Project
-    template_name = "lims/entries/user-info.html"
+    template_name = "lims/modal/project-info.html"
+
+    def test_func(self) -> bool | None:
+        try:
+            return self.request.user.can_access_project(self.get_object())
+        except models.Project.DoesNotExist:
+            return False
 
     def get_object(self, **kwargs):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+        username = self.kwargs.get('name') or self.kwargs.get('username')
+        obj = models.Project.objects.filter(
+            models.Q(name=username)
+        ).first()
+        if not obj:
+            raise models.Project.DoesNotExist(f"Project matching {username} does not exist.")
+        return obj
 
 
-class UserStats(UserDetail):
-    template_name = "lims/entries/user.html"
-    page_title = "User Profile"
-
-    def get_object(self, **kwargs):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+class ProjectProfile(ProjectInfo):
+    template_name = "lims/details/project.html"
+    page_title = "Project Profile"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1648,66 +1504,336 @@ class UserStats(UserDetail):
         return context
 
 
-class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.NewProjectForm
-    template_name = "modal/form.html"
     model = models.Project
     success_url = reverse_lazy('user-list')
-    success_message = "New Account '%(username)s' has been created."
+    success_message = "New Project '%(name)s' has been created."
 
     def form_valid(self, form):
-        # create local user
         response = super().form_valid(form)
-        info_msg = 'New Account {} added'.format(self.object)
-
         models.ActivityLog.objects.log_activity(
-            self.request, self.object, models.ActivityLog.TYPE.CREATE, info_msg
+            self.request, self.object, models.ActivityLog.TYPE.CREATE,
+            f'New Project {self.object} added'
         )
-        # messages are simply passed down to the template via the request context
         return response
 
 
-class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Project
     success_url = reverse_lazy('user-list')
-    success_message = "Account has been deleted"
+    success_message = "Project has been deleted"
+
+    def test_func(self):
+        if not super().test_func():
+            return False
+        try:
+            obj = self.get_object()
+        except models.Project.DoesNotExist:
+            return True
+        return not bool(obj.source_id)
 
     def get_object(self, *kwargs):
-        obj = self.model.objects.get(username=self.kwargs.get('username'))
+        name = self.kwargs.get('name') or self.kwargs.get('username')
+        obj = self.model.objects.get(name=name)
         return obj
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDelete, self).get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('user-delete', kwargs={'username': self.object.username})
+        context['form_action'] = reverse_lazy('project-delete', kwargs={'name': self.object.name})
         return context
 
-    def delete(self, *args, **kwargs):
-        obj = self.get_object()
-        self.success_message = "{} account has been deleted".format(kwargs.get('username'))
-        return JsonResponse({'url': self.success_url}, safe=False)
+    def confirmed(self, *args, **kwargs):
+        name = self.kwargs.get('name') or self.kwargs.get('username')
+        self.success_message = f"{name} project has been deleted"
+        return super().confirmed(*args, **kwargs)
+
+
+class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
+    model = models.User
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    template_name = "lims/details/user.html"
+
+    def test_func(self):
+        target = self.get_object()
+        return self.request.user == target or self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['projects'] = self.object.get_projects()
+        context['sshkeys'] = self.object.sshkeys.all()
+        context['activities'] = self.object.activities.all().order_by('-created')[:12]
+        return context
+
+
+class UserEditView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
+    model = models.User
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    form_class = forms.UserEditForm
+    success_message = _("Profile has been updated.")
+
+    def test_func(self):
+        target = self.get_object()
+        return self.request.user == target or self.request.user.is_superuser
+
+    def get_success_url(self):
+        return reverse_lazy('user-detail', kwargs={'username': self.object.username})
+
+
+class SwitchProjectView(LoginRequiredMixin, View):
+    """
+    Dedicated view to switch the user's active project context in session and database.
+    """
+    def _switch(self, request, project_id, next_url=None):
+        if not project_id:
+            raise Http404(_("No project specified."))
+
+        project = get_object_or_404(models.Project, pk=project_id)
+
+        # Access check: superuser or project member or PI
+        is_authorized = (
+            request.user.is_superuser
+            or project.members.filter(pk=request.user.pk).exists()
+            or project.pi_id == request.user.pk
+        )
+        if not is_authorized:
+            raise PermissionDenied(_("You do not have access to this project."))
+
+        if hasattr(request, 'session'):
+            request.session['active_project_id'] = project.pk
+
+        if request.user.is_authenticated:
+            request.user.default_project = project
+            request.user.save(update_fields=['default_project'])
+
+        # Safe redirection
+        redirect_to = '/'
+        return HttpResponseRedirect(redirect_to)
+
+    def get(self, request, pk=None):
+        project_id = pk or request.GET.get('project_id')
+        return self._switch(request, project_id, next_url=request.GET.get('next'))
+
+    def post(self, request, pk=None):
+        project_id = pk or request.POST.get('project_id')
+        return self._switch(request, project_id, next_url=request.POST.get('next'))
+
+
+class EditSettings(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
+    model = models.SystemSettings
+    form_class = forms.SystemSettingsForm
+    success_message = _("System Settings updated.")
+
+    def get_object(self, queryset=None):
+        self.kwargs['pk'] = 1
+        return super().get_object(queryset=queryset)
 
 
 def record_logout(sender, user, request, **kwargs):
     """ user logged outof the system """
-    models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGOUT, '{} logged-out'.format(user.username))
+    models.ActivityLog.objects.log_activity(
+        request, user, models.ActivityLog.TYPE.LOGOUT, f'{user.name} logged-out'
+    )
 
 
 def record_login(sender, user, request, **kwargs):
     """ Login a user into the system """
     if user.is_authenticated:
-        models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.username))
-        last_login = models.ActivityLog.objects.last_login(request)
-        if last_login is not None:
-            last_host = last_login.ip_number
-            message = 'Your previous login was on {date} from {ip}.'.format(
-                date=dateformat.format(timezone.localtime(last_login.created), 'M jS @ P'),
-                ip=last_host)
-            messages.info(request, message)
-        elif not request.user.is_staff:
-            message = 'You are logging in for the first time. Please make sure your profile is updated.'
-            messages.info(request, message)
+        models.ActivityLog.objects.log_activity(
+            request, user, models.ActivityLog.TYPE.LOGIN, f'{user.name} logged-in'
+        )
+        last_login = models.ActivityLog.objects.last_login(request, user=user)
+        try:
+            if last_login is not None:
+                last_host = last_login.ip_number
+                login_time = timezone.localtime(last_login.created)
+                message = f'Your previous login was on {dateformat.format(login_time, "M jS @ P")} from {last_host}.'
+                messages.info(request, message)
+            elif not user.is_staff:
+                message = 'You are logging in for the first time. Please make sure your profile is updated.'
+                messages.info(request, message)
+        except Exception:
+            pass
 
 
 user_logged_in.connect(record_login)
 user_logged_out.connect(record_logout)
+
+
+@method_decorator(never_cache, name='dispatch')
+class PuckLoader(AdminRequiredMixin, detail.DetailView):
+    model = models.Beamline
+    template_name = "lims/loader.html"
+
+    def get_object(self, queryset=None):
+        acronym = self.kwargs.get('beamline')
+        return models.Beamline.objects.get(acronym__iexact=acronym)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        automounter = self.object.active_automounter()
+        config, created = models.LoaderConfig.objects.get_or_create(
+            beamline=self.object, automounter=automounter
+        )
+        context['config'] = config
+        context['projects'] = models.Project.objects.filter(
+            shipments__status=models.Shipment.STATES.ON_SITE,
+        )
+        models.LoaderConfig.objects.filter(pk=config.pk).update(pending=False)
+        if self.kwargs.get('project'):
+            project = models.Project.objects.filter(name=self.kwargs['project']).first()
+            if project:
+                context['active_project'] = project
+                context['containers'] = project.containers.on_site().order_by('name')
+        return context
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SelectPuck(AuthenticationRequiredMixin, View):
+
+    def post(self, request, *args, **kwargs):
+        beamline = kwargs.get('beamline')
+        project = kwargs.get('project')
+        puck = kwargs.get('puck')
+
+        beamline = models.Beamline.objects.get(acronym__iexact=beamline)
+        project = models.Project.objects.get(name__iexact=project)
+        puck = project.containers.on_site().filter(pk=puck).first()
+        if not puck:
+            messages.error(request, 'Puck not found')
+            return JsonResponse({"url": "", "error": "Puck not found"})
+
+        config, created = models.LoaderConfig.objects.get_or_create(
+            beamline=beamline, automounter=beamline.active_automounter()
+        )
+        elapsed = timezone.now() - config.modified
+        if config.selected and elapsed.total_seconds() > settings.LOADER_SELECT_DURATION:
+            config.selected = None
+            config.save()
+
+        if not config.automounter.container.accepts(puck):
+            messages.error(request, 'Puck not accepted by automounter')
+            return JsonResponse({"url": "", 'error': "Puck not accepted by automounter"})
+
+        if config.selected != puck:
+            config.selected = puck
+            config.save()
+        elif config.selected == puck:
+            config.selected = None
+            config.save()
+        return JsonResponse({
+            'url': reverse('project-puck-loader', kwargs={'beamline': beamline.acronym, 'project': project.name})
+        })
+
+
+class LoadPuck(AuthenticationRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        acronym = kwargs.get('beamline')
+        position = kwargs.get('position')
+
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
+        if not config:
+            return http.HttpResponseBadRequest("Automounter not found")
+
+        if not config.selected:
+            return http.HttpResponseBadRequest("No puck selected")
+
+        elapsed = timezone.now() - config.modified
+        if elapsed.total_seconds() > settings.LOADER_SELECT_DURATION:
+            return http.HttpResponseBadRequest("Puck selection expired")
+
+        location = config.automounter.kind.locations.filter(name=position).first()
+        if not location:
+            return http.HttpResponseBadRequest("Invalid Position")
+
+        puck = config.selected
+        config.selected = None
+        config.pending = True
+        config.save()
+
+        # remove an existing puck from position
+        existing_puck = config.automounter.children.filter(location=location).first()
+        if existing_puck:
+            models.LoadHistory.objects.filter(child=existing_puck).active().update(end=timezone.now())
+            models.Container.objects.filter(pk=existing_puck.pk).update(parent=None, location=None)
+
+        models.LoadHistory.objects.create(child=puck, parent=config.automounter, location=location)
+        models.Container.objects.filter(pk=puck.pk).update(parent=config.automounter, location=location)
+
+        return JsonResponse({'loaded': puck.name, 'location': location.name})
+
+
+class UnloadPuck(AuthenticationRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        acronym = kwargs.get('beamline')
+        position = kwargs.get('position')
+
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
+        if not config:
+            return http.HttpResponseBadRequest("Automounter not found")
+
+        location = config.automounter.kind.locations.filter(name=position).first()
+        if not location:
+            return http.HttpResponseBadRequest("Invalid location")
+
+        puck = config.automounter.children.filter(location=location).first()
+        if not puck:
+            return http.HttpResponseBadRequest("No puck found at this location")
+
+        config.selected = puck  # Set the selected puck to the one being unloaded in case we need to reload it
+        config.save()
+
+        models.LoadHistory.objects.filter(child=puck).active().update(end=timezone.now())
+        models.Container.objects.filter(pk=puck.pk).update(parent=None, location=None)
+
+        return JsonResponse({'unloaded': puck.name, 'location': location.name})
+
+
+class CheckPending(AuthenticationRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        acronym = kwargs.get('beamline')
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
+        if not config:
+            return JsonResponse({'pending': False})
+
+        return JsonResponse({'pending': config.pending})
+
+
+def custom_403_view(request, exception=None):
+    return render(request, "lims/warning.html", {
+       "status_code": 403,
+       "error_title": "Access Denied",
+       "error_message": (
+           "You lack the required authorization to view this resource."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+       "exception": str(exception),
+    }, status=403)
+
+
+def custom_404_view(request, exception=None):
+    return render(request, "lims/warning.html", {
+       "status_code": 404,
+       "error_title": "Lost in Cyberspace",
+       "error_message": (
+           "The resource you requested may have moved, been deleted, or "
+           "does not exist at this address. Check the URL for errors."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+       "exception": str(exception),
+    }, status=404)
+
+
+def custom_500_view(request):
+    return render(request, "lims/warning.html", {
+       "status_code": 500,
+       "error_title": "Server Encountered an Error",
+       "error_message": (
+           "A critical unexpected server failure was encountered. "
+           "Our automated monitoring infrastructure has logged this event."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+    }, status=500)

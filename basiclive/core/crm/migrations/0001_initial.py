@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('staff_comments', models.TextField(blank=True, null=True)),
                 ('area', models.ManyToManyField(to='crm.SupportArea')),
                 ('session', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.Session')),
-                ('staff', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('staff', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.Project')),
             ],
             options={
                 'abstract': False,

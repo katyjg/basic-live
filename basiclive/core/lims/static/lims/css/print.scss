@@ -1,4 +1,23 @@
 /* Any styling for printing can be done here */
+@page {
+  /* Defines the physical paper size and orientation */
+  size: letter portrait; /* Options: A4, letter, legal, or custom (e.g., 8.5in 11in) */
+  margin: 0in;         /* Sets the print margins */
+}
+
+@media print {
+  body {
+    width: 100%;        /* Forces the body layout to fill the page width */
+    margin: 0;          /* Resets body margins to let @page handle margins */
+    padding: 0;
+  }
+
+  /* Ensures large elements don't get clipped horizontally */
+  img, table, div {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
 
 body {
   font-size: 9px;
@@ -37,10 +56,7 @@ main.content {
 }
 
 .table > tbody > tr > td {
-  padding: 0px;
-  line-height: 1;
   vertical-align: middle;
-  max-height: 14px !important;
 }
 
 a[href]:after, .data-thumbnail {
@@ -61,8 +77,4 @@ input {
     margin-top: 9px;
     vertical-align: top;
   }
-}
-
-body {
-  line-height: 9px;
 }

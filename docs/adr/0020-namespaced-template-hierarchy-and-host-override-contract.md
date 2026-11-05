@@ -1,0 +1,3 @@
+# Namespaced Template Hierarchy and Host Override Contract
+
+BasicLIVE distributes reusable Django apps across facility deployments (ADR-0001, ADR-0019). We decided to maintain strict template namespacing under app subdirectories (`lims/base.html` rather than root `base.html`) across all framework views and template extensions. Reusable libraries must not pollute the global template namespace with generic names like `base.html`, which risks collisions with host application landing pages, custom dashboards, and third-party packages. Host instance applications customize or re-brand the LIMS layout by explicitly providing `templates/lims/base.html`, where they can override framework template blocks or extend their own site-level `base.html`.

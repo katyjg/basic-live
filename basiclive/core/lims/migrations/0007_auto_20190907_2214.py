@@ -41,12 +41,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='activitylog',
             name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.Project'),
         ),
         migrations.AlterField(
             model_name='activitylog',
             name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to='lims.Project'),
         ),
         migrations.AlterField(
             model_name='activitylog',

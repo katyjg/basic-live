@@ -1,0 +1,237 @@
+{% extends "lims/base.html" %}
+{% load humanize %}
+{% load bl_badges %}
+{% load bl_layouts %}
+{% load markup %}
+{% load static %}
+{% load bl_themes %}
+{% load bl_icons %}
+{% load bl_tags %}
+
+{% block pre-scripts %}
+    <script src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script src="{% static 'd3/js/d3-selection-multi.v1.min.js' %}"></script>
+    <script src="{% static 'lims/js/basiclive-layouts.min.js' %}"></script>
+{% endblock %}
+
+{% block page-pre-title %}Shipment{% endblock %}
+{% block page-title %}
+{% if user.is_superuser %}<span class="fw-lighter">{{ shipment.project }} | </span>{% endif %}<strong>{{ shipment.name }}</strong>
+{% endblock %}
+{% block page-subtitle %}
+    <span class="text-muted">
+        {% if not shipment.is_editable %}{% show_icon icon="lock" %}{% endif %}
+        {{ shipment.identity }} |
+        {% if shipment.status == shipment.STATES.DRAFT %}Created {{ shipment.created|naturalday }}
+        {% elif shipment.status == shipment.STATES.SENT %}Sent {{ shipment.date_shipped|naturalday }}
+        {% elif shipment.status == shipment.STATES.ON_SITE %}Received
+            {% if shipment.date_received %}{{ shipment.date_received|naturalday }}{% else %}
+                {{ shipment.date_shipped|naturalday }}
+        {% endif %}
+        {% else %}Returned {{ shipment.date_returned|naturalday }}
+        {% endif %}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    {% include "lims/tools-shipment.html" %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% if shipment.status == shipment.STATES.ON_SITE %}info
+                        {% elif shipment.status == shipment.STATES.DRAFT %}warning
+                        {% elif shipment.status == shipment.STATES.SENT %}success
+                        {% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}success
+                        {% else %}secondary{% endif %} text-condensed">
+        {{ shipment.get_status_display }}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Containers:</small><br>
+        <strong>{{ shipment.containers.count }}</strong>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Groups:</small><br>
+        <strong>{{ shipment.groups.count }}</strong>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Samples:</small><br>
+        <strong>{{ shipment.num_samples }}</strong>
+    </div>
+    {% if shipment.status >= shipment.STATES.ON_SITE %}
+        <div>
+            {% if shipment.status > shipment.STATES.ON_SITE %}
+                <small class="text-muted text-condensed">On-Site:</small><br>
+                {% if shipment.date_received %}{{ shipment.date_received|naturalday }}{% else %}
+                    {{ shipment.date_shipped|naturalday }}{% endif %} - {{ shipment.date_returned|naturalday }}
+            {% else %}
+                <small class="text-muted text-condensed">Location:</small><br>
+                {{ shipment.storage_location }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if shipment.status == shipment.STATES.DRAFT %}
+        <div>
+            <small class="text-muted text-condensed">Ready to Ship:</small><br>
+            {{ shipment.shipping_errors|yesno:"No,Yes" }}
+        </div>
+        {% else %}{% if shipment.status < shipment.STATES.RETURNED %}
+            <div>
+                <small class="text-muted text-condensed">Sent:</small><br>
+                <span class="text-muted">via</span> {{ shipment.carrier }}
+                {% if shipment.tracking_code and shipment.carrier %}
+                    [<a href="{{ shipment.carrier.url }}{{ shipment.tracking_code }}"
+                        title="Track with {{ shipment.carrier }}">{{ shipment.tracking_code }}</a>]
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif%}
+    {% if shipment.status >= shipment.STATES.RETURNED %}
+        <div>
+            {% if shipment.status < shipment.STATES.RETURNED %}
+                <small class="text-muted text-condensed">Ready to Return:</small><br>
+                {{ shipment.is_returnable|yesno:"No,Yes" }}
+            {% else %}
+                <small class="text-muted text-condensed">Returned:</small><br>
+                via {{ shipment.carrier }} {% if shipment.return_code and shipment.carrier %}
+                [<a href="{{ shipment.carrier.url }}{{ shipment.return_code }}"
+                    title="Track with {{ shipment.carrier }}">{{ shipment.return_code }}</a>]
+            {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if shipment.components.count %}
+        <div>
+            <small class="text-muted text-condensed">Included Items</small><br>
+            {% for c in shipment.components.all %}
+                <span class="badge text-bg-warning p-2">{{ c.kind }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="col-sm-7 col-12">
+            <div class="row">
+                {% for container in shipment.containers.all %}
+                    <div class="{% container_col container %} text-center">
+                        <div id="layout-{{ container.pk }}" class="layout-lg mt-4">
+                            <h5 class="text-condensed">
+                                <a href="{% url 'container-detail' pk=container.pk %}">
+                                    {% if container.parent %}
+                                        <span class="badge text-bg-primary text-thin" title="Loaded">
+                                            {{ container.loaded_name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary text-thin">{{ container.name }}</span>
+                                    {% endif %}
+                                </a>
+                            </h5>
+                        </div>
+                        {% include "lims/details/container-layout.html" with show_samples=True label_samples=True %}
+                    </div>
+
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-sm-5 col-12">
+            {% if shipment.requests or shipment.is_editable %}
+            <div class="card mb-3">
+                <div class="card-header text-center text-wide text-muted"><small>REQUESTS</small></div>
+                <ul class="list-group list-group-flush sortable" data-url="{% url 'update-request-priority' %}" data-sort="request">
+                    {% for request in shipment.requests %}
+                        {% include "lims/details/request-list-item.html" with editable=shipment.is_editable %}
+                    {% empty %}
+                        <div class="list-group-item">
+                            <div class="d-flex flex-row">
+                                <div class="ps-3 flex-shrink-1 align-self-center">
+                                    <small class="p-0 m-0 text-condensed">
+                                        Use Requests to communicate intended experiments and procedures for this set of
+                                        samples, especially if beamline staff will be collecting the data.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="card">
+                <div class="card-header text-center text-wide text-muted"><small>GROUPS</small></div>
+                <ul class="list-group list-group-flush sortable" data-url="{% url 'update-group-priority' %}" data-sort="group">
+                    {% for group in shipment.groups_by_priority %}
+                        {% include "lims/details/group-list-item.html" with group=group editable=shipment.is_editable %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block page-scripts %}
+    <script>
+        $(document).ready(function () {
+            $(document).on('mouseenter', '[data-requests]', function () {
+                let refs = String($(this).data('requests')).split(" ");
+                $.each(refs, function(i, ref) {
+                    $("#request-" + ref).addClass('list-group-item-warning');
+                });
+            });
+            $(document).on('mouseleave', '[data-highlight]', function () {
+                $('.list-group-item-warning').removeClass('list-group-item-warning');
+            });
+        });
+    </script>
+    <script src="{% static 'jquery/js/jquery-ui.min.js' %}"></script>
+    <script>
+        function update_priority(url, data) {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: url,
+                data: data,
+                success: function (response) {
+                    new Noty({
+                        text: "Priorities updated!",
+                        type: "success",
+                        layout: 'bottomRight',
+                        theme: 'sunset',
+                        timeout: 4000,
+                        visibilityControl: true
+                    }).show()
+                },
+                error: function (response) {
+                    new Noty({
+                        text: "Could not update priorities!",
+                        type: "error",
+                        layout: 'bottomRight',
+                        theme: 'sunset',
+                        timeout: 4000,
+                        visibilityControl: true
+                    }).show()
+                }
+            });
+        }
+
+        $(".sortable").sortable({
+            items: "li",
+            handle: ".cursor",
+            cursor: 'move',
+            opacity: 0.9,
+            axis: 'y',
+            update: function () {
+                let el = $(this).sortable("instance").element;
+                let sort = $(el).data('sort');
+                let priorities = $(this).sortable("toArray", {key: sort, attribute: 'data-' + sort});
+                let data = {
+                    'shipment': {{ object.pk }},
+                    'priorities': priorities
+                };
+                update_priority($(el).data('url'), data)
+            }
+        });
+    </script>
+{% endblock %}

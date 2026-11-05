@@ -1,0 +1,63 @@
+{% extends "lims/base.html" %}
+{% load humanize %}
+{% load markup %}
+{% load static %}
+{% load bl_icons %}
+
+{% block pre-scripts %}
+    <script src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script src="{% static 'd3/js/d3-selection-multi.v1.min.js' %}"></script>
+    <script src="{% static 'lims/js/basiclive-layouts.min.js' %}"></script>
+{% endblock %}
+
+{% block page-pre-title %}Beamline{% endblock %}
+{% block page-title %}
+    <span class="fw-lighter">{{ object.acronym }} |</span><strong>{{ object.active_automounter.container.kind|default:"Manual Mounting" }}</strong>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">{{ object.name }}</span>
+{% endblock %}
+
+{% block page-tools %}
+    {% with object.active_automounter as automounter %}
+    {% if automounter.container.children_history.all %}
+        <a href="{% url 'automounter-history' object.active_automounter.container.pk %}">
+            {% show_icon label='History' icon='history' size='md' %}
+        </a>
+    {% endif %}
+    {% if automounter %}
+        <a href="#!" data-modal-url="{% url 'automounter-edit' pk=automounter.pk %}">
+            {% show_icon label='Comment' icon='comments' size='md' %}
+        </a>
+    {% endif %}
+    {% endwith %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-info text-condensed">
+        {{ object.contact_phone }}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">Energy&nbsp;Range:</small><br>
+        {{ object.energy_lo }} - {{ object.energy_hi }}
+    </div>
+{% endblock %}
+
+{% block page-content %}
+    {% with object.active_automounter as automounter %}
+        {% if automounter %}
+            <div class="row">
+                <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
+                    {% include "lims/details/container-layout.html" with container=automounter.container show_samples=True loadable=True %}
+                </div>
+
+                <div class="col-sm-5 col-12">
+                    {% include "lims/details/loaded.html" %}
+                </div>
+            </div>
+        {% endif %}
+        {% include "lims/comments.html" with object=automounter %}
+    {% endwith %}
+{% endblock %}

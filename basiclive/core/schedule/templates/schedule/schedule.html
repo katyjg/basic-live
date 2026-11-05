@@ -1,35 +1,32 @@
 {% extends 'lims/base.html' %}
 {% load i18n static %}
-{% load icons %}
+{% load bl_icons %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3 class="text-condensed">
         <span class="text-muted"><strong>{{ user.username|upper }}</strong> |</span> Schedule
     </h3>
 {% endblock %}
 
-{% block extra_css %}
+{% block page-styles %}
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-datepicker.min.css' %}" type="text/css" />
 {% endblock %}
 
-{% block pre_js %}
-    <script src="{% static 'schedule/js/mxlive-scheduler.js' %}"></script>
+{% block pre-scripts %}
+    <script src="{% static 'schedule/js/basiclive-scheduler.js' %}"></script>
     <script src="{% static 'bootstrap/js/bootstrap-datepicker.min.js' %}"></script>
 {% endblock %}
 
 
-{% block object_tools %}
+{% block page-tools %}
     {% if editable %}
-        <a href="{% url 'beamtime-stats' %}">
-            {% show_icon label='Usage' icon='ti ti-md ti-pie-chart' %}
-        </a>
         <a href="{% url 'email-list' %}">
-            {% show_icon label='Emails' icon='ti ti-md ti-email' %}
+            {% show_icon label='Emails' icon='mail' size='md' %}
         </a>
     {% endif %}
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     {% include "schedule/week.html" with year=year week=week show_modes=True editable=editable %}
 {% endblock %}
 

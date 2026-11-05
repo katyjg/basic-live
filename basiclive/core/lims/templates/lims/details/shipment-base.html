@@ -1,0 +1,69 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load bl_icons %}
+{% load bl_tags %}
+
+{% block page-styles %}
+    <link rel="stylesheet" href="{% static "lims/css/print.min.css" %}" type="text/css" media="print"/>
+{% endblock %}
+
+{% block page-title %}
+        <span class="text-thin">{% block title %}{% endblock %} |</span>
+        <span class="text-condensed">
+            <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
+        </span>
+{% endblock %}
+{% block page-subtitle %}
+    <span class="text-muted">
+        {% if not shipment.is_editable %}{% show_icon icon="lock" %}{% endif %}
+        {{ shipment.identity }} |
+        {% block sub_title %}{% endblock %}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    {% url 'shipment-data' shipment.pk as data_url %}
+    {% url 'shipment-reports' shipment.pk as report_url %}
+    {% url 'shipment-requests' shipment.pk as request_url %}
+    {% url 'shipment-samples' shipment.pk as sample_url %}
+    {% if request.path != data_url %}
+    <a href="{{ data_url }}" title="Go to Data from this shipment">
+        {% show_icon label="Data" icon="data" size='md' badge=shipment.num_datasets %}
+    </a>
+    {% endif %}
+    {% if request.path != report_url %}
+    <a href="{{ report_url }}" title="Go to Reports from this shipment">
+        {% show_icon label="Reports" icon="reports" size='md' badge=shipment.num_reports %}
+    </a>
+    {% endif %}
+    {% if shipment.requests.count and request.path != request_url %}
+        <a href="{{ request_url }}">
+            {% show_icon label="Requests" icon="requests" size='md' %}
+        </a>
+    {% endif %}
+    {% if request.path != sample_url %}
+    <a href="{{ sample_url }}">
+        {% show_icon label='Samples' icon='list' size='md' %}
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <div>
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        <a href="{% url 'shipment-detail' shipment.pk %}">{{shipment.name}}</a>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Samples:</small><br>
+        {{ shipment.num_samples }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Groups:</small><br>
+        {{ shipment.groups.count }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Comments:</small><br>
+        {{ shipment.comments }}
+    </div>
+{% endblock %}

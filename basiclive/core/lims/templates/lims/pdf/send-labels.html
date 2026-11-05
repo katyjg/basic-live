@@ -1,0 +1,64 @@
+{% extends "lims/pdf/doc-base.html" %}
+{% load static bl_tags %}
+
+{% block full %}
+{% spaceless %}
+<div class="container">
+    <div class="row">
+        <h2 class="heading">
+            <span class="fw-lighter">{{ APP_NAME }}&nbsp;|&nbsp;</span>
+            <span class="text-condensed">RETURN SHIPPING LABEL</span>
+        </h2>
+        <p>Print this document and cut out the label to affix to the outside of your transport container (dewar) for shipment.</p>
+        <div class="panel panel-main" style="width: 20cm;">
+            <div class="label-sidebar">
+                <div>
+                    <img alt="Fragile" src="{% static "lims/img/fragile_sign.svg" %}"/>
+                </div>
+                <div class="my-3 text-center text-condensed fs-5">Non-Hazardous Frozen Samples In Dry-Shipper</div>
+            </div>
+            <div class="label-main pe-4">
+                <table class="table table-sm">
+                    <tr>
+                        <td>To:</td>
+                        <td>{{ system.organisation|upper|default:"" }}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>ATTN: {{ sender.first_name|upper|default:"" }} {{ sender.last_name|upper|default:"" }}</td>
+                    </tr>
+                {% if system.department %}
+                    <tr>
+                        <td></td>
+                        <td>{{ system.department|upper }}</td>
+                    </tr>
+                {% endif %}
+                    {% include "lims/pdf/address-base.html" with object=system %}
+                    <tr><td></td><td>&nbsp;</td></tr>
+                    <tr class="return-address">
+                        <td>From:</td>
+                        <td>{{ project.contact_person|upper|default:"" }}</td>
+                    </tr>
+                {% if project.department %}
+                    <tr class="return-address">
+                        <td></td>
+                        <td>{{ project.department|upper }}</td>
+                    </tr>
+                {% endif %}
+                    <tr class="return-address">
+                        <td></td>
+                        <td>{{ project.organisation|upper|default:"" }}</td>
+                    </tr>
+                    {% include "lims/pdf/address-base.html" with object=project style_class="return-address" %}
+                    <tr class="border-top return-address">
+                        <td>ID:</td>
+                        <td>{{ project.name }} ({{ shipment.pk|human_code:6 }})</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="my-4 text-center text-condensed fs-5">Not restricted, as per Special Provision A152</div>
+        </div>
+    </div>
+</div>
+{% endspaceless %}
+{% endblock %}

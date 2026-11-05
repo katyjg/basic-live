@@ -1,0 +1,47 @@
+{% extends "crisp_modals/modal.html" %}
+
+{% load humanize %}
+
+{% block modal_title %}
+    {% if object.alias %}{{ object.alias }} ~ {{ object.name|upper }}
+    {% else %}{{ object.name|upper }}{% endif %} | {{ object.contact_name }}
+{% endblock %}
+
+{% block modal_subtitle %}
+    Allocated since {{ object.created|naturalday }}
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row status-bar p-3 overflow-ellipsis">
+        <div class="col">
+            <span class="text-muted">Type:</span><br/>
+            <h6 class="m-0">
+                <div class="badge text-bg-info"><span>{{ object.kind }}</span></div>
+            </h6>
+        </div>
+        <div class="col">
+            <span class="text-muted">Principal Investigator:</span><br>
+            <span>{{ object.pi.get_full_name|default:object.contact_name }}</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="p-3">
+                <p class="text-condensed fs-5 fw-thiner text-muted">Logistics Contact</p>
+                {{ object.contact_person|default_if_none:"" }}<br/>
+                {{ object.contact_email|default_if_none:"" }}<br/>
+                <pre>{{ object.contact_phone|default_if_none:"" }}</pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="px-3 mt-3">
+            <div class="text-condensed fs-5 fw-thiner text-muted">Address</div>
+            </div>
+            {% include "lims/address.html" with project=object %}
+
+        </div>
+    </div>
+{% endblock %}
+

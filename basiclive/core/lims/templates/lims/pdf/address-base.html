@@ -1,0 +1,20 @@
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>{{ object.address|upper|default:"" }}</td>
+</tr>
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>
+    {{ object.city|upper|default:"" }}&nbsp;
+    {{ object.region_code|default:object.region.name|upper|default:"" }}&nbsp;
+    {{ object.postal_code|upper|default:"" }}
+    </td>
+</tr>
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>{{ object.country.name|upper|default:"" }}</td>
+</tr>
+{% if object.contact_phone %}
+    <tr class="{{ style_class }}"><td></td><td></td></tr>
+    <tr class="{{ style_class }}"><td></td><td>Phone: {{ object.contact_phone|default:""}}</td></tr>
+{% endif %}

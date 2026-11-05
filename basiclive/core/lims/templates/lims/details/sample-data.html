@@ -1,0 +1,16 @@
+{% load bl_badges %}
+
+{% for data in sample.datasets.all %}
+    {% if not select_session or select_session == data.session %}
+    <a data-modal-url="{% url 'data-detail' data.pk %}" class="d-inline-block p-1">
+    {% label_badge header=data.kind.acronym|slice:":3" value=data|dataset classes="bg-info" %}
+    </a>
+    {% endif %}
+{% endfor %}
+{% for data in sample.orphaned_datasets %}
+    {% if not select_session or select_session == data.session %}
+    <a data-modal-url="{% url 'data-detail' data.pk %}" class="d-inline-block p-1">
+    {% label_badge header=data.kind.acronym|slice:":3" value=data|dataset classes="bg-info" %}
+    </a>
+    {% endif %}
+{% endfor %}

@@ -39,9 +39,9 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, null=True)),
                 ('address', models.GenericIPAddressField()),
                 ('active', models.BooleanField(default=False)),
-                ('created', models.DateTimeField(auto_now_add=True, verbose_name=b'date created')),
-                ('modified', models.DateTimeField(auto_now_add=True, verbose_name=b'date modified')),
-                ('users', models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL)),
+                ('created', models.DateTimeField(auto_now_add=True, verbose_name='date created')),
+                ('modified', models.DateTimeField(auto_now_add=True, verbose_name='date modified')),
+                ('users', models.ManyToManyField(blank=True, to='lims.Project')),
             ],
             options={
                 'verbose_name': 'Access List',

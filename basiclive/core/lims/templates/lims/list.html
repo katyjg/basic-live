@@ -1,21 +1,15 @@
 {% extends "lims/base.html" %}
 {% load static %}
-{% load icons %}
-{% block page_heading %}<h3>{{ view.page_title }}</h3>{% endblock %}
+{% load bl_icons %}
 
-{% block object_tools %}
-    {% if view.plot_url %}
-        <a href="{{ view.plot_url }}">
-            {% show_icon label='Stats' icon='ti ti-md ti-pulse' %}
-        </a>
-        {% if view.tool_template %}
-            <a class="separator"></a>
-        {% endif %}
-    {% endif %}
+{% block page-pre-title %}List of{% endblock %}
+{% block page-title %}{{ view.page_title }}{% endblock %}
+
+{% block page-tools %}
     {% if view.tool_template %}{% include view.tool_template %}{% endif %}
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 <div class="row">
         <div class="col">
 		{% include "itemlist/embed_list.html" %}

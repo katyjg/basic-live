@@ -1,0 +1,98 @@
+{% extends "lims/base.html" %}
+
+{% load bl_icons %}
+
+
+{% block page-pre-title %}Sample{% endblock %}
+{% block page-title %}
+{% if user.is_superuser %}<span class="fw-lighter">{{ object.project }} | </span>{% endif %}<strong>{{ object.name }}</strong>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
+        {% if object.container.shipment %}
+            {% with object.container.shipment.num_samples as num_samples %}
+            <strong>1</strong> of <strong>{{ num_samples }}</strong> Sample{{ num_samples|pluralize }} in Shipment {{object.container.shipment.name}}
+            {% endwith %}
+        {% else %}
+            Sample not in a shipment.
+        {% endif %}
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    {%  if object.container.status == object.container.STATES.DRAFT %}
+        <a href="#!" data-modal-url="{% url 'request-new' %}?samples={{ object.pk }}" title="Add a Request">
+            {% show_icon label='Request' icon="requests" size='md' badge="+" color="primary" %}
+        </a>
+
+    {% endif %}
+    {% if object.container.status == object.container.STATES.DRAFT or object.comments or object.staff_comments %}
+    {% if object.container.status == object.container.STATES.DRAFT %}
+        <a href="#!" data-modal-url="{{ handler }}edit/">
+            {% show_icon label='Edit' icon='edit' size='md' %}
+        </a>
+        <a href="#!" data-modal-url="{{ handler }}delete/">
+            {% show_icon label='Delete' icon='trash' size='md' %}
+        </a>
+    {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    {% spaceless %}
+    <span class="status-badge badge bg-{% if object.container.status == object.container.STATES.ON_SITE %}info
+                                     {% elif object.container.status < object.container.STATES.ON_SITE %}warning
+                                     {% else %}secondary{% endif %} text-condensed">
+            {% if object.container.status < object.container.STATES.SENT %}
+                Draft
+            {% elif object.container.status < object.container.STATES.RETURNED %}
+                {{ object.automounter.beamline.acronym|default:"Pending" }}
+            {% else %}
+                Done
+            {% endif %}
+    </span>
+    {% endspaceless %}
+    <div>
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        {% if object.container.shipment %}
+        <a href="{% url 'shipment-detail' object.container.shipment.pk %}">{{object.container.shipment.name}}</a>
+            {% else %}
+            Not in Shipment
+        {% endif  %}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Location:</small><br>
+        <strong>{{ object.automounter|default_if_none:"" }} {{ object.port }}</strong>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Group:</small><br>
+        <a href="{% url 'group-detail' object.group.pk %}">{{ object.group }}</a>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Container:</small><br>
+        <a href="{% url 'container-detail' object.container.pk %}">{{ object.container.name }}</a>
+    </div>
+    {% include "lims/comments.html" with object=object %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="{% if sample.image %}col-md-7 {% endif %}col-12">
+            <div class="list-group list-group-hover">
+                {% include "lims/details/sample-data.html" %}
+                {% if not object.datasets.count %}
+                    <div class="list-group-item empty">No data collected for this sample yet.</div>
+                {% endif %}
+            </div>
+        </div>
+        {% if sample.image %}
+            <div class="float-end col-md-5 ps-md-4 pt-4 pt-md-0 col-12">
+                <img src="{{ sample.image.url }}" width="100%"/>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+

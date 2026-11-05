@@ -24,7 +24,7 @@ p {
   padding: 4rem;
 
   table {
-    font-size: 20px;
+    font-size: 1rem;
     max-width: 77.5%;
   }
 }
@@ -44,14 +44,14 @@ table td {
 
 .panel-default {
   background-color: #efefef !important;
-  padding: 1.5rem;
-  margin-top: 45px;
+  padding: 0.75rem;
   width: 72.5%;
+  margin-top: 1rem;
 
   table {
     width: 100%;
     max-width: 100%;
-    font-size: 14px;
+    font-size: 0.80rem;
 
     td {
       background: none !important;
@@ -67,17 +67,25 @@ table td {
     width: 100%;
   }
 }
+.label-main {
+  table td {
+    line-height: 1.05;
+    font-size: 13pt;
+  }
 
-.emphasize {
-  font-size: 18px;
-  text-align: center;
+  font-weight: 600;
+  tr.return-address td {
+    font-size: 0.9rem;
+    font-weight: 300;
+    background: rgba(0, 0, 0, 0.1) !important;
+  }
 }
-
 /* Shipping Form */
 
 #shipping-form {
   page-break-before: always !important;
-  padding-right: 2px;
+  margin: 1.5cm;
+  padding: 0.5em;
 
   p {
     margin-top: 0;
@@ -156,4 +164,11 @@ table td {
 
 .border-black-right {
   border-right: 1px solid black !important;
+}
+
+@media print {
+    #shipping-form {
+        margin: 1.5cm;
+        break-before: page;
+    }
 }

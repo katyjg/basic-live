@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Automounter Loader</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'misc/css/toastify.min.css' %}">
+    <style>
+        :root {
+            --bs-body-font-size: 1.85vw;
+        }
+        main {
+            height: 100vh;
+            overflow-y: hidden;
+            overflow-x: hidden;
+        }
+
+        .scroll-area {
+            overflow-y: auto;
+        }
+
+        .puck {
+            aspect-ratio: 1;
+        }
+    </style>
+    <script src="{% static 'jquery/js/jquery-3.4.1.min.js' %}" crossorigin="anonymous"></script>
+</head>
+<body data-bs-theme="dark">
+<main class="d-flex flex-nowrap gap-1">
+    <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-body-tertiary" style="width: 30vw;">
+        <div class="d-flex flex-row justify-content-start align-items-center p-2 bg-secondary text-white">
+            <a href="" class="p-3 me-3 text-white border-end">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                     class="icon icon-tabler icons-tabler-outline icon-tabler-refresh">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/>
+                    <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>
+                </svg>
+            </a>
+            <span class="fw-thin border-left m-0">{{ config }}</span>
+        </div>
+        <div class="list-group list-group-flush border-bottom scroll-area">
+            {% for project in projects %}
+                <a href="{% url 'project-puck-loader' beamline=object.acronym project=project.name %}"
+                   class="list-group-item list-group-item-action {% if project == active_project %}active{% endif %} py-3 lh-sm"
+                   {% if project == active_project %}aria-current="true"{% endif %}
+                >
+                    <div class="d-flex w-100 align-items-center justify-content-between">
+                        <strong class="mb-1">{{ project.name.upper }}</strong>
+                        <small>{{ project.kind|default_if_none:"" }}</small>
+                    </div>
+                    <div class="col-10 mb-1 small">
+                        {{ project.shipments.on_site.count }} shipments
+                        {% if project.shipments.on_site.count > 0 %}
+                            , {{ project.containers.on_site.count }} Containers
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="d-flex flex-grow-1 flex-row flex-wrap align-items-start justify-content-start scroll-area p-3">
+        <div class="container-fluid">
+            <div class="row">
+                {% for container in containers %}
+                    <a class="col-4 text-decoration-none mb-3 puck-selector"
+                       href="#0"
+                       data-container-id="{{ container.pk }}"
+                       data-container-name="{{ container.name }}"
+                       data-container-project="{{ container.project.name }}"
+                       data-select-url="{% url 'loader-select-puck' beamline=beamline.acronym project=container.project.name puck=container.pk %}"
+                    >
+                        <div class="puck border border-5 rounded-circle d-flex flex-column justify-content-center align-items-center {% if container == config.selected %}text-bg-primary{% else %}{% endif %}">
+                            <div class="fw-bold">{{ container.name }}</div>
+                            {% if container.location %}
+                                <span class="badge rounded-pill text-bg-info">{{ container.port }}</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div id="progressBox" class="progress fixed-bottom" role="progressbar" aria-label="Load Status"
+         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="height: 3px">
+      <div id="progressBar" class="progress-bar" style="width: 0"></div>
+    </div>
+</main>
+
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}" crossorigin="anonymous"></script>
+<script type="text/javascript" src="{% static 'misc/js/toastify.min.js' %}"></script>
+<script type="text/javascript">
+
+    function goFullScreen() {
+        let el = document.documentElement;
+        let rfs = el.requestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        rfs.call(el);
+    }
+
+    const config_time = {{ config.updated.timestamp|floatformat:0 }};
+    $(document).ready(function () {
+        // Initialize Toastify for displaying messages
+
+        {% for message in messages %}
+        Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            gravity: "bottom",
+            position: 'right',
+            backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+        }).showToast();
+        {% endfor %}
+
+        // Check if changes are pending and reload the page
+        setInterval(function(){
+            $.ajax({
+                url: "{% url 'loader-check-pending' beamline=beamline.acronym %}",
+                type: 'GET',
+                success: function (data) {
+                    if ((data.time) && (data.time - config_time > 1)) {
+                        window.location.reload()
+                    }
+                },
+            });
+        }, 2000);
+
+        // Handle puck selection
+        $('.puck-selector').on('click', function (e) {
+            e.preventDefault();
+            const puck = $(this);
+            const puckId = puck.data('container-id');
+            const puckName = puck.data('container-name');
+            const puckProject = puck.data('container-project');
+            const selectUrl = puck.data('select-url');
+
+            if (!selectUrl) {
+                return;
+            }
+
+            $.ajax({
+                url: selectUrl,
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    id: puckId,
+                    name: puckName,
+                    project: puckProject
+                },
+                success: function (data) {
+                    if (data.url) {
+                        window.location.href = data.url;
+                    } else if (data.error) {
+                        Toastify({
+                            text: data.error,
+                            duration: 3000,
+                            gravity: "bottom",
+                            position: 'right',
+                            backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+                        }).showToast();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Toastify({
+                        text: error,
+                        duration: 3000,
+                        gravity: "bottom",
+                        position: 'right',
+                        backgroundColor: "linear-gradient(to right, #FF5F6D, #FFC371)",
+                    }).showToast();
+                }
+            });
+        });
+    });
+</script>
+</body>

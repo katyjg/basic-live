@@ -1,6 +1,6 @@
-{% extends "modal/form.html" %}
+{% extends "crisp_modals/form.html" %}
 
-{% load misc_tags %}
+{% load bl_tags %}
 
 {% block modal_title %}Reset API Key?{% endblock %}
 {% block pre_content %}
@@ -13,7 +13,7 @@
     <p>Resetting the key allows a new key to be set remotely. Only do this if you will be providing a new key shortly.
     </p>
 
-    <div id="key_snippet_grp" class="form-group">
+    <div id="key_snippet_grp" class="mb-3">
         <label for="key_snippet" class="">Existing Key</label>
         <div class="">
             <textarea cols="40" rows="1" disabled class="textarea form-control" id="key_snippet">{{ object.key|truncatechars:50|default:"-- no key --" }}</textarea>
@@ -23,7 +23,7 @@
     <input type="hidden" name="key" value="" />
 {% endblock %}
 {% block modal_footer %}
-    <button type="submit" value="Submit" class="btn btn-danger pull-right">Yes, I'm sure</button>
+    <button type="submit" value="Submit" class="btn btn-danger float-end">Yes, I'm sure</button>
 {% endblock %}
 {% block post_content %}
     </form>

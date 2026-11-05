@@ -1,0 +1,79 @@
+{% extends "notebooks/entries/entry.html" %}
+{% load bl_notebooks %}
+
+{% block entry_content %}
+    {% load_data entry as data %}
+    {% plot_axes entry as axes %}
+    <div>
+      {% if axes|length > 1 %}
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" href="#data-{{ entry.pk }}" role="tab" data-bs-toggle="tab">Data</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link plot-tab" href="#plot-{{ entry.pk }}" role="tab" data-bs-toggle="tab" data-entry-pk="{{ entry.pk }}">Plot</a>
+          </li>
+        </ul>
+      {% endif %}
+        <!-- Tab panes -->
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane fade show active" id="data-{{ entry.pk }}">
+              <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                    {% for header in data.headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in data.data %}
+                        <tr>
+                            {% for e in line %}
+                                <td>{{ e }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+          </div>
+          {% if axes|length > 1 %}
+          <div role="tabpanel" class="tab-pane fade" id="plot-{{ entry.pk }}">
+            <div class="row">
+                <div class="col-sm">
+                    <label for="x-axis-{{ entry.pk }}" class="form-label">X-Axis</label>
+                    <select class="form-select form-select-sm x-axis" id="x-axis-{{ entry.pk }}" autocomplete="off" onchange="plotData(this);">
+                        {% for header in data.headers %}
+                            <option value="{{ header }}" {% if forloop.counter == 1 %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm">
+                    <label for="y1-axis-{{ entry.pk }}" class="form-label">Y-Axis (1)</label>
+                    <select class="form-select form-select-sm y1-axis" id="y1-axis-{{ entry.pk }}" autocomplete="off" onchange="plotData(this);">
+                        {% for axis in axes %}
+                            <option value="{{ axis }}"
+                            {% if data.headers|length > axes|length and forloop.counter == 1 or data.headers|length == axes|length and forloop.counter == 2 %}selected{% endif %}>{{ axis }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if data.headers|length > 2 and axes|length > 1 %}
+                    <div class="col-sm">
+                        <label for="y2-axis-{{ entry.pk }}" class="form-label">Y-Axis (2)</label>
+                        <select class="form-select form-select-sm y2-axis" id="y2-axis-{{ entry.pk }}" autocomplete="off" onchange="plotData(this);">
+                            <option value="">None</option>
+                            {% for axis in axes %}
+                                <option value="{{ axis }}" {% if axes|length > 2 and forloop.counter == 3 or axes|length == 2 and forloop.counter == 2 %}selected{% endif %}>{{ axis }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+    </div>
+    <script id="plot-data-{{ entry.pk }}" type="application/json">
+        {{ entry.text|safe }}
+    </script>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "notebooks/entries/entry.html" %}
+{% load markup %}
+
+{% block entry_content %}
+    {% if entry.file %}<a href="{{ entry.file.url }}" class="d-block mb-2">{{ entry.file.name }}</a>{% endif %}
+    {% if entry.text %}{{ entry.text|markdown }}{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% load bl_tags %}
+
+{% with request.labeled_parameters as parameters %}
+    {% if parameters %}
+        <table class="table">
+            <tbody>
+                {% for name, value in parameters.items %}
+                <tr>
+                   <th>{{ name }}</th>
+                   <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">No parameters defined for this request.</p>
+    {% endif %}
+{% endwith %}

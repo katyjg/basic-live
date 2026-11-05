@@ -1,12 +1,11 @@
-{% extends "modal/content.html" %}
+{% extends "crisp_modals/modal.html" %}
 
-{% load converter %}
+{% load bl_tags %}
+{% load bl_icons %}
 {% load humanize %}
 
-{% block modal_title %}
-    <h3 class="text-condensed">User Feedback</h3>
-    <span class="text-muted"><small>Submitted {{ object.created }}</small></span>
-{% endblock %}
+{% block modal_title %}User Feedback{% endblock %}
+{% block modal_subtitle %}Submitted {{ object.created }}{% endblock %}
 
 {% block modal_body %}
     <div class="row status-bar pb-1 overflow-ellipsis">
@@ -18,7 +17,7 @@
                 No Session
             {% endif %}
         </div>
-        <div class="col pull-right text-right">
+        <div class="col float-end text-end">
             <small class="text-muted text-condensed">Session Start:</small><br>
             {{ object.session.start }}
         </div>
@@ -27,7 +26,7 @@
         {% if object.comments %}
         <div class="col-12">
             <div class="alert alert-info mt-3">
-                <sup><i class="ti ti-sm ti-quote-left"></i></sup> {{ object.comments }} <sup><i class="ti ti-sm ti-quote-right"></i></sup>
+                {% show_icon icon="quote" size="sm" %} {{ object.comments }}
             </div>
         </div>
         {% endif %}
@@ -42,7 +41,12 @@
                 <tbody>
                   {% for area in object.areas.all %}
                     <tr>
-                      <td>{{ area.area.name }}</td>
+                      <td>
+                        <div class="fw-bold">{{ area.area.name }}</div>
+                        {% if area.area.label and area.area.label != area.area.name %}
+                          <small class="text-muted">{{ area.area.label }}</small>
+                        {% endif %}
+                      </td>
                       <td>{{ area.get_rating_display }}</td>
                     </tr>
                   {% endfor %}

@@ -1,7 +1,6 @@
-{% extends "modal/content.html" %}
+{% extends "crisp_modals/modal.html" %}
 
 {% load humanize %}
-{% load settings %}
 
 {% block modal_title %}
     <h3 class="text-condensed">
@@ -18,10 +17,6 @@
 
 {% block modal_body %}
     {% now "Y-m-d" as now %}
-    {% get_setting "MIN_SUPPORT_HOUR" 0 as MIN_SUPPORT_HOUR %}
-    {% get_setting "MAX_SUPPORT_HOUR" 24 as MAX_SUPPORT_HOUR %}
-    {% get_setting "SUPPORT_EMAIL" as SUPPORT_EMAIL %}
-
     {% with object.active as active %}
         <div class="row status-bar pb-1 overflow-ellipsis">
             <div class="col">
@@ -30,7 +25,7 @@
                     <strong><span class="{% if active %}text-success{% elif current %}text-warning{% else %}text-muted{% endif %}">{% now "H:i" %}</span></strong> <span class="text-condensed text-muted">{% now "M j, Y" %}</span>
                 </h5>
             </div>
-            <div class="col pull-right text-right">
+            <div class="col float-end text-end">
                 <strong class="text-sm">Support Hours:</strong><br>
                 <h5 class="text-condensed text-muted">{% if MIN_SUPPORT_HOUR < 10 %}0{% endif %}{{ MIN_SUPPORT_HOUR|floatformat:"0" }}:00 - {{ MAX_SUPPORT_HOUR|floatformat:"0" }}:00</h5>
             </div>
@@ -41,9 +36,9 @@
                 {% if active %}
                     <div class="alert alert-success mt-3">
                         Contact <strong>{{ object.staff.first_name }}</strong> at
-                        <strong><a href="mailto:{{ object.staff.contact_email|urlencode }}" title="Email {{ object }}">
-                            {{ object.staff.contact_email }}
-                        </a></strong> or <strong>{{ object.staff.contact_phone }}</strong>.
+                        <strong><a href="mailto:{{ object.staff.email|urlencode }}" title="Email {{ object }}">
+                            {{ object.staff.email }}
+                        </a></strong>{% if object.staff.phone %} or <strong>{{ object.staff.phone }}</strong>{% endif %}.
                     </div>
                 {% else %}
                     <div class="alert alert-{% if current %}warning{% else %}info{% endif %} mt-3">

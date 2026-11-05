@@ -1,0 +1,49 @@
+{% extends "lims/base.html" %}
+{% load bl_icons %}
+{% load humanize %}
+{% load static %}
+{% load bl_tags %}
+
+{% block page-title %}
+    <span class="text-muted">{% if user.is_superuser %}{{ session.project|upper }} | {% endif %}</span><strong>{{ session.name }}</strong>
+{% endblock %}
+{% block page-subtitle %}
+    <span class="text-muted">
+        Data from Session
+    </span>
+{% endblock %}
+
+{% block page-tools %}
+    <a href="{% url 'session-reports' session.pk %}" title="Go to Reports from this session">
+        {% show_icon label='Reports' icon='reports' size='md' badge=session.num_reports %}
+    </a>
+{% endblock %}
+
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <div>
+        <small class="text-muted text-condensed">Session:</small><br>
+        <a href="{% url 'session-detail' session.pk %}">{{session.name}}</a>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Total Time:</small><br>
+        {{ session.total_time|humanize_duration }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Start:</small><br>
+        {{ session.start|naturalday }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Comments:</small><br>
+        {{ session.comments }}
+    </div>
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="col-sm-12">
+            {% include "itemlist/embed_list.html" %}
+        </div>
+    </div>
+
+{% endblock %}

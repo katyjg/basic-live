@@ -1,16 +1,1 @@
-{% extends "lims/warning.html" %}
-
-{% load icons %}
-
-{% block page_heading %}
-    <h3>
-        <span class="text-thin">Warning |</span>
-        <span class="text-condensed">
-            <strong>You're not allowed to do that.</strong>
-        </span>
-    </h3>
-    <span class="text-muted">
-        <i class="text-muted ti ti-lock"></i>
-        UH-OH-403 | Please contact staff or go back.
-    </span>
-{% endblock %}
+{% include "lims/warning.html" with error_message="You lack the required authorization to view this resource." error_title="Access Denied" status_code=403 %}

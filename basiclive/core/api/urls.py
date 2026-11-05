@@ -1,21 +1,43 @@
-from django.urls import re_path, path
+from django.urls import path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView
+)
+
+from basiclive.core.lims.conf import settings as lims_settings
 from . import views
 
-
-def keyed_url(regex, view, kwargs=None, name=None):
-    regex = r'(?P<signature>(?P<username>[\w_-]+):.+)/' + regex[1:]
-    return re_path(regex, view, kwargs, name)
-
-
 urlpatterns = [
-    #re_path(r'^accesslist/$', views.AccessList.as_view()),
-    #path('keys/<slug:username>', views.SSHKeys.as_view(), name='project-sshkeys'),
+    path('v3/auth/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v3/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('v3/auth/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
-    keyed_url(r'^data/(?P<beamline>[\w_-]+)/$', views.AddData.as_view()),
-    keyed_url(r'^report/(?P<beamline>[\w_-]+)/$', views.AddReport.as_view()),
+    # V3 routes (JWT Bearer Token / request.project context)
+    path('v3/data/<slug:beamline>/', views.AddData.as_view(), name='api-data'),
+    path('v3/projects/', views.FetchProjects.as_view(), name='api-projects'),
+    path('v3/report/<slug:beamline>/', views.AddReport.as_view(), name='api-report'),
+    path('v3/samples/<slug:beamline>/', views.ProjectSamples.as_view(), name='api-project-samples'),
+    path('v3/session/<slug:beamline>/<slug:session>/start/', views.LaunchSession.as_view(), name='api-session-start'),
+    path('v3/session/<slug:beamline>/<slug:session>/close/', views.CloseSession.as_view(), name='api-session-close'),
 
-    keyed_url(r'^project/$', views.UpdateUserKey.as_view(), name='project-update'),
-    keyed_url(r'^samples/(?P<beamline>[\w_-]+)/$', views.ProjectSamples.as_view(), name='project-samples'),
-    keyed_url(r'^launch/(?P<beamline>[\w_-]+)/(?P<session>[\w_-]+)/$', views.LaunchSession.as_view(), name='session-launch'),
-    keyed_url(r'^close/(?P<beamline>[\w_-]+)/(?P<session>[\w_-]+)/$', views.CloseSession.as_view(), name='session-close'),
+    # V2 legacy routes (asymmetric signed URL fallback)
+    path('v2/<slug:signature>:<slug:username>/data/<slug:beamline>/', views.AddData.as_view(), name='v2-data'),
+    path('v2/<slug:signature>:<slug:username>/report/<slug:beamline>/', views.AddReport.as_view(), name='v2-report'),
+    path('v2/<slug:signature>:<slug:username>/samples/<slug:beamline>/', views.ProjectSamples.as_view(), name='v2-project-samples'),
+    path('v2/<slug:signature>:<slug:username>/launch/<slug:beamline>/<slug:session>/', views.LaunchSession.as_view(), name='v2-session-launch'),
+    path('v2/<slug:signature>:<slug:username>/close/<slug:beamline>/<slug:session>/', views.CloseSession.as_view(), name='v2-session-close'),
 ]
+
+if lims_settings.USE_ACL:
+    import basiclive.core.acl.views as acl_views
+    urlpatterns += [
+        # v3
+        path('v3/accesslist/', acl_views.EndpointList.as_view()),
+        path('v3/keys/<slug:username>/', acl_views.AccessKeys.as_view()),
+
+        # v2
+        path('v2/accesslist/', acl_views.EndpointList.as_view()),
+        path('v2/keys/<slug:username>/', acl_views.AccessKeys.as_view()),
+
+    ]
