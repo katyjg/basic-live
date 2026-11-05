@@ -19,5 +19,5 @@ class Command(BaseCommand):
         jmetrics = update_journal_metrics(year)
         print(f"UPDATED JOURNAL METRICS: {jmetrics}")
         pmetrics = update_publication_metrics(year)
-        print("UPDATED PUBLICATION METRICS: {}".format(pmetrics))
+        print(f"UPDATED PUBLICATION METRICS: {pmetrics}")
         update_funders()
