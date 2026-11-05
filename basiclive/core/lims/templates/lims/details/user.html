@@ -116,7 +116,7 @@
                                         <strong>{% show_icon icon="key" size='sm' %} {{ key.name }}</strong>
                                     </h6>
                                     <div>
-                                        <a href="#!" data-modal-url="{% url 'sshkey-delete' username=user.username pk=key.pk %}"
+                                        <a href="#!" data-modal-url="{% url 'sshkey-delete' username=object.username pk=key.pk %}"
                                            class="text-danger small" title="Delete Key">
                                             {% show_icon icon="delete" size='sm' %}
                                         </a>

@@ -1563,6 +1563,7 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView)
     model = models.User
     slug_field = 'username'
     slug_url_kwarg = 'username'
+    context_object_name = 'target_user'     # Prevent clobbering of {{ user }} in template
     template_name = "lims/details/user.html"
 
     def test_func(self):
