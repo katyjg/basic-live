@@ -27,6 +27,7 @@ DEFAULTS: dict[str, Any] = {
         "last_name": "sn",
         "email": "mail",
     },
+    "AUTH_CLEAN_USER_DATA": "basiclive.auth.ldap.utils.clean_user_data",
 }
 
 settings = AppSettings("LDAP", DEFAULTS)

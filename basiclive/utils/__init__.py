@@ -158,6 +158,7 @@ def configure(settings: dict) -> None:
         for provider in settings["BASICLIVE_AUTH_PROVIDERS"]:
             if provider == 'ldap':
                 settings["AUTHENTICATION_BACKENDS"].append('django_python3_ldap.auth.LDAPBackend')
+                settings.setdefault("LDAP_AUTH_CLEAN_USER_DATA", "basiclive.auth.ldap.utils.clean_user_data")
             elif provider == 'cas':
                 settings["AUTHENTICATION_BACKENDS"].append('django_cas_ng.backends.CASBackend')
 
