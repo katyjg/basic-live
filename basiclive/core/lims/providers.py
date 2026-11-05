@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 _ROLE_RANK = {
     ProjectMembership.Role.MEMBER: 1,
-    ProjectMembership.Role.CO_INVESTIGATOR: 2,
+    ProjectMembership.Role.DELEGATE: 2,
     ProjectMembership.Role.PI: 3,
 }
 
@@ -38,8 +38,8 @@ def _normalize_role(role: str | None) -> str:
     role_upper = role.strip().upper()
     if role_upper in valid_roles:
         return role_upper
-    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR"):
-        return ProjectMembership.Role.CO_INVESTIGATOR
+    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR", "CO_INVESTIGATOR", "DELEGATE"):
+        return ProjectMembership.Role.DELEGATE
     return ProjectMembership.Role.MEMBER
 
 
@@ -438,8 +438,9 @@ class HttpProjectProvider(BaseProjectProvider):
     }
     DEFAULT_ROLE_MAP = {
         "PI": ProjectMembership.Role.PI,
-        "CO_INVESTIGATOR": ProjectMembership.Role.CO_INVESTIGATOR,
-        "CO_I": ProjectMembership.Role.CO_INVESTIGATOR,
+        "DELEGATE": ProjectMembership.Role.DELEGATE,
+        "CO_INVESTIGATOR": ProjectMembership.Role.DELEGATE,
+        "CO_I": ProjectMembership.Role.DELEGATE,
         "MEMBER": ProjectMembership.Role.MEMBER,
         "USER": ProjectMembership.Role.MEMBER,
     }

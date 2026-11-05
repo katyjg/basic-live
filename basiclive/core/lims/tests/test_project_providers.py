@@ -399,7 +399,7 @@ class BulkProjectSyncTests(TestCase):
                         email="MEMBER@FACILITY.ORG",  # Case-insensitive email match
                         first_name="Grace",
                         last_name="Hopper",
-                        role=ProjectMembership.Role.CO_INVESTIGATOR,
+                        role=ProjectMembership.Role.DELEGATE,
                     ),
                     ExternalMemberData(
                         username="unlogged_researcher",
@@ -465,7 +465,7 @@ class BulkProjectSyncTests(TestCase):
         m_pi = ProjectMembership.objects.get(project=proj1, user=self.existing_pi)
         self.assertEqual(m_pi.role, ProjectMembership.Role.PI)
         m_coi = ProjectMembership.objects.get(project=proj1, user=self.existing_member)
-        self.assertEqual(m_coi.role, ProjectMembership.Role.CO_INVESTIGATOR)
+        self.assertEqual(m_coi.role, ProjectMembership.Role.DELEGATE)
 
         # Verify PORTAL-2001 update: stale_member removed, unlogged PI leaves project.pi=None
         preexisting.refresh_from_db()
@@ -536,10 +536,10 @@ class BulkProjectSyncTests(TestCase):
         self.assertEqual(proj.country.alpha2, "CA")
         self.assertEqual(proj.region.code, "CA-SK")
         # Roster stores normalized role
-        self.assertEqual(proj.external_roster[0]["role"], ProjectMembership.Role.CO_INVESTIGATOR)
-        # CO_INVESTIGATOR wins over MEMBER when user is listed twice
+        self.assertEqual(proj.external_roster[0]["role"], ProjectMembership.Role.DELEGATE)
+        # DELEGATE wins over MEMBER when user is listed twice
         membership = ProjectMembership.objects.get(project=proj, user=self.existing_member)
-        self.assertEqual(membership.role, ProjectMembership.Role.CO_INVESTIGATOR)
+        self.assertEqual(membership.role, ProjectMembership.Role.DELEGATE)
 
         # Second sync changes country to US without a region -> must clear incompatible CA-SK region
         StaticSyncProvider.projects_to_return = [
@@ -619,7 +619,7 @@ class HttpProjectProviderTests(TestCase):
             },
             role_map={
                 "LEAD_PI": "PI",
-                "CO_I": "CO_INVESTIGATOR",
+                "CO_I": "DELEGATE",
                 "EXPERIMENTER": "MEMBER",
             },
         )
@@ -645,7 +645,7 @@ class HttpProjectProviderTests(TestCase):
         self.assertEqual(proj.country_code, "FR")
         self.assertEqual(len(proj.members), 3)
         self.assertEqual(proj.members[0].role, ProjectMembership.Role.PI)
-        self.assertEqual(proj.members[1].role, ProjectMembership.Role.CO_INVESTIGATOR)
+        self.assertEqual(proj.members[1].role, ProjectMembership.Role.DELEGATE)
         self.assertEqual(proj.members[2].role, ProjectMembership.Role.MEMBER)
 
 
@@ -682,7 +682,7 @@ class DeferredUserSyncTests(TestCase):
                     "email": "RFRANKLIN@KINGS.AC.UK",  # Case-insensitive email match
                     "first_name": "Rosalind",
                     "last_name": "Franklin",
-                    "role": "CO_INVESTIGATOR",
+                    "role": "DELEGATE",
                     "phone": "555-1952",
                 }
             ],
@@ -716,7 +716,7 @@ class DeferredUserSyncTests(TestCase):
         )
         self.assertTrue(
             ProjectMembership.objects.filter(
-                project=proj_member, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+                project=proj_member, user=user, role=ProjectMembership.Role.DELEGATE
             ).exists()
         )
 
@@ -768,7 +768,7 @@ class DeferredUserSyncTests(TestCase):
                         )
                     ],
                 ),
-                ("EXT-MX-1", "CO_INVESTIGATOR"),
+                ("EXT-MX-1", "DELEGATE"),
             ],
         )
 
@@ -791,7 +791,7 @@ class DeferredUserSyncTests(TestCase):
         )
         self.assertTrue(
             ProjectMembership.objects.filter(
-                project=existing_proj, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+                project=existing_proj, user=user, role=ProjectMembership.Role.DELEGATE
             ).exists()
         )
 
@@ -1025,7 +1025,7 @@ class DeferredUserSyncTests(TestCase):
                 {
                     "username": "cli_user",
                     "email": "cli@example.org",
-                    "role": "CO_INVESTIGATOR",
+                    "role": "DELEGATE",
                 }
             ],
         )
@@ -1043,7 +1043,7 @@ class DeferredUserSyncTests(TestCase):
             call_command("sync_projects", "--user", "cli_user", stdout=out)
             self.assertTrue(
                 ProjectMembership.objects.filter(
-                    project=proj, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+                    project=proj, user=user, role=ProjectMembership.Role.DELEGATE
                 ).exists()
             )
             self.assertIn("cli_user", out.getvalue())

@@ -64,7 +64,7 @@ from basiclive.core.schedule.models import Beamtime, AccessType
 
 class MultiUserRolesAndBoundariesTestCase(TestCase):
     """
-    Validates role-based access permissions, team hierarchies (PI, Co-Investigator, Member),
+    Validates role-based access permissions, team hierarchies (PI, Delegate, Member),
     and project boundaries.
     """
 
@@ -92,7 +92,7 @@ class MultiUserRolesAndBoundariesTestCase(TestCase):
         # User belonging to both Project Alpha and Project Beta
         self.dual_user = create_user(username="dual_user", name="Dual User")
         create_project_membership(self.dual_user, self.proj_alpha, role=ProjectMembership.Role.MEMBER)
-        create_project_membership(self.dual_user, self.proj_beta, role=ProjectMembership.Role.CO_INVESTIGATOR)
+        create_project_membership(self.dual_user, self.proj_beta, role=ProjectMembership.Role.DELEGATE)
 
         # Unaffiliated outsider
         self.outsider = create_user(username="outsider", name="Outsider")

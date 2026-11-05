@@ -314,7 +314,7 @@ class User(AbstractUser):
 class ProjectMembership(TimeStampedModel):
     class Role(models.TextChoices):
         PI = 'PI', _('Principal Investigator')
-        CO_INVESTIGATOR = 'CO_INVESTIGATOR', _('Co-Investigator')
+        DELEGATE = 'DELEGATE', _('Delegate')
         MEMBER = 'MEMBER', _('Member')
 
     ROLES = Role
@@ -473,7 +473,7 @@ class Project(ProjectEditorMixin, TimeStampedModel):
         """
         Returns the contact person for the project. If a contact person is not explicitly set, it will return the PI.
         """
-        contact = self.members.filter(role=ProjectMembership.Role.CO_INVESTIGATOR).first()
+        contact = self.members.filter(role=ProjectMembership.Role.DELEGATE).first()
         if not contact:
             contact = self.pi
         return contact

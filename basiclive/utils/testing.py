@@ -74,11 +74,12 @@ def create_project_with_team(
     name: str,
     pi=None,
     co_invs: Optional[List] = None,
+    delegates: Optional[List] = None,
     members: Optional[List] = None,
     **kwargs
 ) -> Tuple[Project, dict]:
     """
-    Create a project along with PI, co-investigators, and members.
+    Create a project along with PI, delegates, and members.
     Returns (project, team_dict).
     """
     if pi is None:
@@ -89,13 +90,15 @@ def create_project_with_team(
     team = {
         "pi": pi,
         "co_invs": [],
+        "delegates": [],
         "members": [],
     }
 
-    if co_invs:
-        for u in co_invs:
-            create_project_membership(u, project, role=ProjectMembership.Role.CO_INVESTIGATOR)
-            team["co_invs"].append(u)
+    dlgs = delegates if delegates is not None else (co_invs or [])
+    for u in dlgs:
+        create_project_membership(u, project, role=ProjectMembership.Role.DELEGATE)
+        team["delegates"].append(u)
+        team["co_invs"].append(u)
 
     if members:
         for u in members:

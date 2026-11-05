@@ -71,7 +71,7 @@ class ProjectFormsTestCase(TestCase):
             'title': 'Ark Discovery Initiative',
             'kind': self.project_type.pk,
             'pi': self.pi.pk,
-            'co_investigator': self.co_inv.pk,
+            'delegate': self.co_inv.pk,
             'members': [self.member1.pk, self.member2.pk],
             'alias': 'ARK-PROJECT',
             'contact_person': 'Marion Ravenwood',
@@ -109,7 +109,7 @@ class ProjectFormsTestCase(TestCase):
         self.assertEqual(pi_membership.role, ProjectMembership.Role.PI)
 
         co_membership = ProjectMembership.objects.get(project=project, user=self.co_inv)
-        self.assertEqual(co_membership.role, ProjectMembership.Role.CO_INVESTIGATOR)
+        self.assertEqual(co_membership.role, ProjectMembership.Role.DELEGATE)
 
         m1_membership = ProjectMembership.objects.get(project=project, user=self.member1)
         self.assertEqual(m1_membership.role, ProjectMembership.Role.MEMBER)
@@ -129,13 +129,13 @@ class ProjectFormsTestCase(TestCase):
         self.assertIn('pi', form.errors)
 
     def test_new_project_form_deduplicates_pi_and_co_inv_in_members(self):
-        # If PI or Co-Investigator is accidentally included in 'members',
+        # If PI or Delegate is accidentally included in 'members',
         # their higher role should not be overridden to MEMBER.
         form_data = {
             'code': 'overlap-project',
             'kind': self.project_type.pk,
             'pi': self.pi.pk,
-            'co_investigator': self.co_inv.pk,
+            'delegate': self.co_inv.pk,
             'members': [self.pi.pk, self.co_inv.pk, self.member1.pk],
         }
         form = NewProjectForm(data=form_data)
@@ -149,7 +149,7 @@ class ProjectFormsTestCase(TestCase):
         )
         self.assertEqual(
             ProjectMembership.objects.get(project=project, user=self.co_inv).role,
-            ProjectMembership.Role.CO_INVESTIGATOR
+            ProjectMembership.Role.DELEGATE
         )
         self.assertEqual(
             ProjectMembership.objects.get(project=project, user=self.member1).role,

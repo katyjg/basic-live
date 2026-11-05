@@ -171,10 +171,10 @@ class NewProjectForm(ModalModelForm):
         required=True,
         label=_("Principal Investigator")
     )
-    co_investigator = forms.ModelChoiceField(
+    delegate = forms.ModelChoiceField(
         queryset=User.objects.filter(is_active=True),
         required=False,
-        label=_("Co-Investigator")
+        label=_("Delegate")
     )
     members = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(is_active=True),
@@ -237,7 +237,7 @@ class NewProjectForm(ModalModelForm):
             ),
             Row(
                 HalfWidth(Field('pi', css_class="select")),
-                HalfWidth(Field('co_investigator', css_class="select")),
+                HalfWidth(Field('delegate', css_class="select")),
                 style="g-2"
             ),
             Row(
@@ -316,19 +316,19 @@ class NewProjectForm(ModalModelForm):
                 defaults={'role': ProjectMembership.Role.PI}
             )
 
-            # Create or update Co-Investigator membership if provided
-            co_inv = self.cleaned_data.get('co_investigator')
-            if co_inv:
+            # Create or update Delegate membership if provided
+            delegate = self.cleaned_data.get('delegate')
+            if delegate:
                 ProjectMembership.objects.update_or_create(
                     project=project,
-                    user=co_inv,
-                    defaults={'role': ProjectMembership.Role.CO_INVESTIGATOR}
+                    user=delegate,
+                    defaults={'role': ProjectMembership.Role.DELEGATE}
                 )
 
             # Create or update Team Memberships
             members = self.cleaned_data.get('members') or []
             for member in members:
-                if member != pi and member != co_inv:
+                if member != pi and member != delegate:
                     ProjectMembership.objects.update_or_create(
                         project=project,
                         user=member,
