@@ -34,6 +34,10 @@ _Avoid_: System User, Hardware Project, Admin Project.
 The integration mechanism that synchronizes approved research proposals and team rosters from a central facility user office portal into BasicLIVE.
 _Avoid_: User Importer, Portal Bridge, Sync Service.
 
+**ProjectProvider**:
+The pluggable integration provider responsible for synchronizing external Project allocations, temporal validity dates, and staged team rosters into BasicLIVE without eagerly provisioning User accounts prior to first login.
+_Avoid_: User Importer, Account Sync, Portal Adapter.
+
 **SSHKey**:
 A public cryptographic key registered by a User, used by beamline workstations to authenticate operational connections.
 _Avoid_: Private Key, Host Key.
@@ -103,6 +107,22 @@ _Avoid_: Segment, Active Period, Uptime.
 **Downtime**:
 A recorded period during which the facility beam delivery or beamline instrumentation was unavailable for scientific operations.
 _Avoid_: Outage, Maintenance Window, Shutdown.
+
+**FacilityModeType**:
+A canonical classification of facility accelerator operating state (such as normal user delivery, development, maintenance, shutdown, or special beam) defining its label and presentation color.
+_Avoid_: Mode Kind, Beam Mode, Machine State.
+
+**FacilityMode**:
+A scheduled time interval during which the facility operates in a specific FacilityModeType.
+_Avoid_: Mode Shift, Operating Window, Ring Status.
+
+**BeamlineSupport**:
+A daily schedule assignment designating the facility staff member serving as the primary point of contact for beamline user operations.
+_Avoid_: Duty Officer, On-Call Staff.
+
+**ScheduleProvider**:
+The pluggable integration provider responsible for synchronizing FacilityMode intervals, Beamtime allocations, Downtime windows, and BeamlineSupport assignments from an external facility scheduling system.
+_Avoid_: Calendar Importer, Mode Fetcher, Schedule Bridge.
 
 **SupportRecord**:
 An observational log entry recorded by beamline staff documenting technical assistance, problems encountered, and estimated lost operational hours.

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Iterable
 
 import httpx2
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
-from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.module_loading import import_string
 
 from basiclive.core.lims.conf import settings as lims_settings
@@ -20,8 +20,27 @@ from basiclive.core.lims.models import (
     Region,
     User,
 )
+from basiclive.utils.misc import parse_date_value
 
 logger = logging.getLogger(__name__)
+
+_ROLE_RANK = {
+    ProjectMembership.Role.MEMBER: 1,
+    ProjectMembership.Role.CO_INVESTIGATOR: 2,
+    ProjectMembership.Role.PI: 3,
+}
+
+
+def _normalize_role(role: str | None) -> str:
+    if not role:
+        return ProjectMembership.Role.MEMBER
+    valid_roles = {choice for choice, _ in ProjectMembership.Role.choices}
+    role_upper = role.strip().upper()
+    if role_upper in valid_roles:
+        return role_upper
+    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR"):
+        return ProjectMembership.Role.CO_INVESTIGATOR
+    return ProjectMembership.Role.MEMBER
 
 
 @dataclass
@@ -116,25 +135,6 @@ def _find_existing_user(username: str = "", email: str = "") -> User | None:
     return None
 
 
-_ROLE_RANK = {
-    ProjectMembership.Role.MEMBER: 1,
-    ProjectMembership.Role.CO_INVESTIGATOR: 2,
-    ProjectMembership.Role.PI: 3,
-}
-
-
-def _normalize_role(role: str | None) -> str:
-    if not role:
-        return ProjectMembership.Role.MEMBER
-    valid_roles = {choice for choice, _ in ProjectMembership.Role.choices}
-    role_upper = role.strip().upper()
-    if role_upper in valid_roles:
-        return role_upper
-    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR"):
-        return ProjectMembership.Role.CO_INVESTIGATOR
-    return ProjectMembership.Role.MEMBER
-
-
 class BaseProjectProvider:
     def __init__(self, cache_ttl: int | None = 900, **options: Any):
         self.cache_ttl = cache_ttl
@@ -146,68 +146,74 @@ class BaseProjectProvider:
     def fetch_user(self, user: User) -> ExternalUserData | None:
         return None
 
-    def _upsert_project_data(self, item: ExternalProjectData) -> tuple[Project, bool, int, int]:
-        """
-        Upserts a single ExternalProjectData record and reconciles memberships for existing users.
-        Returns (project, created, memberships_synced, memberships_removed).
-        """
+    def _prepare_project_metadata(self, item: ExternalProjectData) -> tuple[Project, bool]:
         source_id = str(item.source_id).strip()
         slug_name = str(item.name).strip()
 
-        with transaction.atomic():
-            project = Project.objects.filter(source_id=source_id).first()
-            created = False
-            if not project:
-                # Fallback to matching an unlinked local project by name on initial link
-                project = Project.objects.filter(
-                    name__iexact=slug_name, source_id__isnull=True
-                ).first()
-                if project:
-                    project.source_id = source_id
-                else:
-                    project = Project(source_id=source_id, name=slug_name)
-                    created = True
+        project = Project.objects.filter(source_id=source_id).first()
+        created = False
+        if not project:
+            project = Project.objects.filter(
+                name__iexact=slug_name, source_id__isnull=True
+            ).first()
+            if project:
+                project.source_id = source_id
+            else:
+                project = Project(source_id=source_id, name=slug_name)
+                created = True
 
-            project.name = slug_name
+        project.name = slug_name
+        if item.start_date is not None or created:
             project.start_date = item.start_date
+        if item.end_date is not None or created:
             project.end_date = item.end_date
 
-            for attr in (
-                "alias",
-                "contact_person",
-                "contact_email",
-                "contact_phone",
-                "organisation",
-                "department",
-                "address",
-                "city",
-                "postal_code",
-            ):
-                val = getattr(item, attr, None)
-                if val is not None:
-                    setattr(project, attr, val)
+        for attr in (
+            "alias",
+            "contact_person",
+            "contact_email",
+            "contact_phone",
+            "organisation",
+            "department",
+            "address",
+            "city",
+            "postal_code",
+        ):
+            val = getattr(item, attr, None)
+            if val is not None:
+                setattr(project, attr, val)
 
-            if item.kind:
-                kind_obj = ProjectType.objects.filter(name__iexact=item.kind.strip()).first()
-                if kind_obj:
-                    project.kind = kind_obj
+        if item.kind:
+            kind_obj = ProjectType.objects.filter(name__iexact=item.kind.strip()).first()
+            if kind_obj:
+                project.kind = kind_obj
 
-            country = _resolve_country(item.country_code)
-            if country:
-                project.country = country
-            region = _resolve_region(item.region_code, country=project.country)
-            if region:
-                project.region = region
-                if not project.country:
-                    project.country = region.country
-            elif item.region_code is None or (
-                project.region and project.country and project.region.country_id != project.country_id
-            ):
-                project.region = None
+        country = _resolve_country(item.country_code)
+        if country:
+            project.country = country
+        region = _resolve_region(item.region_code, country=project.country)
+        if region:
+            project.region = region
+            if not project.country:
+                project.country = region.country
+        elif item.region_code is None and item.country_code is not None or (
+            project.region and project.country and project.region.country_id != project.country_id
+        ):
+            project.region = None
 
+        return project, created
+
+    def _upsert_project_data(self, item: ExternalProjectData) -> tuple[Project, bool, int, int]:
+        """
+        Upserts a full ExternalProjectData record and reconciles its complete team roster
+        against existing local Users.
+        """
+        with transaction.atomic():
+            project, created = self._prepare_project_metadata(item)
+            project.start_date = item.start_date
+            project.end_date = item.end_date
             project.external_roster = [m.to_dict() for m in item.members]
 
-            # Match members against already existing Users without creating new Users
             matched_members: dict[int, tuple[User, str]] = {}
             resolved_pi: User | None = None
 
@@ -218,7 +224,6 @@ class BaseProjectProvider:
                     continue
                 if role == ProjectMembership.Role.PI and resolved_pi is None:
                     resolved_pi = existing_user
-                # Keep highest precedence role if a user appears multiple times
                 prev = matched_members.get(existing_user.pk)
                 if prev is None or _ROLE_RANK.get(role, 0) > _ROLE_RANK.get(prev[1], 0):
                     matched_members[existing_user.pk] = (existing_user, role)
@@ -228,14 +233,7 @@ class BaseProjectProvider:
 
             memberships_synced = 0
             for existing_user, role in matched_members.values():
-                membership, m_created = ProjectMembership.objects.get_or_create(
-                    user=existing_user,
-                    project=project,
-                    defaults={"role": role},
-                )
-                if not m_created and membership.role != role:
-                    membership.role = role
-                    membership.save(update_fields=["role", "modified"])
+                self._apply_user_membership(existing_user, project, role)
                 memberships_synced += 1
 
             stale_qs = ProjectMembership.objects.filter(project=project).exclude(
@@ -269,24 +267,140 @@ class BaseProjectProvider:
 
         return stats
 
+    @staticmethod
+    def _entry_matches_user(entry: dict[str, Any], user: User) -> bool:
+        uname = (user.username or "").strip().lower()
+        uemail = (user.email or "").strip().lower()
+        entry_uname = str(entry.get("username") or "").strip().lower()
+        entry_email = str(entry.get("email") or "").strip().lower()
+        if uname and entry_uname and uname == entry_uname:
+            return True
+        if uemail and entry_email and uemail == entry_email:
+            return True
+        return False
 
-def _parse_date_value(val: Any) -> date | None:
-    if not val:
-        return None
-    if isinstance(val, datetime):
-        return val.date()
-    if isinstance(val, date):
-        return val
-    s = str(val).strip()
-    if not s:
-        return None
-    parsed_d = parse_date(s[:10])
-    if parsed_d:
-        return parsed_d
-    parsed_dt = parse_datetime(s)
-    if parsed_dt:
-        return parsed_dt.date()
-    return None
+    @staticmethod
+    def _update_user_profile(
+        user: User,
+        source: dict[str, Any] | ExternalUserData,
+        *,
+        overwrite: bool = False,
+    ) -> bool:
+        updated = False
+        for attr in ("first_name", "last_name", "email", "phone"):
+            raw = source.get(attr) if isinstance(source, dict) else getattr(source, attr, "")
+            val = str(raw or "").strip()
+            if not val:
+                continue
+            current = getattr(user, attr, "")
+            if (overwrite and current != val) or (not overwrite and not current):
+                setattr(user, attr, val)
+                updated = True
+        if updated:
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            if full_name and (not user.name or user.name == user.username):
+                user.name = full_name
+            user.save()
+        return updated
+
+    @staticmethod
+    def _apply_user_membership(user: User, project: Project, role: str) -> None:
+        normalized_role = _normalize_role(role)
+        membership, created = ProjectMembership.objects.get_or_create(
+            user=user,
+            project=project,
+            defaults={"role": normalized_role},
+        )
+        if not created and membership.role != normalized_role:
+            membership.role = normalized_role
+            membership.save(update_fields=["role", "modified"])
+        if normalized_role == ProjectMembership.Role.PI and project.pi_id != user.pk:
+            project.pi = user
+            project.save(update_fields=["pi", "modified"])
+
+    def _match_staged_rosters(self, user: User) -> None:
+        for project in Project.objects.exclude(external_roster=[]):
+            roster = project.external_roster or []
+            if not isinstance(roster, list):
+                continue
+            best_role: str | None = None
+            for entry in roster:
+                if not isinstance(entry, dict):
+                    continue
+                if not self._entry_matches_user(entry, user):
+                    continue
+                self._update_user_profile(user, entry, overwrite=False)
+                role = _normalize_role(entry.get("role"))
+                if best_role is None or _ROLE_RANK.get(role, 0) > _ROLE_RANK.get(best_role, 0):
+                    best_role = role
+            if best_role is not None:
+                self._apply_user_membership(user, project, best_role)
+
+    def _reconcile_external_user(self, user: User, ext_user: ExternalUserData) -> None:
+        self._update_user_profile(user, ext_user, overwrite=True)
+
+        for item in ext_user.projects:
+            explicit_role: str | None = None
+            proj_target: ExternalProjectData | str | None = None
+            if isinstance(item, tuple) and len(item) == 2:
+                proj_target, explicit_role = item[0], _normalize_role(item[1])
+            elif isinstance(item, ExternalProjectData):
+                proj_target = item
+
+            if isinstance(proj_target, ExternalProjectData):
+                with transaction.atomic():
+                    project, _ = self._prepare_project_metadata(proj_target)
+                    if not project.external_roster and proj_target.members:
+                        project.external_roster = [m.to_dict() for m in proj_target.members]
+                    project.save()
+
+                    user_role = explicit_role
+                    if user_role is None:
+                        for m in proj_target.members:
+                            if self._entry_matches_user(m.to_dict(), user):
+                                candidate = _normalize_role(m.role)
+                                if user_role is None or _ROLE_RANK.get(candidate, 0) > _ROLE_RANK.get(user_role, 0):
+                                    user_role = candidate
+                    self._apply_user_membership(
+                        user, project, user_role or ProjectMembership.Role.MEMBER
+                    )
+            elif isinstance(proj_target, str) and proj_target.strip():
+                ident = proj_target.strip()
+                project = Project.objects.filter(
+                    Q(source_id=ident) | Q(name__iexact=ident)
+                ).first()
+                if project:
+                    self._apply_user_membership(
+                        user, project, explicit_role or ProjectMembership.Role.MEMBER
+                    )
+
+    def sync_user(self, user: User, force: bool = False) -> bool:
+        if not user or not user.username:
+            return False
+
+        cache_key = f"lims:sync:user:{user.username.lower()}"
+        if not force:
+            if self.cache_ttl is None or self.cache_ttl <= 0:
+                return False
+            if cache.get(cache_key):
+                return False
+
+        # Stage 1: Match against staged external_roster entries on local Projects
+        self._match_staged_rosters(user)
+
+        # Stage 2: Query external user endpoint if implemented
+        fetch_succeeded = True
+        try:
+            ext_user = self.fetch_user(user)
+            if ext_user is not None:
+                self._reconcile_external_user(user, ext_user)
+        except Exception as exc:
+            fetch_succeeded = False
+            logger.warning("ProjectProvider.fetch_user(%s) failed: %s", user.username, exc)
+
+        if fetch_succeeded and self.cache_ttl and self.cache_ttl > 0:
+            cache.set(cache_key, True, timeout=int(self.cache_ttl))
+        return True
 
 
 class HttpProjectProvider(BaseProjectProvider):
@@ -338,6 +452,30 @@ class HttpProjectProvider(BaseProjectProvider):
             return endpoint
         return f"{self.base_url}/{endpoint.lstrip('/')}"
 
+    def _fetch_json(self, endpoint: str) -> Any:
+        url = self._build_url(endpoint)
+        response = httpx2.get(
+            url,
+            headers=self.headers,
+            timeout=self.timeout,
+            follow_redirects=True,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    @staticmethod
+    def _extract_list(payload: Any) -> list[Any]:
+        if isinstance(payload, dict):
+            return list(
+                payload.get("projects")
+                or payload.get("results")
+                or payload.get("data")
+                or []
+            )
+        if isinstance(payload, list):
+            return payload
+        return []
+
     def _map_role(self, raw_role: Any) -> str:
         if not raw_role:
             return ProjectMembership.Role.MEMBER
@@ -379,8 +517,8 @@ class HttpProjectProvider(BaseProjectProvider):
         return ExternalProjectData(
             source_id=str(source_id_val).strip(),
             name=str(name_val).strip(),
-            start_date=_parse_date_value(raw.get(fm["start_date"])),
-            end_date=_parse_date_value(raw.get(fm["end_date"])),
+            start_date=parse_date_value(raw.get(fm["start_date"])),
+            end_date=parse_date_value(raw.get(fm["end_date"])),
             kind=_opt_str("kind"),
             alias=_opt_str("alias"),
             contact_person=_opt_str("contact_person"),
@@ -397,27 +535,8 @@ class HttpProjectProvider(BaseProjectProvider):
         )
 
     def fetch_projects(self) -> list[ExternalProjectData]:
-        url = self._build_url(self.projects_endpoint)
-        response = httpx2.get(
-            url,
-            headers=self.headers,
-            timeout=self.timeout,
-            follow_redirects=True,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if isinstance(payload, dict):
-            records = (
-                payload.get("results")
-                or payload.get("projects")
-                or payload.get("data")
-                or []
-            )
-        elif isinstance(payload, list):
-            records = payload
-        else:
-            records = []
-
+        payload = self._fetch_json(self.projects_endpoint)
+        records = self._extract_list(payload)
         results: list[ExternalProjectData] = []
         for item in records:
             if isinstance(item, dict):
@@ -425,6 +544,64 @@ class HttpProjectProvider(BaseProjectProvider):
                 if parsed:
                     results.append(parsed)
         return results
+
+    def fetch_user(self, user: User) -> ExternalUserData | None:
+        if not self.user_projects_endpoint:
+            return None
+        endpoint = self.user_projects_endpoint.format(
+            username=user.username,
+            email=user.email,
+            id=user.pk,
+        )
+        payload = self._fetch_json(endpoint)
+
+        ext_user = ExternalUserData(
+            username=user.username,
+            email=user.email or "",
+            first_name=user.first_name or "",
+            last_name=user.last_name or "",
+            phone=user.phone or "",
+        )
+        if isinstance(payload, dict):
+            for attr in ("email", "first_name", "last_name", "phone"):
+                if payload.get(attr):
+                    setattr(ext_user, attr, str(payload[attr]).strip())
+        records = self._extract_list(payload)
+
+        fm = self.field_map
+        for item in records:
+            if not isinstance(item, dict):
+                continue
+            raw_role = item.get("role") or item.get("user_role") or item.get("membership_role")
+            mapped_role = self._map_role(raw_role) if raw_role else ProjectMembership.Role.MEMBER
+            parsed_proj = self._parse_project(item)
+            if parsed_proj:
+                if raw_role and not any(
+                    self._entry_matches_user(m.to_dict(), user) for m in parsed_proj.members
+                ):
+                    parsed_proj.members.append(
+                        ExternalMemberData(
+                            username=user.username,
+                            email=ext_user.email or user.email,
+                            first_name=ext_user.first_name or user.first_name,
+                            last_name=ext_user.last_name or user.last_name,
+                            role=mapped_role,
+                            phone=ext_user.phone or user.phone,
+                        )
+                    )
+                ext_user.projects.append(parsed_proj)
+            else:
+                ident = (
+                    item.get(fm["source_id"])
+                    or item.get("source_id")
+                    or item.get("project")
+                    or item.get(fm["name"])
+                    or item.get("name")
+                )
+                if ident is not None:
+                    ext_user.projects.append((str(ident).strip(), mapped_role))
+
+        return ext_user
 
 
 def _resolve_provider_class(backend: Any) -> type[BaseProjectProvider]:

@@ -1903,7 +1903,7 @@ class ActivityLogManager(models.Manager):
         else:
             if getattr(obj, 'project', None) is not None:
                 activity.project_id = obj.project.pk
-            elif getattr(request, 'project', None) is not None:
+            elif getattr(request, 'project', None):
                 activity.project_id = request.project.pk
             elif isinstance(obj, Project):
                 activity.project_id = obj.pk

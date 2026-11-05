@@ -38,40 +38,6 @@ class AccessType(models.Model):
         return self.name
 
 
-class FacilityMode(models.Model):
-    kind = models.CharField(max_length=30)
-    description = models.CharField(blank=True, max_length=60)
-    color = ColorField(default="#000000")
-
-    class Meta:
-        verbose_name = _("Facility Mode")
-        verbose_name_plural = _("Facility Modes")
-
-    def __str__(self):
-        return self.kind
-
-    def css_classes(self):
-        return [k.strip() for k in self.kind.split(',')]
-
-
-class BeamlineSupport(models.Model):
-    staff = models.ForeignKey(
-        django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE
-    )
-    date = models.DateField()
-
-    class Meta:
-        verbose_name = _("Beamline Support")
-        verbose_name_plural = _("Beamline Support")
-
-    def __str__(self):
-        return f"{self.staff.first_name} {self.staff.last_name}".strip() or str(self.staff)
-
-    def active(self):
-        now = timezone.localtime()
-        return now.date() == self.date and MIN_SUPPORT_HOUR <= now.hour < MAX_SUPPORT_HOUR
-
-
 class BeamtimeQuerySet(models.QuerySet):
     def with_duration(self):
         return self.annotate(
@@ -85,6 +51,75 @@ class BeamtimeManager(models.Manager.from_queryset(BeamtimeQuerySet)):
     use_for_related_fields = True
 
 
+class FacilityModeType(models.Model):
+    code = models.SlugField(max_length=30, unique=True)
+    description = models.CharField(blank=True, max_length=60)
+    color = ColorField(default="#000000")
+
+    class Meta:
+        verbose_name = _("Facility Mode Type")
+        verbose_name_plural = _("Facility Mode Types")
+        ordering = ["code"]
+
+    def __str__(self):
+        return self.description or self.code
+
+    @property
+    def css_class(self) -> str:
+        return f"mode-{self.code}"
+
+
+class FacilityMode(TimeFramedModel):
+    mode = models.ForeignKey(
+        FacilityModeType,
+        related_name="intervals",
+        on_delete=models.CASCADE,
+    )
+    comments = models.TextField(blank=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+
+    objects = BeamtimeManager()
+
+    class Meta:
+        verbose_name = _("Facility Mode")
+        verbose_name_plural = _("Facility Modes")
+        ordering = ["start"]
+
+    def __str__(self):
+        return f"{self.mode} ({self.start} - {self.end})"
+
+
+class BeamlineSupport(models.Model):
+    staff = models.ForeignKey(
+        django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE
+    )
+    date = models.DateField()
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+
+    class Meta:
+        verbose_name = _("Beamline Support")
+        verbose_name_plural = _("Beamline Support")
+
+    def __str__(self):
+        return f"{self.staff.first_name} {self.staff.last_name}".strip() or str(self.staff)
+
+    def active(self):
+        now = timezone.localtime()
+        return now.date() == self.date and MIN_SUPPORT_HOUR <= now.hour < MAX_SUPPORT_HOUR
+
+
 class Beamtime(models.Model):
     project = models.ForeignKey(Project, related_name="beamtime", on_delete=models.CASCADE, null=True, blank=True)
     beamline = models.ForeignKey(Beamline, related_name="beamtime", on_delete=models.CASCADE)
@@ -93,6 +128,13 @@ class Beamtime(models.Model):
     cancelled = models.BooleanField(default=False)
     start = models.DateTimeField(verbose_name=_('Start'))
     end = models.DateTimeField(verbose_name=_('End'))
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
 
     objects = BeamtimeManager()
 
@@ -156,10 +198,10 @@ class Beamtime(models.Model):
         }
 
     def info_subject(self):
-        return self.access.email_subject.format(**self.format_info())
+        return self.access.email_subject.format(**self.format_info()) if self.access else ""
 
     def info_body(self):
-        return self.access.email_body.format(**self.format_info())
+        return self.access.email_body.format(**self.format_info()) if self.access else ""
 
     def __str__(self):
         return f"{self.project} on {self.beamline.acronym}"
@@ -173,6 +215,13 @@ class Downtime(TimeFramedModel):
     scope = models.IntegerField(choices=SCOPE_CHOICES, default=SCOPE_CHOICES.FACILITY)
     beamline = models.ForeignKey(Beamline, related_name="downtime", on_delete=models.CASCADE)
     comments = models.TextField(blank=True)
+    source_id = models.CharField(
+        _("External Source ID"),
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
 
     objects = BeamtimeManager()
 

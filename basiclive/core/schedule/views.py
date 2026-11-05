@@ -49,7 +49,7 @@ class CalendarView(TemplateView):
         context['support'] = f"{MIN_SUPPORT_HOUR:02d}:00 - {MAX_SUPPORT_HOUR:02d}:00"
         context['beamlines'] = Beamline.objects.filter(active=True, simulated=False)
         context['access_types'] = models.AccessType.objects.all()
-        context['facility_modes'] = models.FacilityMode.objects.all()
+        context['facility_modes'] = models.FacilityModeType.objects.all()
         context['scope_types'] = [(s[1].replace(' ', ''), s[1]) for s in models.Downtime.SCOPE_CHOICES]
         context['next_week'] = (now + timedelta(days=7)).isocalendar()[:2]
         context['last_week'] = (now - timedelta(days=7)).isocalendar()[:2]
@@ -115,11 +115,12 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
         response = super().form_valid(form)
         obj = self.object
 
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt = models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True)
+        local_bt.filter(
             Q(start__lt=obj.start) & Q(end__gt=obj.start)).update(**{'end': obj.start})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt.filter(
             Q(start__lt=obj.end) & Q(end__gt=obj.end)).update(**{'start': obj.end})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter((
+        local_bt.filter((
             Q(start__gte=obj.start) & Q(start__lt=obj.end)) | (
             Q(end__lte=obj.end) & Q(end__gt=obj.start)) | (
             Q(start__gte=obj.start) & Q(end__lte=obj.end))).exclude(pk=obj.pk).delete()
@@ -130,7 +131,14 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
         return response
 
 
-class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
+class LocalScheduleRecordRequiredMixin(AdminRequiredMixin):
+    def test_func(self):
+        if not super().test_func():
+            return False
+        return not bool(self.get_object().source_id)
+
+
+class BeamtimeEdit(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.BeamtimeForm
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
@@ -153,11 +161,12 @@ class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
         if form.cleaned_data['notify']:
             models.EmailNotification.objects.create(beamtime=obj)
 
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt = models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True)
+        local_bt.filter(
             Q(start__lt=obj.start) & Q(end__gt=obj.start)).update(**{'end': obj.start})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        local_bt.filter(
             Q(start__lt=obj.end) & Q(end__gt=obj.end)).update(**{'start': obj.end})
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter((
+        local_bt.filter((
             Q(start__gte=obj.start) & Q(start__lt=obj.end)) | (
             Q(end__lte=obj.end) & Q(end__gt=obj.start)) | (
             Q(start__gte=obj.start) & Q(end__lte=obj.end))).exclude(pk=obj.pk).delete()
@@ -165,7 +174,7 @@ class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
         return response
 
 
-class BeamtimeDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+class BeamtimeDelete(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been deleted"
@@ -224,34 +233,37 @@ class SupportDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
 
 def split_visits(obj, start, end):
+    local_beamtimes = models.Beamtime.objects.filter(
+        beamline=obj.beamline, source_id__isnull=True
+    )
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter((Q(end__lte=end) & Q(end__gt=start))).filter(start__lt=start)
+    originals = local_beamtimes.filter((Q(end__lte=end) & Q(end__gt=start))).filter(start__lt=start)
     for bt in originals:
         clone_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone_info.update({'id': None, 'start': start})
+        clone_info.update({'id': None, 'start': start, 'source_id': None})
         clone = models.Beamtime(**clone_info)
         clone.save()
         bt.end = start
         bt.save()
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter((Q(start__lt=end) & Q(start__gte=start))).filter(end__gt=end)
+    originals = local_beamtimes.filter((Q(start__lt=end) & Q(start__gte=start))).filter(end__gt=end)
     for bt in originals:
         clone_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone_info.update({'id': None, 'end': end})
+        clone_info.update({'id': None, 'end': end, 'source_id': None})
         clone = models.Beamtime(**clone_info)
         clone.save()
         bt.start = end
         bt.save()
 
-    originals = models.Beamtime.objects.filter(beamline=obj.beamline).filter(start__lt=start).filter(end__gt=end)
+    originals = local_beamtimes.filter(start__lt=start).filter(end__gt=end)
     for bt in originals:
         clone1_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone1_info.update({'id': None, 'end': end})
+        clone1_info.update({'id': None, 'end': end, 'source_id': None})
         clone1 = models.Beamtime(**clone1_info)
         clone1.save()
 
         clone2_info = {f.name: getattr(bt, f.name) for f in bt._meta.fields}
-        clone2_info.update({'id': None, 'start': end})
+        clone2_info.update({'id': None, 'start': end, 'source_id': None})
         clone2 = models.Beamtime(**clone2_info)
         clone2.save()
 
@@ -285,13 +297,13 @@ class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
         obj = self.object
 
         split_visits(obj, obj.start, obj.end)
-        models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+        models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
             (Q(start__gte=obj.start) & Q(end__lte=obj.end))).update(cancelled=True)
 
         return response
 
 
-class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
+class DowntimeEdit(LocalScheduleRecordRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.DowntimeForm
     model = models.Downtime
     success_url = reverse_lazy('schedule')
@@ -302,7 +314,9 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
         obj = form.instance
 
         if form.data.get('submit') == 'Delete':
-            models.Beamtime.objects.filter(beamline=obj.beamline, start__gte=obj.start, end__lte=obj.end).update(cancelled=False)
+            models.Beamtime.objects.filter(
+                beamline=obj.beamline, source_id__isnull=True, start__gte=obj.start, end__lte=obj.end
+            ).update(cancelled=False)
             obj.delete()
             self.success_message = "Downtime has been deleted"
         else:
@@ -311,14 +325,14 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
                 end = form.initial['start']
 
                 split_visits(obj, start, end)
-                models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+                models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
                     (Q(start__gte=start) & Q(end__lte=end))).update(cancelled=True)
             if obj.end > form.initial['end']:
                 start = form.initial['end']
                 end = obj.end
 
                 split_visits(obj, start, end)
-                models.Beamtime.objects.filter(beamline=obj.beamline).filter(
+                models.Beamtime.objects.filter(beamline=obj.beamline, source_id__isnull=True).filter(
                     (Q(start__gte=start) & Q(end__lte=end))).update(cancelled=True)
 
         return fv

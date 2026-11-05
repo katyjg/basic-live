@@ -2,8 +2,9 @@ from datetime import date, timedelta
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -639,6 +640,410 @@ class HttpProjectProviderTests(TestCase):
         self.assertEqual(proj.members[0].role, ProjectMembership.Role.PI)
         self.assertEqual(proj.members[1].role, ProjectMembership.Role.CO_INVESTIGATOR)
         self.assertEqual(proj.members[2].role, ProjectMembership.Role.MEMBER)
+
+
+class DeferredUserSyncTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.today = timezone.localdate()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_sync_user_matches_staged_external_roster_and_populates_blank_profile_fields(self):
+        # Project synced earlier when rfranklin had not yet logged in
+        proj_pi = Project.objects.create(
+            name="dna-51",
+            source_id="PORTAL-51",
+            external_roster=[
+                {
+                    "username": "rfranklin",
+                    "email": "rfranklin@kings.ac.uk",
+                    "first_name": "Rosalind",
+                    "last_name": "Franklin",
+                    "role": "PI",
+                    "phone": "555-1952",
+                }
+            ],
+        )
+        proj_member = Project.objects.create(
+            name="dna-52",
+            source_id="PORTAL-52",
+            external_roster=[
+                {
+                    "username": "",
+                    "email": "RFRANKLIN@KINGS.AC.UK",  # Case-insensitive email match
+                    "first_name": "Rosalind",
+                    "last_name": "Franklin",
+                    "role": "CO_INVESTIGATOR",
+                    "phone": "555-1952",
+                }
+            ],
+        )
+
+        # User created with minimal info on first SSO/LDAP login
+        user = User.objects.create_user(
+            username="rfranklin",
+            email="rfranklin@kings.ac.uk",
+            first_name="",
+            last_name="",
+            phone="",
+        )
+
+        provider = DummyProjectProvider(cache_ttl=900)
+        synced = provider.sync_user(user)
+        self.assertTrue(synced)
+
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, "Rosalind")
+        self.assertEqual(user.last_name, "Franklin")
+        self.assertEqual(user.phone, "555-1952")
+        self.assertEqual(user.name, "Rosalind Franklin")
+
+        proj_pi.refresh_from_db()
+        self.assertEqual(proj_pi.pi, user)
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=proj_pi, user=user, role=ProjectMembership.Role.PI
+            ).exists()
+        )
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=proj_member, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+            ).exists()
+        )
+
+    def test_sync_user_respects_cache_ttl_and_force_flag(self):
+        user = User.objects.create_user(username="cached_researcher", email="cached@example.org")
+        provider = DummyProjectProvider(cache_ttl=900)
+
+        with patch.object(provider, "fetch_user", return_value=None) as mock_fetch:
+            self.assertTrue(provider.sync_user(user))
+            self.assertEqual(mock_fetch.call_count, 1)
+
+            # Second call within TTL window is skipped
+            self.assertFalse(provider.sync_user(user))
+            self.assertEqual(mock_fetch.call_count, 1)
+
+            # force=True bypasses cache guard
+            self.assertTrue(provider.sync_user(user, force=True))
+            self.assertEqual(mock_fetch.call_count, 2)
+
+        # When cache_ttl is 0 or None, automatic login sync (force=False) is disabled
+        disabled_provider = DummyProjectProvider(cache_ttl=0)
+        self.assertFalse(disabled_provider.sync_user(user, force=False))
+        self.assertTrue(disabled_provider.sync_user(user, force=True))
+
+    def test_sync_user_reconciles_external_user_data_and_upserts_projects(self):
+        existing_proj = Project.objects.create(name="existing-mx", source_id="EXT-MX-1")
+        user = User.objects.create_user(username=" DorothyH ", email="dhodgkin@ox.ac.uk".strip())
+        user.username = "dhodgkin"
+        user.save()
+
+        ext_user_data = ExternalUserData(
+            username="dhodgkin",
+            email="dhodgkin@ox.ac.uk",
+            first_name="Dorothy",
+            last_name="Hodgkin",
+            phone="555-1964",
+            projects=[
+                ExternalProjectData(
+                    source_id="EXT-B12",
+                    name="vit-b12",
+                    start_date=self.today - timedelta(days=1),
+                    end_date=self.today + timedelta(days=100),
+                    organisation="Oxford University",
+                    members=[
+                        ExternalMemberData(
+                            username="dhodgkin",
+                            email="dhodgkin@ox.ac.uk",
+                            role="PI",
+                        )
+                    ],
+                ),
+                ("EXT-MX-1", "CO_INVESTIGATOR"),
+            ],
+        )
+
+        provider = DummyProjectProvider(cache_ttl=900)
+        with patch.object(provider, "fetch_user", return_value=ext_user_data):
+            self.assertTrue(provider.sync_user(user))
+
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, "Dorothy")
+        self.assertEqual(user.last_name, "Hodgkin")
+        self.assertEqual(user.phone, "555-1964")
+
+        upserted_proj = Project.objects.get(source_id="EXT-B12")
+        self.assertEqual(upserted_proj.name, "vit-b12")
+        self.assertEqual(upserted_proj.pi, user)
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=upserted_proj, user=user, role=ProjectMembership.Role.PI
+            ).exists()
+        )
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=existing_proj, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+            ).exists()
+        )
+
+    @patch("basiclive.core.lims.providers.httpx2.get")
+    def test_http_project_provider_fetch_user_parses_user_and_projects(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "username": "kbanister",
+            "email": "kbanister@beamline.org",
+            "first_name": "K.",
+            "last_name": "Banister",
+            "phone": "555-0199",
+            "projects": [
+                {
+                    "id": "P-900",
+                    "proposal_id": "px-900",
+                    "start_date": "2026-03-01",
+                    "end_date": "2026-12-31",
+                    "role": "LEAD_PI",
+                },
+                {
+                    "id": "P-901",
+                    "role": "EXPERIMENTER",
+                },
+            ],
+        }
+        mock_get.return_value = mock_response
+
+        provider = HttpProjectProvider(
+            base_url="https://portal.facility.example.org/api/v1",
+            user_projects_endpoint="/users/{username}/projects/",
+            field_map={
+                "source_id": "id",
+                "name": "proposal_id",
+            },
+            role_map={
+                "LEAD_PI": "PI",
+                "EXPERIMENTER": "MEMBER",
+            },
+        )
+        user = User.objects.create_user(username="kbanister", email="kbanister@beamline.org")
+        ext_user = provider.fetch_user(user)
+
+        mock_get.assert_called_once_with(
+            "https://portal.facility.example.org/api/v1/users/kbanister/projects/",
+            headers={},
+            timeout=10.0,
+            follow_redirects=True,
+        )
+        self.assertIsNotNone(ext_user)
+        self.assertEqual(ext_user.first_name, "K.")
+        self.assertEqual(ext_user.last_name, "Banister")
+        self.assertEqual(ext_user.phone, "555-0199")
+        self.assertEqual(len(ext_user.projects), 2)
+
+    def test_sync_user_handles_fetch_user_network_error_gracefully(self):
+        proj = Project.objects.create(
+            name="fallback-proj",
+            source_id="EXT-FALLBACK",
+            external_roster=[
+                {
+                    "username": "resilient_user",
+                    "email": "resilient@example.org",
+                    "role": "MEMBER",
+                }
+            ],
+        )
+        user = User.objects.create_user(username="resilient_user", email="resilient@example.org")
+        provider = DummyProjectProvider(cache_ttl=900)
+
+        with patch.object(provider, "fetch_user", side_effect=RuntimeError("Portal API timeout")):
+            with self.assertLogs("basiclive.core.lims.providers", level="WARNING") as cm:
+                result = provider.sync_user(user)
+
+        self.assertTrue(result)
+        self.assertTrue(any("Portal API timeout" in msg for msg in cm.output))
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=proj, user=user, role=ProjectMembership.Role.MEMBER
+            ).exists()
+        )
+        # Transient fetch_user failure must not stamp the TTL cache, allowing immediate retry
+        with patch.object(provider, "fetch_user", return_value=None) as retry_fetch:
+            self.assertTrue(provider.sync_user(user))
+            self.assertEqual(retry_fetch.call_count, 1)
+
+    def test_sync_user_project_upsert_preserves_existing_pi_memberships_and_roster(self):
+        pi_user = User.objects.create_user(username="pi_leader", email="pi@beamline.org")
+        team_user = User.objects.create_user(username="team_member", email="member@beamline.org")
+
+        staged_roster = [
+            {"username": "pi_leader", "email": "pi@beamline.org", "role": "PI"},
+            {"username": "team_member", "email": "member@beamline.org", "role": "MEMBER"},
+        ]
+        proj = Project.objects.create(
+            name="shared-proj",
+            source_id="EXT-SHARED-1",
+            pi=pi_user,
+            external_roster=staged_roster,
+        )
+
+        # User B (team_member) logs in and fetch_user returns a user-scoped project summary
+        # that only lists team_member's own role (not the full team roster)
+        ext_user_data = ExternalUserData(
+            username="team_member",
+            email="member@beamline.org",
+            projects=[
+                ExternalProjectData(
+                    source_id="EXT-SHARED-1",
+                    name="shared-proj",
+                    organisation="Updated Institute",
+                    members=[
+                        ExternalMemberData(
+                            username="team_member",
+                            email="member@beamline.org",
+                            role=ProjectMembership.Role.MEMBER,
+                        )
+                    ],
+                )
+            ],
+        )
+
+        provider = DummyProjectProvider(cache_ttl=900)
+        with patch.object(provider, "fetch_user", return_value=ext_user_data):
+            self.assertTrue(provider.sync_user(team_user))
+
+        proj.refresh_from_db()
+        self.assertEqual(proj.organisation, "Updated Institute")
+        # Existing PI, PI's membership, and full staged external_roster must be preserved
+        self.assertEqual(proj.pi, pi_user)
+        self.assertEqual(proj.external_roster, staged_roster)
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=proj, user=pi_user, role=ProjectMembership.Role.PI
+            ).exists()
+        )
+        self.assertTrue(
+            ProjectMembership.objects.filter(
+                project=proj, user=team_user, role=ProjectMembership.Role.MEMBER
+            ).exists()
+        )
+
+    def test_login_triggers_sync_user_and_resolves_active_project_immediately(self):
+        proj = Project.objects.create(
+            name="login-proj-1",
+            source_id="EXT-LOGIN-1",
+            external_roster=[
+                {
+                    "username": "newlogin",
+                    "email": "newlogin@example.org",
+                    "first_name": "New",
+                    "last_name": "Login",
+                    "role": "PI",
+                }
+            ],
+        )
+        user = User.objects.create_user(
+            username="newlogin",
+            email="newlogin@example.org",
+            password="secret",
+            first_name="",
+            last_name="",
+        )
+
+        with override_settings(
+            BASICLIVE_LIMS={
+                "PROJECT_PROVIDER": "basiclive.core.lims.tests.test_project_providers.DummyProjectProvider"
+            }
+        ):
+            logged_in = self.client.login(username="newlogin", password="secret")
+            self.assertTrue(logged_in)
+
+            proj.refresh_from_db()
+            user.refresh_from_db()
+            self.assertEqual(proj.pi, user)
+            self.assertEqual(user.first_name, "New")
+            self.assertEqual(user.last_name, "Login")
+
+            resp = self.client.get(reverse("data-list"))
+            self.assertEqual(resp.status_code, 200)
+            user.refresh_from_db()
+            self.assertEqual(user.default_project, proj)
+            self.assertEqual(self.client.session.get("active_project_id"), proj.pk)
+
+    @patch("basiclive.core.lims.providers.httpx2.get", side_effect=RuntimeError("Connection refused"))
+    def test_login_succeeds_when_external_api_errors(self, _mock_get):
+        proj = Project.objects.create(
+            name="offline-portal-proj",
+            source_id="EXT-OFFLINE-1",
+            external_roster=[
+                {
+                    "username": "offline_login",
+                    "email": "offline@example.org",
+                    "role": "MEMBER",
+                }
+            ],
+        )
+        user = User.objects.create_user(
+            username="offline_login",
+            email="offline@example.org",
+            password="secret",
+        )
+
+        with override_settings(
+            BASICLIVE_LIMS={
+                "PROJECT_PROVIDER": {
+                    "BACKEND": "basiclive.core.lims.providers.HttpProjectProvider",
+                    "CACHE_TTL": 900,
+                    "OPTIONS": {
+                        "base_url": "https://portal.facility.example.org/api/v1",
+                        "user_projects_endpoint": "/users/{username}/projects/",
+                    },
+                }
+            }
+        ):
+            with self.assertLogs("basiclive.core.lims.providers", level="WARNING"):
+                logged_in = self.client.login(username="offline_login", password="secret")
+            self.assertTrue(logged_in)
+            self.assertTrue(
+                ProjectMembership.objects.filter(
+                    project=proj, user=user, role=ProjectMembership.Role.MEMBER
+                ).exists()
+            )
+
+    def test_sync_projects_command_with_user_argument(self):
+        proj = Project.objects.create(
+            name="cli-user-proj",
+            source_id="EXT-CLI-USER",
+            external_roster=[
+                {
+                    "username": "cli_user",
+                    "email": "cli@example.org",
+                    "role": "CO_INVESTIGATOR",
+                }
+            ],
+        )
+        user = User.objects.create_user(username="cli_user", email="cli@example.org")
+        out = StringIO()
+
+        with override_settings(
+            BASICLIVE_LIMS={
+                "PROJECT_PROVIDER": {
+                    "BACKEND": "basiclive.core.lims.tests.test_project_providers.DummyProjectProvider",
+                    "CACHE_TTL": 0,
+                }
+            }
+        ):
+            call_command("sync_projects", "--user", "cli_user", stdout=out)
+            self.assertTrue(
+                ProjectMembership.objects.filter(
+                    project=proj, user=user, role=ProjectMembership.Role.CO_INVESTIGATOR
+                ).exists()
+            )
+            self.assertIn("cli_user", out.getvalue())
+
+            with self.assertRaises(CommandError):
+                call_command("sync_projects", "--user", "unknown_username")
+
 
 
 
