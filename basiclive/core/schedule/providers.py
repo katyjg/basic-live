@@ -14,7 +14,8 @@ from django.utils.dateparse import parse_datetime
 from django.utils.module_loading import import_string
 
 from basiclive.core.lims.models import Beamline, Project
-from basiclive.core.lims.providers import _find_existing_user, _parse_date_value
+from basiclive.core.lims.providers import _find_existing_user
+from basiclive.utils.misc import parse_date_value
 from basiclive.core.schedule.conf import settings as schedule_settings
 from basiclive.core.schedule.models import (
     AccessType,
@@ -740,7 +741,7 @@ class HttpScheduleProvider(BaseScheduleProvider):
         for raw in records:
             if not isinstance(raw, dict):
                 continue
-            dt_val = _parse_date_value(raw.get("date") or raw.get("start"))
+            dt_val = parse_date_value(raw.get("date") or raw.get("start"))
             if not dt_val:
                 continue
             staff_username = str(

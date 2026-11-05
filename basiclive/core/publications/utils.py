@@ -1,4 +1,3 @@
-import codecs
 import csv
 import itertools
 import operator

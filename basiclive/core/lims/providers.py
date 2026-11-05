@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Iterable
 
 import httpx2
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
-from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.module_loading import import_string
 
 from basiclive.core.lims.conf import settings as lims_settings
@@ -21,6 +20,7 @@ from basiclive.core.lims.models import (
     Region,
     User,
 )
+from basiclive.utils.misc import parse_date_value
 
 logger = logging.getLogger(__name__)
 
@@ -403,25 +403,6 @@ class BaseProjectProvider:
         return True
 
 
-def _parse_date_value(val: Any) -> date | None:
-    if not val:
-        return None
-    if isinstance(val, datetime):
-        return val.date()
-    if isinstance(val, date):
-        return val
-    s = str(val).strip()
-    if not s:
-        return None
-    parsed_d = parse_date(s[:10])
-    if parsed_d:
-        return parsed_d
-    parsed_dt = parse_datetime(s)
-    if parsed_dt:
-        return parsed_dt.date()
-    return None
-
-
 class HttpProjectProvider(BaseProjectProvider):
     DEFAULT_FIELD_MAP = {
         "source_id": "source_id",
@@ -536,8 +517,8 @@ class HttpProjectProvider(BaseProjectProvider):
         return ExternalProjectData(
             source_id=str(source_id_val).strip(),
             name=str(name_val).strip(),
-            start_date=_parse_date_value(raw.get(fm["start_date"])),
-            end_date=_parse_date_value(raw.get(fm["end_date"])),
+            start_date=parse_date_value(raw.get(fm["start_date"])),
+            end_date=parse_date_value(raw.get(fm["end_date"])),
             kind=_opt_str("kind"),
             alias=_opt_str("alias"),
             contact_person=_opt_str("contact_person"),
