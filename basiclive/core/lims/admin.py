@@ -6,23 +6,23 @@ from basiclive.core.lims import models
 
 class ItemAdmin(admin.ModelAdmin):
     list_display = ('identity', 'project')
-    search_fields = ('name', 'project__name')
+    search_fields = ('name', 'project__code')
 
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pi', 'kind', 'contact_person', 'contact_email', 'country', 'region')
+    list_display = ('code', 'title', 'pi', 'kind', 'contact_person', 'contact_email', 'country', 'region')
     search_fields = (
-        'name', 'contact_person', 'contact_email', 'pi__username', 'pi__first_name', 'pi__last_name',
+        'code', 'title', 'contact_person', 'contact_email', 'pi__username', 'pi__first_name', 'pi__last_name',
         'country__name', 'region__name'
     )
     list_filter = ('kind', 'country')
 
 
 class ProjectMemberAdmin(admin.ModelAdmin):
-    list_display = ('user', 'project__name')
+    list_display = ('user', 'project__code')
     list_filter = ('project__designation', 'project__kind')
     search_fields = (
-        'user__username', 'user__first_name', 'user__last_name', 'project__name',
+        'user__username', 'user__first_name', 'user__last_name', 'project__code',
         'project__contact_person', 'project__contact_email',
     )
 

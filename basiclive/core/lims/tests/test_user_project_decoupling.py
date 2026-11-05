@@ -84,10 +84,10 @@ class DataModelsDecouplingTestCase(TestCase):
         membership = ProjectMembership.objects.create(
             user=researcher,
             project=project,
-            role=ProjectMembership.Role.CO_INVESTIGATOR,
+            role=ProjectMembership.Role.DELEGATE,
         )
-        self.assertEqual(membership.role, ProjectMembership.Role.CO_INVESTIGATOR)
-        self.assertEqual(membership.get_role_display(), "Co-Investigator")
+        self.assertEqual(membership.role, ProjectMembership.Role.DELEGATE)
+        self.assertEqual(membership.get_role_display(), "Delegate")
         self.assertIn(researcher, project.members.all())
 
         # Duplicate membership should raise IntegrityError

@@ -96,7 +96,7 @@ class FeedbackList(ListViewMixin, ItemListView):
     ]
     list_columns = ['created', 'session__beamline__acronym', 'comments', 'contact']
     list_transforms = {'contact': format_contact}
-    list_search = ['session__project__name', 'comments']
+    list_search = ['session__project__code', 'comments']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     show_project = False
@@ -120,10 +120,10 @@ class FeedbackCreate(LoginRequiredMixin, UserPassesTestMixin, edit.CreateView):
         project_name = self.kwargs.get('project')
         session_id = self.kwargs.get('session')
 
-        flt = (Q(pi_id=self.request.user.pk) | Q(members__pk=self.request.user.pk)) & Q(name=project_name)
+        flt = (Q(pi_id=self.request.user.pk) | Q(members__pk=self.request.user.pk)) & (Q(code=project_name) | Q(id=int(project_name) if str(project_name).isdigit() else -1))
         if not self.request.user.is_authenticated:
             return False
-        elif not models.Session.objects.filter(project__name=project_name, id=session_id).exists():
+        elif not models.Session.objects.filter(project__code=project_name, id=session_id).exists():
             return False
         elif self.request.user.is_superuser:
             return True
@@ -136,7 +136,7 @@ class FeedbackCreate(LoginRequiredMixin, UserPassesTestMixin, edit.CreateView):
         try:
             project_name = self.kwargs.get('project')
             session_id = self.kwargs.get('session')
-            initial['session'] = models.Session.objects.get(project__name=project_name, id=session_id)
+            initial['session'] = models.Session.objects.get(project__code=project_name, id=session_id)
         except (models.Session.DoesNotExist, ValueError):
             raise Http404
 
@@ -186,7 +186,7 @@ class SupportEntryList(AdminRequiredMixin, ListViewMixin, ItemListView):
     list_styles = {
         'beamline': 'text-nowrap'
     }
-    list_search = ['beamline__acronym', 'project__name', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
+    list_search = ['beamline__acronym', 'project__code', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
@@ -204,7 +204,7 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateVie
         initial = super().get_initial()
         project_param = self.request.GET.get('project')
         if project_param:
-            initial['project'] = models.Project.objects.filter(name=project_param).first()
+            initial['project'] = models.Project.objects.filter(code=project_param).first()
         initial['beamline'] = models.Beamline.objects.filter(acronym=self.request.GET.get('beamline')).first()
         if self.request.user and getattr(self.request.user, 'is_staff', False):
             initial['staff'] = self.request.user

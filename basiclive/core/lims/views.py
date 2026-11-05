@@ -63,10 +63,10 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     success_message = "Profile has been updated."
 
     def get_object(self, queryset=None):
-        username = self.kwargs.get('username') or self.kwargs.get('name')
+        code = self.kwargs.get('code') or self.kwargs.get('username') or self.kwargs.get('name')
         return models.Project.objects.filter(
-            models.Q(name=username)
-        ).first() or models.Project.objects.get(name=username)
+            models.Q(code=code)
+        ).first() or models.Project.objects.get(code=code)
 
     def test_func(self):
         """Allow access to admin or project members"""
@@ -81,15 +81,15 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
         return kwargs
 
     def get_success_url(self):
-        kwarg_val = self.kwargs.get('name') or self.kwargs.get('username')
-        return reverse_lazy('project-profile', kwargs={'name': kwarg_val})
+        kwarg_val = self.kwargs.get('code') or self.kwargs.get('name') or self.kwargs.get('username')
+        return reverse_lazy('project-profile', kwargs={'code': kwarg_val})
 
 
 class ProjectLabels(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/pdf/return-labels.html"
     model = models.Project
-    slug_field = 'name'
-    slug_url_kwarg = 'name'
+    slug_field = 'code'
+    slug_url_kwarg = 'code'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -116,7 +116,7 @@ class ListViewMixin(LoginRequiredMixin):
     def get_list_columns(self):
         columns = super().get_list_columns()
         if self.request.user.is_superuser and self.show_project:
-            return ['project__name'] + columns
+            return ['project__code'] + columns
         return columns
 
     def get_queryset(self):
@@ -155,7 +155,7 @@ class ShipmentList(ListViewMixin, ItemListView):
     model = models.Shipment
     list_filters = [filters.YearFilter('created'), 'status']
     list_columns = ['id', 'name', 'date_shipped', 'carrier', 'num_containers', 'status']
-    list_search = ['project__name', 'name', 'comments', 'status']
+    list_search = ['project__code', 'name', 'comments', 'status']
     link_url = 'shipment-detail'
     link_data = False
     ordering = ['status', '-modified']
@@ -374,7 +374,7 @@ class SampleList(ListViewMixin, ItemListView):
     model = models.Sample
     list_filters = ['modified']
     list_columns = ['id', 'name', 'comments', 'container', 'location']
-    list_search = ['project__name', 'name', 'barcode', 'comments']
+    list_search = ['project__code', 'name', 'barcode', 'comments']
     link_url = 'sample-detail'
     ordering = ['-created', '-priority']
     ordering_proxies = {}
@@ -422,7 +422,7 @@ class ContainerList(ListViewMixin, ItemListView):
     model = models.Container
     list_filters = ['modified', 'kind', 'status']
     list_columns = ['name', 'id', 'shipment', 'kind', 'capacity', 'num_samples', 'status']
-    list_search = ['project__name', 'name', 'comments']
+    list_search = ['project__code', 'name', 'comments']
     link_url = 'container-detail'
     ordering = ['-created']
     ordering_proxies = {}
@@ -529,7 +529,8 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
-        return models.Project.objects.get(name=self.kwargs.get('project'))
+        proj_ident = self.kwargs.get('project')
+        return models.Project.objects.filter(models.Q(code=proj_ident) | models.Q(id=int(proj_ident) if str(proj_ident).isdigit() else -1)).first() or models.Project.objects.get(code=proj_ident)
 
     def get_initial(self):
         initial = super(EmptyContainers, self).get_initial()
@@ -562,7 +563,7 @@ class GroupList(ListViewMixin, ItemListView):
     model = models.Group
     list_filters = ['modified', 'status']
     list_columns = ['id', 'name', 'num_samples', 'status']
-    list_search = ['project__name', 'comments', 'name']
+    list_search = ['project__code', 'comments', 'name']
     link_url = 'group-detail'
     ordering = ['-modified', '-priority']
     ordering_proxies = {}
@@ -641,7 +642,7 @@ class DataList(ListViewMixin, ItemListView):
         'beamline'
     ]
     list_columns = ['id', 'name', 'sample', 'frame_sets', 'session__name', 'energy', 'beamline', 'kind', 'modified']
-    list_search = ['id', 'name', 'beamline__name', 'sample__name', 'frames', 'project__name', 'modified']
+    list_search = ['id', 'name', 'beamline__name', 'sample__name', 'frames', 'project__code', 'modified']
     link_url = 'data-detail'
     link_field = 'name'
     link_attr = 'data-modal-url'
@@ -666,7 +667,7 @@ class ReportList(ListViewMixin, ItemListView):
     model = models.AnalysisReport
     list_filters = ['modified', 'kind']
     list_columns = ['id', 'name', 'kind', 'score', 'modified']
-    list_search = ['project__name', 'name', 'data__name']
+    list_search = ['project__code', 'name', 'data__name']
     link_field = 'name'
     link_url = 'report-detail'
     ordering = ['-modified']
@@ -973,7 +974,7 @@ class SessionList(ListViewMixin, ItemListView):
         filters.NewEntryFilter(field_label="First Session")
     ]
     list_columns = ['name', 'created', 'beamline', 'total_time', 'num_datasets', 'num_reports']
-    list_search = ['beamline__acronym', 'project__name', 'name']
+    list_search = ['beamline__acronym', 'project__code', 'name']
     link_field = 'name'
     ordering = ['-created']
     list_transforms = {
@@ -1022,7 +1023,16 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
         if request.user.is_authenticated and not request.user.is_superuser:
             project = getattr(request, 'project', None)
             if not project or project.is_expired:
-                raise PermissionDenied("Cannot create a shipment for an expired project.")
+                return render(
+                    request, "lims/modal/alert.html",
+                    {
+                        "title": "Project Expired",
+                        "message": (
+                            "You cannot create a shipment for an expired project. "
+                            "Please switch to an active or pending project to proceed."
+                        )
+                    }
+                )
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, form, **kwargs):
@@ -1405,18 +1415,18 @@ class ProjectList(AdminRequiredMixin, ItemListView):
     paginate_by = 16
     template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
-    list_columns = ['name', 'pi', 'kind', 'contact_person', 'contact_phone', 'contact_email']
+    list_columns = ['code', 'title', 'pi', 'kind', 'contact_person', 'contact_phone', 'contact_email']
     list_search = [
-        'name', 'pi__username', 'pi__first_name', 'pi__last_name',
+        'code', 'title', 'pi__username', 'pi__first_name', 'pi__last_name',
         'contact_person', 'contact_phone', 'contact_email', 'city',
         'region__name', 'region__code', 'country__name', 'country__alpha2', 'country__alpha3',
         'department', 'organisation'
     ]
     link_url = 'project-profile'
-    link_kwarg = 'name'
+    link_kwarg = 'code'
     add_url = 'new-project'
     add_ajax = True
-    ordering = ['name']
+    ordering = ['code']
 
 
 class UserList(AdminRequiredMixin, ItemListView):
@@ -1440,7 +1450,7 @@ class AutomounterHistory(AdminRequiredMixin, ListViewMixin, ItemListView):
     show_project = False
     list_filters = ['start', 'end']
     list_columns = ['child', 'location', 'start', 'end', ]
-    list_search = ['child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    list_search = ['child__name', 'child__project__code', 'location__name', 'parent__container__name']
     page_title = "Load History"
 
     def get_queryset(self):
@@ -1456,7 +1466,7 @@ class ContainerHistory(UserPassesTestMixin, ListViewMixin, ItemListView):
     show_project = False
     list_filters = ['start', 'end']
     list_columns = ['parent', 'location', 'start', 'end', ]
-    list_search = ['parent__name', 'child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    list_search = ['parent__name', 'child__name', 'child__project__code', 'location__name', 'parent__container__name']
     page_title = "Load History"
 
     def test_func(self) -> bool | None:
@@ -1485,12 +1495,12 @@ class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
             return False
 
     def get_object(self, **kwargs):
-        username = self.kwargs.get('name') or self.kwargs.get('username')
+        code = self.kwargs.get('code') or self.kwargs.get('name') or self.kwargs.get('username')
         obj = models.Project.objects.filter(
-            models.Q(name=username)
+            models.Q(code=code)
         ).first()
         if not obj:
-            raise models.Project.DoesNotExist(f"Project matching {username} does not exist.")
+            raise models.Project.DoesNotExist(f"Project matching {code} does not exist.")
         return obj
 
 
@@ -1508,7 +1518,7 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.NewProjectForm
     model = models.Project
     success_url = reverse_lazy('user-list')
-    success_message = "New Project '%(name)s' has been created."
+    success_message = "New Project '%(code)s' has been created."
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -1534,18 +1544,18 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
         return not bool(obj.source_id)
 
     def get_object(self, *kwargs):
-        name = self.kwargs.get('name') or self.kwargs.get('username')
-        obj = self.model.objects.get(name=name)
+        code = self.kwargs.get('code') or self.kwargs.get('name') or self.kwargs.get('username')
+        obj = self.model.objects.get(code=code)
         return obj
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDelete, self).get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('project-delete', kwargs={'name': self.object.name})
+        context['form_action'] = reverse_lazy('project-delete', kwargs={'code': self.object.code})
         return context
 
     def confirmed(self, *args, **kwargs):
-        name = self.kwargs.get('name') or self.kwargs.get('username')
-        self.success_message = f"{name} project has been deleted"
+        code = self.kwargs.get('code') or self.kwargs.get('name') or self.kwargs.get('username')
+        self.success_message = f"{code} project has been deleted"
         return super().confirmed(*args, **kwargs)
 
 
@@ -1553,6 +1563,7 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView)
     model = models.User
     slug_field = 'username'
     slug_url_kwarg = 'username'
+    context_object_name = 'target_user'     # Prevent clobbering of {{ user }} in template
     template_name = "lims/details/user.html"
 
     def test_func(self):
@@ -1683,7 +1694,8 @@ class PuckLoader(AdminRequiredMixin, detail.DetailView):
         )
         models.LoaderConfig.objects.filter(pk=config.pk).update(pending=False)
         if self.kwargs.get('project'):
-            project = models.Project.objects.filter(name=self.kwargs['project']).first()
+            proj_ident = self.kwargs['project']
+            project = models.Project.objects.filter(models.Q(code=proj_ident) | models.Q(id=int(proj_ident) if str(proj_ident).isdigit() else -1)).first()
             if project:
                 context['active_project'] = project
                 context['containers'] = project.containers.on_site().order_by('name')
@@ -1699,7 +1711,7 @@ class SelectPuck(AuthenticationRequiredMixin, View):
         puck = kwargs.get('puck')
 
         beamline = models.Beamline.objects.get(acronym__iexact=beamline)
-        project = models.Project.objects.get(name__iexact=project)
+        project = models.Project.objects.filter(models.Q(code__iexact=project) | models.Q(id=int(project) if str(project).isdigit() else -1)).first() or models.Project.objects.get(code__iexact=project)
         puck = project.containers.on_site().filter(pk=puck).first()
         if not puck:
             messages.error(request, 'Puck not found')

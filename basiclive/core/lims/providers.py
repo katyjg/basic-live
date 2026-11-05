@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 _ROLE_RANK = {
     ProjectMembership.Role.MEMBER: 1,
-    ProjectMembership.Role.CO_INVESTIGATOR: 2,
+    ProjectMembership.Role.DELEGATE: 2,
     ProjectMembership.Role.PI: 3,
 }
 
@@ -38,8 +38,8 @@ def _normalize_role(role: str | None) -> str:
     role_upper = role.strip().upper()
     if role_upper in valid_roles:
         return role_upper
-    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR"):
-        return ProjectMembership.Role.CO_INVESTIGATOR
+    if role_upper in ("CO_I", "CO-I", "COINVESTIGATOR", "CO_INVESTIGATOR", "DELEGATE"):
+        return ProjectMembership.Role.DELEGATE
     return ProjectMembership.Role.MEMBER
 
 
@@ -66,7 +66,9 @@ class ExternalMemberData:
 @dataclass
 class ExternalProjectData:
     source_id: str
-    name: str
+    code: str = ""
+    name: str = ""
+    title: str = ""
     start_date: date | None = None
     end_date: date | None = None
     kind: str | None = None
@@ -83,6 +85,12 @@ class ExternalProjectData:
     postal_code: str | None = None
     members: list[ExternalMemberData] = field(default_factory=list)
 
+    def __post_init__(self):
+        if not self.code and self.name:
+            self.code = self.name
+        elif not self.name and self.code:
+            self.name = self.code
+
 
 @dataclass
 class ExternalUserData:
@@ -94,23 +102,40 @@ class ExternalUserData:
     projects: list[ExternalProjectData | tuple[str, str]] = field(default_factory=list)
 
 
-def _resolve_country(country_code: str | None) -> Country | None:
+def _resolve_country(country_code: str | None, country_cache: dict[str, Country] | None = None) -> Country | None:
     if not country_code:
         return None
     code = country_code.strip()
     if not code:
         return None
+    if country_cache is not None:
+        return country_cache.get(code.upper())
     return Country.objects.filter(
         Q(alpha2__iexact=code) | Q(alpha3__iexact=code) | Q(name__iexact=code)
     ).first()
 
 
-def _resolve_region(region_code: str | None, country: Country | None = None) -> Region | None:
+def _resolve_region(
+    region_code: str | None,
+    country: Country | None = None,
+    region_cache: dict[tuple[int | None, str], Region] | None = None,
+) -> Region | None:
     if not region_code:
         return None
     code = region_code.strip()
     if not code:
         return None
+    if region_cache is not None:
+        country_id = country.pk if country else None
+        key = (country_id, code.upper())
+        if key in region_cache:
+            return region_cache[key]
+        if country and country.alpha2:
+            prefixed = f"{country.alpha2}-{code}".upper()
+            if (country_id, prefixed) in region_cache:
+                return region_cache[(country_id, prefixed)]
+        return None
+
     qs = Region.objects.all()
     if country:
         qs = qs.filter(country=country)
@@ -121,13 +146,25 @@ def _resolve_region(region_code: str | None, country: Country | None = None) -> 
     return qs.filter(query).first()
 
 
-def _find_existing_user(username: str = "", email: str = "") -> User | None:
+def _find_existing_user(
+    username: str = "",
+    email: str = "",
+    user_cache: tuple[dict[str, User], dict[str, User]] | None = None,
+) -> User | None:
     uname = (username or "").strip()
+    mail = (email or "").strip()
+    if user_cache is not None:
+        by_username, by_email = user_cache
+        if uname and uname.lower() in by_username:
+            return by_username[uname.lower()]
+        if mail and mail.lower() in by_email:
+            return by_email[mail.lower()]
+        return None
+
     if uname:
         user = User.objects.filter(username__iexact=uname).first()
         if user:
             return user
-    mail = (email or "").strip()
     if mail:
         user = User.objects.filter(email__iexact=mail).first()
         if user:
@@ -146,23 +183,40 @@ class BaseProjectProvider:
     def fetch_user(self, user: User) -> ExternalUserData | None:
         return None
 
-    def _prepare_project_metadata(self, item: ExternalProjectData) -> tuple[Project, bool]:
+    def _prepare_project_metadata(
+        self,
+        item: ExternalProjectData,
+        context: dict[str, Any] | None = None,
+    ) -> tuple[Project, bool]:
         source_id = str(item.source_id).strip()
-        slug_name = str(item.name).strip()
+        slug_code = str(item.code or item.name).strip()
 
-        project = Project.objects.filter(source_id=source_id).first()
+        projects_by_source = context.get("projects_by_source") if context else None
+        projects_by_code = context.get("projects_by_code") if context else None
+
+        if projects_by_source is not None:
+            project = projects_by_source.get(source_id)
+        else:
+            project = Project.objects.filter(source_id=source_id).first()
+
         created = False
         if not project:
-            project = Project.objects.filter(
-                name__iexact=slug_name, source_id__isnull=True
-            ).first()
+            if projects_by_code is not None:
+                project = projects_by_code.get(slug_code.lower())
+            else:
+                project = Project.objects.filter(
+                    code__iexact=slug_code,
+                    source_id__isnull=True,
+                ).first()
             if project:
                 project.source_id = source_id
             else:
-                project = Project(source_id=source_id, name=slug_name)
+                project = Project(source_id=source_id, code=slug_code)
                 created = True
 
-        project.name = slug_name
+        project.code = slug_code
+        if item.title:
+            project.title = item.title.strip()
         if item.start_date is not None or created:
             project.start_date = item.start_date
         if item.end_date is not None or created:
@@ -184,14 +238,22 @@ class BaseProjectProvider:
                 setattr(project, attr, val)
 
         if item.kind:
-            kind_obj = ProjectType.objects.filter(name__iexact=item.kind.strip()).first()
-            if kind_obj:
-                project.kind = kind_obj
+            kind_cache = context.get("kind_cache") if context else None
+            kind_clean = item.kind.strip()
+            if kind_cache is not None:
+                project.kind = kind_cache.get(kind_clean.lower())
+            else:
+                kind_obj = ProjectType.objects.filter(name__iexact=kind_clean).first()
+                if kind_obj:
+                    project.kind = kind_obj
 
-        country = _resolve_country(item.country_code)
+        country_cache = context.get("country_cache") if context else None
+        region_cache = context.get("region_cache") if context else None
+
+        country = _resolve_country(item.country_code, country_cache=country_cache)
         if country:
             project.country = country
-        region = _resolve_region(item.region_code, country=project.country)
+        region = _resolve_region(item.region_code, country=project.country, region_cache=region_cache)
         if region:
             project.region = region
             if not project.country:
@@ -203,23 +265,30 @@ class BaseProjectProvider:
 
         return project, created
 
-    def _upsert_project_data(self, item: ExternalProjectData) -> tuple[Project, bool, int, int]:
+    def _upsert_project_data(
+        self,
+        item: ExternalProjectData,
+        context: dict[str, Any] | None = None,
+    ) -> tuple[Project, bool, int, int]:
         """
         Upserts a full ExternalProjectData record and reconciles its complete team roster
         against existing local Users.
         """
         with transaction.atomic():
-            project, created = self._prepare_project_metadata(item)
+            project, created = self._prepare_project_metadata(item, context=context)
             project.start_date = item.start_date
             project.end_date = item.end_date
             project.external_roster = [m.to_dict() for m in item.members]
 
             matched_members: dict[int, tuple[User, str]] = {}
             resolved_pi: User | None = None
+            user_cache = context.get("user_cache") if context else None
 
             for member in item.members:
                 role = _normalize_role(member.role)
-                existing_user = _find_existing_user(member.username, member.email)
+                existing_user = _find_existing_user(
+                    member.username, member.email, user_cache=user_cache
+                )
                 if not existing_user:
                     continue
                 if role == ProjectMembership.Role.PI and resolved_pi is None:
@@ -231,10 +300,31 @@ class BaseProjectProvider:
             project.pi = resolved_pi
             project.save()
 
+            if context and context.get("projects_by_source") is not None:
+                context["projects_by_source"][project.source_id] = project
+
+            memberships_by_user = {}
+            if project.pk:
+                memberships_by_user = {
+                    m.user_id: m for m in ProjectMembership.objects.filter(project=project)
+                }
+
             memberships_synced = 0
             for existing_user, role in matched_members.values():
-                self._apply_user_membership(existing_user, project, role)
-                memberships_synced += 1
+                normalized_role = _normalize_role(role)
+                m = memberships_by_user.get(existing_user.pk)
+                if m is None:
+                    ProjectMembership.objects.create(
+                        user=existing_user,
+                        project=project,
+                        role=normalized_role,
+                    )
+                    memberships_synced += 1
+                else:
+                    if m.role != normalized_role:
+                        m.role = normalized_role
+                        m.save(update_fields=["role", "modified"])
+                    memberships_synced += 1
 
             stale_qs = ProjectMembership.objects.filter(project=project).exclude(
                 user_id__in=list(matched_members.keys())
@@ -242,6 +332,80 @@ class BaseProjectProvider:
             memberships_removed, _ = stale_qs.delete()
 
         return project, created, memberships_synced, memberships_removed
+
+    def _build_sync_context(self, items: list[ExternalProjectData]) -> dict[str, Any]:
+        # 1. User prefetch
+        roster_usernames: set[str] = set()
+        roster_emails: set[str] = set()
+        for item in items:
+            for m in item.members:
+                u = (m.username or "").strip().lower()
+                e = (m.email or "").strip().lower()
+                if u:
+                    roster_usernames.add(u)
+                if e:
+                    roster_emails.add(e)
+
+        users_by_uname: dict[str, User] = {}
+        users_by_email: dict[str, User] = {}
+        if roster_usernames or roster_emails:
+            q_filter = Q()
+            if roster_usernames:
+                q_filter |= Q(username__in=roster_usernames)
+            if roster_emails:
+                q_filter |= Q(email__in=roster_emails)
+            for u in User.objects.filter(q_filter):
+                if u.username:
+                    users_by_uname[u.username.lower()] = u
+                if u.email:
+                    users_by_email[u.email.lower()] = u
+
+        # 2. ProjectType cache
+        kind_cache = {pt.name.lower(): pt for pt in ProjectType.objects.all()}
+
+        # 3. Country cache
+        country_cache: dict[str, Country] = {}
+        for c in Country.objects.all():
+            if c.alpha2:
+                country_cache[c.alpha2.upper()] = c
+            if c.alpha3:
+                country_cache[c.alpha3.upper()] = c
+            if c.name:
+                country_cache[c.name.upper()] = c
+
+        # 4. Region cache
+        region_cache: dict[tuple[int | None, str], Region] = {}
+        for r in Region.objects.all():
+            if r.code:
+                code_upper = r.code.upper()
+                region_cache[(r.country_id, code_upper)] = r
+                region_cache[(None, code_upper)] = r
+            if r.name:
+                name_upper = r.name.upper()
+                region_cache[(r.country_id, name_upper)] = r
+                region_cache[(None, name_upper)] = r
+
+        # 5. Project lookup cache
+        source_ids = [str(item.source_id).strip() for item in items if item.source_id]
+        codes = [str(item.code or item.name).strip() for item in items if item.code or item.name]
+        projects_by_source: dict[str, Project] = {}
+        if source_ids:
+            for p in Project.objects.filter(source_id__in=source_ids):
+                projects_by_source[p.source_id] = p
+
+        projects_by_code: dict[str, Project] = {}
+        if codes:
+            for p in Project.objects.filter(code__in=codes, source_id__isnull=True):
+                projects_by_code[p.code.lower()] = p
+
+        return {
+            "user_cache": (users_by_uname, users_by_email),
+            "kind_cache": kind_cache,
+            "country_cache": country_cache,
+            "region_cache": region_cache,
+            "projects_by_source": projects_by_source,
+            "projects_by_code": projects_by_code,
+        }
 
     def sync_projects(self) -> dict[str, int]:
         stats = {
@@ -256,8 +420,10 @@ class BaseProjectProvider:
             logger.warning("ProjectProvider.fetch_projects() failed: %s", exc)
             return stats
 
+        context = self._build_sync_context(items)
+
         for item in items:
-            _, created, m_synced, m_removed = self._upsert_project_data(item)
+            _, created, m_synced, m_removed = self._upsert_project_data(item, context=context)
             if created:
                 stats["created"] += 1
             else:
@@ -367,7 +533,7 @@ class BaseProjectProvider:
             elif isinstance(proj_target, str) and proj_target.strip():
                 ident = proj_target.strip()
                 project = Project.objects.filter(
-                    Q(source_id=ident) | Q(name__iexact=ident)
+                    Q(source_id=ident) | Q(code__iexact=ident)
                 ).first()
                 if project:
                     self._apply_user_membership(
@@ -406,7 +572,9 @@ class BaseProjectProvider:
 class HttpProjectProvider(BaseProjectProvider):
     DEFAULT_FIELD_MAP = {
         "source_id": "source_id",
+        "code": "code",
         "name": "name",
+        "title": "title",
         "start_date": "start_date",
         "end_date": "end_date",
         "kind": "kind",
@@ -425,8 +593,9 @@ class HttpProjectProvider(BaseProjectProvider):
     }
     DEFAULT_ROLE_MAP = {
         "PI": ProjectMembership.Role.PI,
-        "CO_INVESTIGATOR": ProjectMembership.Role.CO_INVESTIGATOR,
-        "CO_I": ProjectMembership.Role.CO_INVESTIGATOR,
+        "DELEGATE": ProjectMembership.Role.DELEGATE,
+        "CO_INVESTIGATOR": ProjectMembership.Role.DELEGATE,
+        "CO_I": ProjectMembership.Role.DELEGATE,
         "MEMBER": ProjectMembership.Role.MEMBER,
         "USER": ProjectMembership.Role.MEMBER,
     }
@@ -496,8 +665,10 @@ class HttpProjectProvider(BaseProjectProvider):
     def _parse_project(self, raw: dict[str, Any]) -> ExternalProjectData | None:
         fm = self.field_map
         source_id_val = raw.get(fm["source_id"])
-        name_val = raw.get(fm["name"])
-        if source_id_val is None or not name_val:
+        code_val = raw.get(fm.get("code", "code"))
+        name_val = raw.get(fm.get("name", "name"))
+        resolved_code = code_val or name_val
+        if source_id_val is None or not resolved_code:
             return None
 
         raw_members = raw.get(fm["members"]) or []
@@ -516,7 +687,9 @@ class HttpProjectProvider(BaseProjectProvider):
 
         return ExternalProjectData(
             source_id=str(source_id_val).strip(),
-            name=str(name_val).strip(),
+            code=str(resolved_code).strip(),
+            name=str(resolved_code).strip(),
+            title=_opt_str("title") or "",
             start_date=parse_date_value(raw.get(fm["start_date"])),
             end_date=parse_date_value(raw.get(fm["end_date"])),
             kind=_opt_str("kind"),

@@ -1,0 +1,12 @@
+{% extends "lims/modal/content.html" %}
+{% load bl_icons %}
+{% block modal_title %}{{ title }}{% endblock %}
+{% block modal_body %}
+    <div class="d-flex flex-row justify-content-start gap-3">
+        {% show_icon icon="alert" size="lg" %}
+        <div>
+        {{ message }}
+        </div>
+    </div>
+
+{% endblock %}

@@ -62,7 +62,7 @@ class ProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = (
-            'contact_person', 'contact_email', 'contact_phone',
+            'title', 'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'country',
             'region', 'postal_code', 'kind', 'alias', 'designation'
         )
@@ -90,7 +90,7 @@ class ProjectForm(ModalModelForm):
 
         if pk:
             self.body.title = _("Edit Project")
-            self.body.form_action = reverse_lazy('project-edit', kwargs={'name': self.instance.name})
+            self.body.form_action = reverse_lazy('project-edit', kwargs={'code': self.instance.code})
         else:
             self.body.title = _("Create New Profile")
             self.body.form_action = reverse_lazy('new-project')
@@ -101,6 +101,10 @@ class ProjectForm(ModalModelForm):
             self.fields['designation'].widget = forms.MultipleHiddenInput()
 
         self.body.layout = Layout(
+            Row(
+                FullWidth('title'),
+                style="g-2"
+            ),
             Row(
                 ThirdWidth(Field('kind', css_class='select')),
                 ThirdWidth('alias') if self.user.is_superuser else HalfWidth('alias'),
@@ -167,10 +171,10 @@ class NewProjectForm(ModalModelForm):
         required=True,
         label=_("Principal Investigator")
     )
-    co_investigator = forms.ModelChoiceField(
+    delegate = forms.ModelChoiceField(
         queryset=User.objects.filter(is_active=True),
         required=False,
-        label=_("Co-Investigator")
+        label=_("Delegate")
     )
     members = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(is_active=True),
@@ -191,7 +195,7 @@ class NewProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = (
-            'name', 'kind', 'alias', 'designation',
+            'code', 'title', 'kind', 'alias', 'designation',
             'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes',
             'organisation', 'department', 'address', 'city', 'country',
@@ -223,13 +227,17 @@ class NewProjectForm(ModalModelForm):
         self.body.form_action = reverse_lazy('new-project')
         self.body.layout = Layout(
             Row(
-                HalfWidth('name'),
+                HalfWidth('code'),
                 HalfWidth(Field('kind', css_class="select")),
                 style="g-2"
             ),
             Row(
+                FullWidth('title'),
+                style="g-2"
+            ),
+            Row(
                 HalfWidth(Field('pi', css_class="select")),
-                HalfWidth(Field('co_investigator', css_class="select")),
+                HalfWidth(Field('delegate', css_class="select")),
                 style="g-2"
             ),
             Row(
@@ -308,19 +316,19 @@ class NewProjectForm(ModalModelForm):
                 defaults={'role': ProjectMembership.Role.PI}
             )
 
-            # Create or update Co-Investigator membership if provided
-            co_inv = self.cleaned_data.get('co_investigator')
-            if co_inv:
+            # Create or update Delegate membership if provided
+            delegate = self.cleaned_data.get('delegate')
+            if delegate:
                 ProjectMembership.objects.update_or_create(
                     project=project,
-                    user=co_inv,
-                    defaults={'role': ProjectMembership.Role.CO_INVESTIGATOR}
+                    user=delegate,
+                    defaults={'role': ProjectMembership.Role.DELEGATE}
                 )
 
             # Create or update Team Memberships
             members = self.cleaned_data.get('members') or []
             for member in members:
-                if member != pi and member != co_inv:
+                if member != pi and member != delegate:
                     ProjectMembership.objects.update_or_create(
                         project=project,
                         user=member,

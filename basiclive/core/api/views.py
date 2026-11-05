@@ -74,7 +74,7 @@ class VerificationMixin(object):
 
         User = get_user_model()
         user = User.objects.filter(username=username).first()
-        project = Project.objects.filter(name__exact=username).first()
+        project = Project.objects.filter(code__exact=username).first()
 
         if not user and not project:
             return http.HttpResponseNotFound("User or Project not found.")
@@ -140,7 +140,7 @@ class UpdateUserKey(View):
 
         target_project = None
         if username:
-            target_project = Project.objects.filter(name__exact=username).first()
+            target_project = Project.objects.filter(code__exact=username).first()
         elif getattr(request, 'project', None):
             target_project = request.project
 
@@ -214,7 +214,7 @@ class LaunchSession(AuthenticationRequiredMixin, View):
 
         project = None
         if project_name:
-            project = Project.objects.filter(name__exact=project_name).first()
+            project = Project.objects.filter(code__exact=project_name).first()
             if not project and str(project_name).isdigit():
                 project = Project.objects.filter(id=int(project_name)).first()
             if not project:
@@ -390,7 +390,7 @@ class ProjectSamples(VerificationMixin, View):
 
         project = None
         if project_name:
-            project = Project.objects.filter(name__exact=project_name).first()
+            project = Project.objects.filter(code__exact=project_name).first()
             if not project and str(project_name).isdigit():
                 project = Project.objects.filter(id=int(project_name)).first()
             if not project:
@@ -452,7 +452,7 @@ class AddReport(VerificationMixin, View):
 
         project = None
         if project_name:
-            project = Project.objects.filter(name__exact=project_name).first()
+            project = Project.objects.filter(code__exact=project_name).first()
             if not project and str(project_name).isdigit():
                 project = Project.objects.filter(id=int(project_name)).first()
             if not project:
@@ -542,7 +542,7 @@ class AddData(VerificationMixin, View):
 
         project = None
         if project_name:
-            project = Project.objects.filter(name__exact=project_name).first()
+            project = Project.objects.filter(code__exact=project_name).first()
             if not project and str(project_name).isdigit():
                 project = Project.objects.filter(id=int(project_name)).first()
             if not project:

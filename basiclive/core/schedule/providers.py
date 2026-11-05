@@ -251,7 +251,7 @@ class BaseScheduleProvider:
                     ).first()
                 if not project and item.project_name:
                     project = Project.objects.filter(
-                        name__iexact=str(item.project_name).strip()
+                        code__iexact=str(item.project_name).strip()
                     ).first()
 
                 access = default_access

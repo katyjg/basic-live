@@ -30,6 +30,10 @@ class LdapConfTests(SimpleTestCase):
         self.assertEqual(ldap_settings.AUTH_USER_LOOKUP_FIELDS, ("username",))
         self.assertIs(ldap_settings.AUTH_USE_TLS, True)
         self.assertIn("username", ldap_settings.AUTH_USER_FIELDS)
+        self.assertEqual(
+            ldap_settings.AUTH_CLEAN_USER_DATA,
+            "basiclive.auth.ldap.utils.clean_user_data",
+        )
 
     def test_prefixed_and_unprefixed_attribute_access(self):
         # Accessing with and without LDAP_ prefix should resolve identically

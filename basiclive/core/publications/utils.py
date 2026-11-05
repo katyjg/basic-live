@@ -409,7 +409,7 @@ class ArticleParser(ObjectParser):
         names += self._entry.get('container-title', [])
         names.sort(key=lambda v: len(v))
         names = list(filter(None, names))
-        issn_query = reduce(operator.__or__, [Q(codes__icontains=issn) | Q(issn__iexact=issn) for issn in codes], Q())
+        issn_query = reduce(operator.__or__, [Q(codes__icontains=issn) for issn in codes], Q())
         journal = models.Journal.objects.filter(issn_query).distinct().first()
         if journal:
             return journal.pk
@@ -728,7 +728,7 @@ def create_publications(doi_list):
             details.update(book_entry.dict())
         else:
             journal = entry['journal']
-            if journal:
+            if isinstance(journal, dict):
                 codes = journal['codes']
                 if codes in existing_journals:
                     details['journal_id'] = existing_journals[codes]
@@ -738,6 +738,8 @@ def create_publications(doi_list):
 
                 # keep issn for later use to swap for journal_id
                 details['journal_issn'] = codes
+            elif isinstance(journal, int):
+                details['journal_id'] = journal
 
         new_publications[details['code']] = details
 

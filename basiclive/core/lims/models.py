@@ -284,7 +284,7 @@ class User(AbstractUser):
     def get_projects(self):
         return Project.objects.filter(
             Q(memberships__user=self) | Q(pi=self)
-        ).distinct().order_by('name')
+        ).distinct().order_by('code')
 
     def get_status(self):
         if self.is_superuser:
@@ -314,7 +314,7 @@ class User(AbstractUser):
 class ProjectMembership(TimeStampedModel):
     class Role(models.TextChoices):
         PI = 'PI', _('Principal Investigator')
-        CO_INVESTIGATOR = 'CO_INVESTIGATOR', _('Co-Investigator')
+        DELEGATE = 'DELEGATE', _('Delegate')
         MEMBER = 'MEMBER', _('Member')
 
     ROLES = Role
@@ -370,7 +370,8 @@ class Project(ProjectEditorMixin, TimeStampedModel):
     HELP = {
         'contact_person': _("Full name of contact person"),
     }
-    name = models.SlugField(max_length=100, unique=True)
+    code = models.SlugField(max_length=100, unique=True)
+    title = models.CharField(_("Title"), max_length=500, blank=True, default="")
     source_id = models.CharField(
         _("External Source ID"),
         max_length=100,
@@ -437,8 +438,16 @@ class Project(ProjectEditorMixin, TimeStampedModel):
         verbose_name = _("Project")
         verbose_name_plural = _("Projects")
 
+    @property
+    def name(self):
+        return self.code
+
+    @name.setter
+    def name(self, value):
+        self.code = value
+
     def __str__(self):
-        return self.name.upper() if self.name else ""
+        return self.code.upper() if self.code else ""
 
     @property
     def is_expired(self) -> bool:
@@ -458,39 +467,39 @@ class Project(ProjectEditorMixin, TimeStampedModel):
             return self.contact_person
         if self.pi:
             return self.pi.get_full_name() or self.pi.name or self.pi.username
-        return self.name
+        return self.code
 
     def get_contact(self):
         """
         Returns the contact person for the project. If a contact person is not explicitly set, it will return the PI.
         """
-        contact = self.members.filter(role=ProjectMembership.Role.CO_INVESTIGATOR).first()
+        contact = self.members.filter(role=ProjectMembership.Role.DELEGATE).first()
         if not contact:
             contact = self.pi
         return contact
 
     def get_absolute_url(self):
-        return reverse('project-profile', kwargs={'name': self.name})
+        return reverse('project-profile', kwargs={'code': self.code})
 
     def onsite_containers(self):
         return self.containers.filter(status=Container.STATES.ON_SITE).count()
 
     def label_hash(self):
-        return self.name
+        return self.code
 
     def active_status(self):
         if self.is_expired:
-            return 'Expired'
+            return _('Expired')
         if self.is_pending:
-            return 'Pending'
+            return _('Pending')
         try:
             if not self.sessions.count():
-                return 'New'
+                return _('New')
             if self.last_session() >= (timezone.localtime() - timedelta(days=365)):
-                return 'Active'
+                return _('Active')
         except TypeError:
-            return 'Active'
-        return 'Idle'
+            return _('Active')
+        return _('Idle')
 
     def last_session(self):
         session = self.sessions.first()

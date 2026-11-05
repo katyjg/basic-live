@@ -22,7 +22,7 @@ def get_v2_user(request):
         signature = kwargs.get('signature')
         user_model = get_user_model()
         user = user_model.objects.filter(username=username).first()
-        project = Project.objects.filter(name__exact=username).first()
+        project = Project.objects.filter(code__exact=username).first()
 
         public_key = None
         if user:

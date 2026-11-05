@@ -84,6 +84,10 @@ class ConfigureTests(SimpleTestCase):
             "django_python3_ldap.auth.LDAPBackend",
             settings["AUTHENTICATION_BACKENDS"],
         )
+        self.assertEqual(
+            settings.get("LDAP_AUTH_CLEAN_USER_DATA"),
+            "basiclive.auth.ldap.utils.clean_user_data",
+        )
         self.assertIn(
             "django_cas_ng.backends.CASBackend",
             settings["AUTHENTICATION_BACKENDS"],
